@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows-0078D4?style=flat-square" alt="Windows" />
-  <img src="https://img.shields.io/badge/Version-0.16.0-6554C0?style=flat-square" alt="Version 0.16.0" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-287C63?style=flat-square" alt="Version 1.0.0" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
   <img src="https://img.shields.io/badge/Project-Closed--source-52525B?style=flat-square" alt="Closed-source" />
 </p>
 
-<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · 开发测试中</p>
+<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.0 Release Candidate</p>
 
 <p align="center">
   <a href="#功能特性">功能特性</a> ·
@@ -38,27 +38,41 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 观看管理 | 播放进度同步、收藏、待看清单与观看记录 |
 | 多线路 | Smart Route 多线路切换 |
 | 界面 | Dark / Light / System 主题、UI 字号与可折叠侧栏 |
+| Windows 集成 | 系统媒体控制、正式安装程序与手动版本检查 |
 
 ## 下载与版本
 
 | 项目 | 当前状态 |
 | --- | --- |
 | 平台 | Windows |
-| 当前版本 | 0.16.0 |
-| 开发状态 | 开发测试阶段 |
+| 当前版本 | Miry v1.0.0 |
+| 发布状态 | First Stable Release · RELEASE CANDIDATE COMPLETE，尚未公开发布 |
+| 主要发行形式 | Windows NSIS 安装程序 |
 | 项目性质 | 个人维护、非商业、Closed-source（闭源） |
 
-当前尚未在本仓库公开发布安装包。版本状态与开发进度通过本项目主页更新。
+v1.0.0 发布候选已完成。正式公开发布后，推荐从 [GitHub Releases](https://github.com/Lomiry/Miry/releases) 下载 Windows Setup 安装程序。当前尚无公开正式 Release。
+
+安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
+
+About 中可手动检查新版本并查看发布页面。当前不提供自动下载安装或后台更新。
 
 本仓库用于项目介绍、开发进度展示和第三方服务接入审核。
 
 ## 在线弹幕
 
-Miry 正在接入弹弹play开放弹幕网络，用于作品搜索、自动/手动匹配以及只读弹幕展示。
+Miry 已完成弹弹play开放弹幕网络的接入实现，用于作品搜索、自动/手动匹配以及只读弹幕展示。
+
+**Online Danmaku implementation complete. Live provider verification pending.** 当前尚未使用正式服务凭据完成真实在线验证；不保证所有电影、电视剧都有可匹配的弹幕。
 
 在线弹幕通过弹弹play官方开放 API 接入，不使用网页抓取、Cookie 模拟或非公开接口。
 
 Miry 不提供弹幕发送、弹弹play用户登录、批量弹幕下载或社区功能。
+
+## 已知限制
+
+- 当前 Windows 安装程序未签名，SmartScreen 可能提示警告。
+- 真实远程 Emby、长时间播放及部分 HDR / Dolby Vision / AVR / DPI 环境仍需实机验证。
+- Miry 不修改 Windows 显示器刷新率，也不自动切换 Windows HDR。
 
 ## 反馈与建议
 
