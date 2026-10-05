@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Project-Closed--source-52525B?style=flat-square" alt="Closed-source" />
 </p>
 
-<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.0 Release Candidate</p>
+<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.0 已发布</p>
 
 <p align="center">
   <a href="#功能特性">功能特性</a> ·
@@ -46,11 +46,11 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | --- | --- |
 | 平台 | Windows |
 | 当前版本 | Miry v1.0.0 |
-| 发布状态 | First Stable Release · RELEASE CANDIDATE COMPLETE，尚未公开发布 |
+| 发布状态 | First Stable Release · RELEASED |
 | 主要发行形式 | Windows NSIS 安装程序 |
 | 项目性质 | 个人维护、非商业、Closed-source（闭源） |
 
-v1.0.0 发布候选已完成。正式公开发布后，推荐从 [GitHub Releases](https://github.com/Lomiry/Miry/releases) 下载 Windows Setup 安装程序。当前尚无公开正式 Release。
+Miry v1.0.0 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.0) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.0/Miry-Setup-v1.0.0.exe)。
 
 安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
 
