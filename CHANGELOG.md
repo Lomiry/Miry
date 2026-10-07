@@ -1,3 +1,31 @@
+# Miry v1.0.2 · 2026-10-07
+
+本次更新将在线弹幕服务内置到发布版，并修复“关于”页按钮尺寸不一致的问题。
+
+## 更新内容
+
+- 内置弹弹play开放弹幕网络接入，安装后无需导入服务配置；隐藏导入、替换和清除服务配置控件。
+- 保留作品搜索、自动/手动匹配和只读弹幕展示。首次启动及退出重启后均可直接使用。
+- “检查新版本”“GitHub 发布记录”“导出匿名诊断”按钮统一宽高，窄空间自动换行。
+- 保留年份 · 类型 · 评分、字幕、收藏、Smart Route 及 1.0.1 的播放器修复。
+
+## 验证
+
+前端 534/534、Rust 54/54、本地 mpv 13/13；TypeScript、Vite、格式检查、cargo check 和 production 安装包构建通过。
+
+最终安装包中的原生程序在无外部服务配置的情况下，首次启动及重启均通过正式作品搜索；电影样本加载 5,993 条真实服务弹幕，单 Canvas 绘制、暂停、跳转和倍速同步通过。
+
+## 下载与说明
+
+[下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.2/Miry-Setup-v1.0.2.exe)。普通用户只需安装程序；不包含个人 Emby 服务器、账号或访问令牌。
+
+安装程序未签名，SmartScreen 可能提示警告。不同作品弹幕覆盖、真实远程 Emby、长时间播放和部分 HDR / Dolby Vision / AVR / DPI 环境仍需实机验证。Miry 不改变 Windows 刷新率，不自动切换 HDR。
+
+Miry 为个人维护、非商业闭源项目。mpv 运行时和第三方依赖与 1.0.1 相同，完整第三方对应源码继续免费提供；本版本的 [源码说明](https://github.com/Lomiry/Miry/releases/download/v1.0.2/THIRD-PARTY-SOURCES.md) 列出全部分册的精确下载地址及 SHA256，[第三方索引](https://github.com/Lomiry/Miry/releases/download/v1.0.2/THIRD-PARTY-SOURCES.json) 和 [校验文件](https://github.com/Lomiry/Miry/releases/download/v1.0.2/SHA256.txt) 同时提供。第三方源码不含 Miry 应用源码。
+
+
+---
+
 # Miry v1.0.1
 
 本次为 1.0.0 的修复更新，保留现有媒体卡片、收藏、字幕、弹幕和播放功能。

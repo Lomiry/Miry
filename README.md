@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows-0078D4?style=flat-square" alt="Windows" />
-  <img src="https://img.shields.io/badge/Version-1.0.1-287C63?style=flat-square" alt="Version 1.0.1" />
+  <img src="https://img.shields.io/badge/Version-1.0.2-287C63?style=flat-square" alt="Version 1.0.2" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
   <img src="https://img.shields.io/badge/Project-Closed--source-52525B?style=flat-square" alt="Closed-source" />
 </p>
 
-<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.1 已发布</p>
+<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.2 已发布</p>
 
 <p align="center">
   <a href="#功能特性">功能特性</a> ·
@@ -46,18 +46,18 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 项目 | 当前状态 |
 | --- | --- |
 | 平台 | Windows |
-| 当前版本 | Miry v1.0.1 |
+| 当前版本 | Miry v1.0.2 |
 | 发布状态 | Maintenance Release · RELEASED |
 | 主要发行形式 | Windows NSIS 安装程序 |
 | 项目性质 | 个人维护、非商业、Closed-source（闭源） |
 
-Miry v1.0.1 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.1) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-Setup-v1.0.1.exe)。
+Miry v1.0.2 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.2) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.2/Miry-Setup-v1.0.2.exe)。
 
 安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
 
 About 中可手动检查新版本并查看发布页面。当前不提供自动下载安装或后台更新。
 
-更新内容见 [更新日志](CHANGELOG.md)。1.0.1 修复本地 mpv 配置校验、重建播放器并补齐完整第三方对应源码，既有卡片和播放功能保留。
+更新内容见 [更新日志](CHANGELOG.md)。1.0.2 内置在线弹幕接入，无需导入服务配置，并统一“关于”页操作按钮大小；既有卡片和播放功能保留。
 
 本仓库用于项目介绍、开发进度展示和第三方服务接入审核。
 
@@ -65,7 +65,7 @@ About 中可手动检查新版本并查看发布页面。当前不提供自动�
 
 Miry 已完成弹弹play开放弹幕网络的接入实现，用于作品搜索、自动/手动匹配以及只读弹幕展示。
 
-**Online Danmaku implementation complete. Live provider verification pending.** 当前尚未使用正式服务凭据完成真实在线验证；不保证所有电影、电视剧都有可匹配的弹幕。
+发布版已内置接入，无需用户导入服务配置。正式作品搜索、电影弹幕样本及原生绘制和时钟同步已通过验证；不保证所有电影、电视剧都有可匹配的弹幕。
 
 在线弹幕通过弹弹play官方开放 API 接入，不使用网页抓取、Cookie 模拟或非公开接口。
 
@@ -101,4 +101,4 @@ Miry 当前为闭源项目。
 
 本仓库仅用于项目介绍、开发进度展示和第三方服务接入审核，不代表 Miry 源代码以开源许可证发布。
 
-安装程序所含 mpv 和其他第三方组件遵循各自许可证；完整第三方对应源码、构建说明和校验文件随 [同版本 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1) 免费提供。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
+安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.2 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/releases/download/v1.0.2/THIRD-PARTY-SOURCES.md)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
