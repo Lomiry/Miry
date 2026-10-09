@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows-0078D4?style=flat-square" alt="Windows" />
-  <img src="https://img.shields.io/badge/Version-1.0.2-287C63?style=flat-square" alt="Version 1.0.2" />
+  <img src="https://img.shields.io/badge/Version-1.0.3-287C63?style=flat-square" alt="Version 1.0.3" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
   <img src="https://img.shields.io/badge/Project-Closed--source-52525B?style=flat-square" alt="Closed-source" />
 </p>
 
-<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.2 已发布</p>
+<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.3 已发布</p>
 
 <p align="center">
   <a href="#功能特性">功能特性</a> ·
@@ -36,6 +36,8 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 字幕 | 主字幕 / 次字幕，字幕大小与位置实时调节 |
 | 本地弹幕 | 加载本地 Bilibili XML / ASS 弹幕 |
 | 在线弹幕 | 作品搜索、自动 / 手动匹配与只读弹幕展示 |
+| 搜索 | 首页与媒体库影视搜索、中文输入与清空恢复 |
+| 分页跳转 | 输入页码，Enter或按钮直接跳转，保留筛选与搜索上下文 |
 | 观看管理 | 播放进度同步、收藏、待看清单与观看记录 |
 | 多线路 | Smart Route 多线路切换 |
 | 界面 | Dark / Light / System 主题、UI 字号与可折叠侧栏 |
@@ -46,18 +48,18 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 项目 | 当前状态 |
 | --- | --- |
 | 平台 | Windows |
-| 当前版本 | Miry v1.0.2 |
+| 当前版本 | Miry v1.0.3 |
 | 发布状态 | Maintenance Release · RELEASED |
 | 主要发行形式 | Windows NSIS 安装程序 |
 | 项目性质 | 个人维护、非商业、Closed-source（闭源） |
 
-Miry v1.0.2 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.2) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.2/Miry-Setup-v1.0.2.exe)。
+Miry v1.0.3 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.3) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.3/Miry-Setup-v1.0.3.exe)。
 
 安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
 
 About 中可手动检查新版本并查看发布页面。当前不提供自动下载安装或后台更新。
 
-更新内容见 [更新日志](CHANGELOG.md)。1.0.2 内置在线弹幕接入，无需导入服务配置，并统一“关于”页操作按钮大小；既有卡片和播放功能保留。
+更新内容见 [更新日志](CHANGELOG.md)。1.0.3 改进影视与弹幕搜索、推荐候选和匹配理由，重新标定默认1×弹幕速度，并新增媒体库页码直接跳转；既有卡片和播放功能保留。
 
 本仓库用于项目介绍、开发进度展示和第三方服务接入审核。
 
@@ -101,4 +103,4 @@ Miry 当前为闭源项目。
 
 本仓库仅用于项目介绍、开发进度展示和第三方服务接入审核，不代表 Miry 源代码以开源许可证发布。
 
-安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.2 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/releases/download/v1.0.2/THIRD-PARTY-SOURCES.md)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
+安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.3 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/releases/download/v1.0.3/THIRD-PARTY-SOURCES.md)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
