@@ -55,6 +55,8 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 
 Miry v1.0.3 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.3) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.3/Miry-Setup-v1.0.3.exe)。
 
+安装程序 SHA256：07c4eedffb6b220012d164b6547e0ca767ded5203f564e9901311e92be056b46。
+
 安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
 
 About 中可手动检查新版本并查看发布页面。当前不提供自动下载安装或后台更新。
@@ -103,4 +105,4 @@ Miry 当前为闭源项目。
 
 本仓库仅用于项目介绍、开发进度展示和第三方服务接入审核，不代表 Miry 源代码以开源许可证发布。
 
-安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.3 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/releases/download/v1.0.3/THIRD-PARTY-SOURCES.md)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
+安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.3 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/blob/a9e110da4817d1433af9e82164b4a783d2e81dd5/docs/third-party/v1.0.3/THIRD-PARTY-SOURCES.md) · [完整源码索引（JSON 下载）](https://raw.githubusercontent.com/Lomiry/Miry/a9e110da4817d1433af9e82164b4a783d2e81dd5/docs/third-party/v1.0.3/THIRD-PARTY-SOURCES.json)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
