@@ -1,2 +1,4 @@
 # Preserve published material bytes and checksums across Windows checkouts.
 docs/third-party/v1.0.4/* -text
+
+docs/third-party/v1.0.5/* -text
