@@ -1,3 +1,26 @@
+# Miry v1.0.5 · 2026-10-12
+
+阶段 G：Smart Route 入口迁移与主题适配。
+
+## 更新日志
+
+- 将“多线路管理”移至设置中的“网络 / 线路”。
+- 优化浅色、深色及跟随系统主题下的服务器连接与线路管理界面。
+- 改善当前线路标记、按钮状态和危险操作的视觉识别。
+- 改善长连接地址换行及窄窗口布局。
+- 修复独立登录页面的主题背景和文字对比度问题。
+
+## 补充说明
+
+- Windows x64：下载 Miry-Setup-v1.0.5.exe，退出 Miry 后安装；升级前备份配置并保留用户数据，不要手动清除 AppData。安装程序包含完整 mpv 运行时，缺少 WebView2 时可能需要联网安装。
+- 安装包 SHA256：`73048dc30fe56d48a0c3a27d4593df6e23c071169bc033628ad9cfa0c022601f`。
+- [第三方源码、许可证与构建说明](https://github.com/Lomiry/Miry/blob/69678aaf466628e8068d817c0184a363721a54bd/docs/third-party/v1.0.5/THIRD-PARTY-SOURCES.md) · [完整源码索引（JSON）](https://raw.githubusercontent.com/Lomiry/Miry/69678aaf466628e8068d817c0184a363721a54bd/docs/third-party/v1.0.5/THIRD-PARTY-SOURCES.json)；沿用其中列出的 v1.0.1 原始源码分册。Miry 为个人维护、非商业的闭源客户端。
+- 安装程序未数字签名，Windows SmartScreen 可能提示警告；请核对下载来源和 SHA256。
+- Emby 文本搜索排序取决于服务器支持；若结果顺序不变，可在媒体库中筛选并排序。
+- 正式安装、覆盖升级、配置保留和卸载、完整 Windows 界面、内置在线弹幕首启/重启、真实 Emby 服务器，以及完整 DPI、多屏和系统主题矩阵仍未完成实机验证（Not Verified）。本次已通过官方只读签名验证，不代表安装包内置服务已实机验收。
+
+---
+
 # Miry v1.0.4 · 2026-10-12
 
 阶段 I：媒体库排序、筛选与分页优化。

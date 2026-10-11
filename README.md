@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows-0078D4?style=flat-square" alt="Windows" />
-  <img src="https://img.shields.io/badge/Version-1.0.4-287C63?style=flat-square" alt="Version 1.0.4" />
+  <img src="https://img.shields.io/badge/Version-1.0.5-287C63?style=flat-square" alt="Version 1.0.5" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
   <img src="https://img.shields.io/badge/Project-Closed--source-52525B?style=flat-square" alt="Closed-source" />
 </p>
 
-<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.4 已发布</p>
+<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.5 已发布</p>
 
 <p align="center">
   <a href="#功能特性">功能特性</a> ·
@@ -50,20 +50,20 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 项目 | 当前状态 |
 | --- | --- |
 | 平台 | Windows |
-| 当前版本 | Miry v1.0.4 |
-| 发布状态 | Stage I Release · RELEASED |
+| 当前版本 | Miry v1.0.5 |
+| 发布状态 | Stage G Release · RELEASED |
 | 主要发行形式 | Windows NSIS 安装程序 |
 | 项目性质 | 个人维护、非商业、Closed-source（闭源） |
 
-Miry v1.0.4 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.4) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.4/Miry-Setup-v1.0.4.exe)。
+Miry v1.0.5 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.5) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.5/Miry-Setup-v1.0.5.exe)。
 
-安装程序 SHA256：f0a4f607c03443975a3a15760834e3e231d0668d04609174f54c558058f49ac7。
+安装程序 SHA256：73048dc30fe56d48a0c3a27d4593df6e23c071169bc033628ad9cfa0c022601f。
 
 安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
 
 About 中可手动检查新版本并查看发布页面。当前不提供自动下载安装或后台更新。
 
-更新内容见 [更新日志](CHANGELOG.md)。1.0.4 完善媒体库排序方向和字段、每页数量选择、自定义分页，以及筛选/搜索协同与浏览状态恢复；保留既有页码跳转、卡片和播放功能。
+更新内容见 [更新日志](CHANGELOG.md)。1.0.5 将多线路管理移至“网络 / 线路”，优化连接与线路管理的主题配色、按钮状态及窄窗口布局，并修复独立登录页背景与文字对比度；保留既有 Smart Route、搜索排序、分页和播放功能。
 
 本仓库用于项目介绍、开发进度展示和第三方服务接入审核。
 
@@ -71,7 +71,7 @@ About 中可手动检查新版本并查看发布页面。当前不提供自动�
 
 Miry 已完成弹弹play开放弹幕网络的接入实现，用于作品搜索、自动/手动匹配以及只读弹幕展示。
 
-发布版已内置接入，无需用户导入服务配置。既有版本的正式作品搜索、电影弹幕样本及原生绘制和时钟同步已通过验证；本版本未重复在线 Provider 实机验证，不保证所有电影、电视剧都有可匹配的弹幕。
+发布版已内置接入，无需用户导入服务配置。既有版本的正式作品搜索、电影弹幕样本及原生绘制和时钟同步已通过验证；本版本官方只读签名验证已通过，正式安装包内置服务的首启/重启仍未实机验证，不保证所有电影、电视剧都有可匹配的弹幕。
 
 在线弹幕通过弹弹play官方开放 API 接入，不使用网页抓取、Cookie 模拟或非公开接口。
 
@@ -81,7 +81,7 @@ Miry 不提供弹幕发送、弹弹play用户登录、批量弹幕下载或社�
 
 - 当前 Windows 安装程序未签名，SmartScreen 可能提示警告。
 - 搜索排序仅在服务器支持时生效；当前已测试服务器的文本搜索评分升降序不生效，若顺序不变，可在媒体库中筛选并排序。
-- 本版本全新安装、覆盖升级、卸载及正式安装包 GUI / 真实服务器完整验证仍为 Not Verified；多服务器、物理 DPI、200 条性能和全部排序字段/同值跨页覆盖也未完整验证。
+- 本版本正式安装、覆盖升级、配置保留和卸载、完整 Windows 界面、内置在线弹幕首启/重启、真实 Emby 服务器，以及完整物理 DPI、多屏和系统主题矩阵仍为 Not Verified；多服务器、200 条性能和全部排序字段/同值跨页覆盖也未完整验证。
 - 演示模式尚未完整覆盖新增排序字段；返回历史页面会恢复并保存当时的每页数量。
 - 真实远程 Emby、长时间播放及部分 HDR / Dolby Vision / AVR / DPI 环境仍需实机验证。
 - Miry 不修改 Windows 显示器刷新率，也不自动切换 Windows HDR。
@@ -110,4 +110,4 @@ Miry 当前为闭源项目。
 
 本仓库仅用于项目介绍、开发进度展示和第三方服务接入审核，不代表 Miry 源代码以开源许可证发布。
 
-安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.4 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/blob/c31b05fa94681c6f8e86d9a8207a3130c092531f/docs/third-party/v1.0.4/THIRD-PARTY-SOURCES.md) · [完整源码索引（JSON 下载）](https://raw.githubusercontent.com/Lomiry/Miry/c31b05fa94681c6f8e86d9a8207a3130c092531f/docs/third-party/v1.0.4/THIRD-PARTY-SOURCES.json)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
+安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.5 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/blob/69678aaf466628e8068d817c0184a363721a54bd/docs/third-party/v1.0.5/THIRD-PARTY-SOURCES.md) · [完整源码索引（JSON 下载）](https://raw.githubusercontent.com/Lomiry/Miry/69678aaf466628e8068d817c0184a363721a54bd/docs/third-party/v1.0.5/THIRD-PARTY-SOURCES.json)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
