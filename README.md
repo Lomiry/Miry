@@ -57,7 +57,7 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 主要发行形式 | Windows NSIS 安装程序 |
 | 项目性质 | 个人维护、非商业；源码可查阅，许可按文件范围适用 |
 
-Miry v1.0.6 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.6) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-OFFICIAL-1.0.6-x64-setup.exe)。
+Miry v1.0.6 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.6) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-Setup-v1.0.6.exe)。
 
 安装程序 SHA256：9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77。
 

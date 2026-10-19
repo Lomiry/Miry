@@ -1,6 +1,6 @@
 # 安装、历史校验与第三方资料
 
-最新正式版为 v1.0.6；OFFICIAL 文件名为 `Miry-OFFICIAL-1.0.6-x64-setup.exe`。普通用户下载对应版本的 `Miry-Setup-vX.Y.Z.exe`，退出 Miry 后安装。升级前备份配置并保留用户数据，不要手动清除 AppData。采用 Windows x64 当前用户安装，安装程序包含 mpv；缺少 WebView2 时官方引导程序可能需要联网。更新由用户手动下载安装，应用不提供后台自动更新。
+最新正式版为 v1.0.6；OFFICIAL 文件名为 `Miry-Setup-v1.0.6.exe`。普通用户下载对应版本的 `Miry-Setup-vX.Y.Z.exe`，退出 Miry 后安装。升级前备份配置并保留用户数据，不要手动清除 AppData。采用 Windows x64 当前用户安装，安装程序包含 mpv；缺少 WebView2 时官方引导程序可能需要联网。更新由用户手动下载安装，应用不提供后台自动更新。
 
 安装程序未数字签名，Windows SmartScreen 可能提示警告。请从本仓库的 Releases 获取文件，并核对下表中的 SHA256。用户账号与设置保存在独立 AppData 中，与安装目录分离。
 
@@ -18,7 +18,7 @@ Miry 为个人维护的非商业客户端。v1.0.6 提供[完整应用源码](..
 | v1.0.3 | [Miry-Setup-v1.0.3.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.3/Miry-Setup-v1.0.3.exe) | 57,661,510 | `07c4eedffb6b220012d164b6547e0ca767ded5203f564e9901311e92be056b46` |
 | v1.0.4 | [Miry-Setup-v1.0.4.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.4/Miry-Setup-v1.0.4.exe) | 57,675,702 | `f0a4f607c03443975a3a15760834e3e231d0668d04609174f54c558058f49ac7` |
 | v1.0.5 | [Miry-Setup-v1.0.5.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.5/Miry-Setup-v1.0.5.exe) | 57,680,893 | `73048dc30fe56d48a0c3a27d4593df6e23c071169bc033628ad9cfa0c022601f` |
-| v1.0.6 | [Miry-OFFICIAL-1.0.6-x64-setup.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-OFFICIAL-1.0.6-x64-setup.exe) | 68,620,227 | `9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77` |
+| v1.0.6 | [Miry-Setup-v1.0.6.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-Setup-v1.0.6.exe) | 68,620,227 | `9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77` |
 
 ## 每个版本的第三方资料
 

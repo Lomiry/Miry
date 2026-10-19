@@ -1,6 +1,6 @@
 2cd2b4b69ac91ec08922b04e9ab03b20d03156956acef965910c6eb436b2e5b5  Miry-1.0.6-source.zip
 c5b007e16df3c30a31d78eb1e8a14699276931858d120b5b2736d321a77bc469  Miry-1.0.6-third-party-materials.zip
-9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77  Miry-OFFICIAL-1.0.6-x64-setup.exe
+9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77  Miry-Setup-v1.0.6.exe
 91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3  Miry-v1.0.1-third-party-sources-1.zip
 ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8  Miry-v1.0.1-third-party-sources-2.zip
 727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e  Miry-v1.0.1-third-party-sources-3.zip

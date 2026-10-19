@@ -2,7 +2,7 @@
 
 [完整应用源码](../../../source/README.md) · [许可范围与待证事项](../../../source/RIGHTS-STATUS.md) · [构建说明](../../../source/BUILDING.md) · [NOTICE](../../../source/tools/mpv/licenses/rust-v106/NOTICE.txt) · [校验](SHA256.txt) · [分卷索引](THIRD-PARTY-SOURCES.json)
 
-MPL 对应源码、CDLA 数据与协议、SDK 告知、精确 Rust 原始许可和运行时索引随应用源码及 third-party-materials 附件提供。原许可/NOTICE 和运行时对应源码字节不变。
+MPL 对应源码、CDLA 数据与协议、SDK 告知、精确 Rust 原始许可和运行时索引由仓库及 v1.0.6 Tag 对应的 GitHub 自动源码归档提供。原许可/NOTICE 和运行时对应源码字节不变。
 
 运行时精确源码、补丁与 PKGBUILD 使用以下既有公开分卷，每册为独立 ZIP，无需登录。与本运行时的对应关系沿用已验证的精确索引；不替换或修改历史 Release。
 

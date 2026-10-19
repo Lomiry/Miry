@@ -3,7 +3,7 @@
   "source_baseline": "abfa6577564ddd38d826d987b0f96098c4b2a28b",
   "validated_source_candidate_sha256": "c10937394606a9019c22853c867af26a08df310be58f61012f1db1d4cd34d1cc",
   "installer": {
-    "name": "Miry-OFFICIAL-1.0.6-x64-setup.exe",
+    "name": "Miry-Setup-v1.0.6.exe",
     "bytes": 68620227,
     "sha256": "9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77",
     "rebuilt": false
