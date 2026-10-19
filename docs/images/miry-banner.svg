@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title description">
   <title id="title">Miry</title>
-  <desc id="description">Windows Emby desktop client powered by mpv. Closed-source, non-commercial project.</desc>
+  <desc id="description">Miry, a Windows Emby desktop client powered by mpv, with subtitles and danmaku.</desc>
   <rect width="1280" height="360" rx="24" fill="#15191e" />
   <path d="M808 0H1280V360H960Z" fill="#1c232b" />
   <path d="M920 0H1280V360H1072Z" fill="#252e38" />
   <rect x="70" y="70" width="5" height="214" rx="2.5" fill="#8ee6bd" />
   <text x="108" y="164" fill="#f5f1e9" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="600" letter-spacing="-3">Miry</text>
   <text x="112" y="220" fill="#d1d6dc" font-family="Segoe UI, Arial, sans-serif" font-size="28" letter-spacing="1">Windows · Emby · mpv</text>
-  <text x="112" y="268" fill="#9da6b2" font-family="Segoe UI, Arial, sans-serif" font-size="18">Closed-source · Non-commercial</text>
+  <text x="112" y="268" fill="#9da6b2" font-family="Segoe UI, Arial, sans-serif" font-size="18">Native playback · Subtitles · Danmaku</text>
   <g transform="translate(996 86) scale(1.47)">
     <rect x="4" y="4" width="120" height="120" rx="28" fill="#173a34" />
     <path d="M29 89V46C29 41 33 38 38 38H43C47 38 51 40 53 44L64 64L75 44C77 40 81 38 85 38H90C95 38 99 41 99 46V89H83V59L64 89L45 59V89Z" fill="#8ee6bd" />
