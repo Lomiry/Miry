@@ -1,0 +1,14 @@
+Miry v1.0.6
+Copyright (c) 2026 Lomiry, subject to LICENSE-SCOPE.md and source/LICENSE-SCOPE.json.
+
+Third-party copyright notices, licenses and file-level exceptions are preserved at:
+source/tools/mpv/licenses/rust-v106/NOTICE.txt
+source/tools/mpv/THIRD-PARTY-NOTICES.md
+source/tools/mpv/licenses/
+source/tools/mpv/compliance/
+
+Corresponding source, data, patches and recipes:
+docs/third-party/v1.0.6/THIRD-PARTY-SOURCES.md
+source/BUILDING.md
+
+These files supplement, and do not replace, the original notices. Third-party materials and unresolved first-party paths are not relicensed under MIT. See source/RIGHTS-STATUS.md for outstanding rights and distribution conditions.
