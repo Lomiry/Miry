@@ -19,4 +19,3 @@
 - [第三方告知](../NOTICE)
 - [v1.0.6 第三方源码、许可证与构建材料](third-party/v1.0.6/THIRD-PARTY-SOURCES.md)
 - [权利范围与待证事项](../source/RIGHTS-STATUS.md)
-
