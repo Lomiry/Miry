@@ -1,0 +1,536 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+}
+button,
+a {
+  cursor: pointer;
+}
+button {
+  color: inherit;
+  border: 0;
+  background: none;
+}
+input {
+  outline: none;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1 {
+  letter-spacing: -1px;
+}
+small {
+  color: #8b9691;
+}
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+aside {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid #252b28;
+  display: flex;
+  flex-direction: column;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  position: relative;
+}
+.brand > img {
+  width: 37px;
+  height: 37px;
+  display: block;
+}
+.brand small {
+  position: absolute;
+  top: 46px;
+  left: 47px;
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+.nav-label {
+  letter-spacing: 1px;
+}
+.nav-label ~ .nav-label {
+  margin-top: 30px;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+}
+.nav:hover {
+  background: #222a25;
+}
+.account {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #29302a;
+}
+.avatar {
+  border-radius: 50%;
+  background: #364333;
+  padding: 10px;
+  font-size: 13px;
+}
+.account strong {
+  display: block;
+}
+.account small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account button {
+  padding: 5px;
+  margin-left: auto;
+}
+main {
+  flex: 1;
+  min-width: 0;
+}
+header {
+  height: 84px;
+  border-bottom: 1px solid #252a27;
+  display: flex;
+  align-items: center;
+  padding: 0 42px;
+  gap: 20px;
+}
+.breadcrumb {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: #8c9890;
+  font-size: 12px;
+}
+.search {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  color: #7d8c81;
+}
+.search input {
+  border: 0;
+  background: none;
+  color: #e8ece6;
+  width: 230px;
+}
+.icon {
+  padding: 7px;
+}
+.primary:hover {
+  background: #ddffb0;
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.section-heading span,
+.section-heading small {
+  font-size: 11px;
+  color: #7f8d83;
+}
+.grid {
+  display: grid;
+}
+.card {
+  padding: 0;
+  min-width: 0;
+}
+.watched {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.content section {
+  margin-bottom: 34px;
+}
+footer {
+  display: flex;
+  border-top: 1px solid #262d27;
+  padding: 24px 0;
+  gap: 14px;
+  color: #afbcaa;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-top: 40px;
+}
+footer span {
+  color: #66746a;
+  letter-spacing: 0;
+}
+footer small {
+  margin-left: auto;
+  letter-spacing: 0;
+}
+.error {
+  padding: 15px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.error button {
+  float: right;
+  text-decoration: underline;
+}
+.loading,
+.empty {
+  min-height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: #8d9b8e;
+}
+.empty {
+  flex-direction: column;
+}
+.empty h3 {
+  font-size: 17px;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.back {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+  color: #a5b4a4;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.meta {
+  color: #9ba99d;
+  font-size: 13px;
+}
+.tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+.tags span {
+  padding: 6px 10px;
+  font-size: 11px;
+  border: 1px solid #354131;
+  border-radius: 4px;
+  color: #b4c3ab;
+}
+.overview {
+  line-height: 1.9;
+  font-size: 14px;
+  color: #acb6aa;
+  max-width: 650px;
+  margin: 22px 0;
+}
+.notice {
+  padding: 15px;
+  border: 1px solid #34412c;
+  border-radius: 6px;
+  color: #b2c09c;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.stream {
+  display: block;
+  margin-top: 10px;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  align-items: center;
+  font-size: 12px;
+  margin: 30px 0;
+}
+.pagination button {
+  padding: 10px 16px;
+  border: 1px solid #354131;
+  border-radius: 6px;
+}
+.demo-banner {
+  font-size: 11px;
+  padding: 10px 15px;
+  background: #273224;
+  color: #b6c99d;
+  border-radius: 6px;
+  margin-bottom: 22px;
+}
+.login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+.login-story {
+  background:
+    radial-gradient(ellipse at 45% 70%, #35483a, transparent 60%), #19231d;
+  padding: 45px 12%;
+  position: relative;
+  overflow: hidden;
+}
+.login-story > .eyebrow {
+  margin-top: 75px;
+}
+.login-story h1 {
+  font-size: 64px;
+  letter-spacing: 3px;
+  line-height: 1.25;
+}
+.login-story p {
+  margin-top: 24px;
+  color: #9db19f;
+  font-size: 14px;
+}
+.login-story > small {
+  display: block;
+  margin-top: 35px;
+  font-size: 9px;
+  letter-spacing: 3px;
+}
+.login-art {
+  margin: 45px 0 15px;
+  height: 210px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: rotate(-7deg);
+}
+.login-art > div {
+  background: linear-gradient(135deg, #91a883, #273e35);
+  box-shadow: 25px 20px 0 #0c181744;
+  width: 250px;
+  height: 200px;
+  padding: 28px;
+  font-family: Georgia;
+  font-size: 27px;
+  line-height: 1.3;
+  color: #192d23;
+  border: 1px solid #96aa8055;
+}
+.login-art small {
+  display: block;
+  color: #c6d2b7;
+  font-size: 8px;
+  margin-top: 40px;
+  letter-spacing: 2px;
+}
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 45px;
+}
+.login-panel form {
+  max-width: 365px;
+  width: 100%;
+}
+.login-panel h2 {
+  font-size: 29px;
+}
+.login-panel form > p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 14px 0 34px;
+}
+.login-panel label:not(.check) {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.login-panel label > input:not([type="checkbox"]) {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #8fa086;
+  font-size: 11px;
+  margin: 24px 0;
+}
+.check input {
+  accent-color: var(--accent);
+}
+.login-panel .primary {
+  width: 100%;
+}
+.divider {
+  text-align: center;
+  color: #667361;
+  font-size: 10px;
+  margin: 26px 0;
+}
+.secondary {
+  width: 100%;
+}
+.secondary:hover {
+  background: #232d20;
+}
+.privacy {
+  display: block;
+  font-size: 10px;
+  line-height: 1.9;
+  margin-top: 25px;
+}
+.cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px;
+  margin-top: 15px;
+  color: #b4c0ab;
+}
+@media (min-width: 1500px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  aside {
+    width: 180px;
+    padding: 30px 12px;
+  }
+  main {
+    margin-left: 180px;
+  }
+  header {
+    padding: 0 22px;
+  }
+  .breadcrumb {
+    display: none;
+  }
+  .content {
+    padding: 24px;
+  }
+  .login-story {
+    padding: 40px;
+  }
+  .login-story h1 {
+    font-size: 48px;
+  }
+}
+@media (max-width: 620px) {
+  aside {
+    width: 70px;
+    padding: 22px 8px;
+  }
+  .brand {
+    font-size: 0;
+  }
+  .brand small,
+  .nav-label,
+  .account {
+    display: none;
+  }
+  .nav {
+    font-size: 0;
+    gap: 0;
+    padding: 15px;
+  }
+  .nav svg {
+    flex-shrink: 0;
+  }
+  .brand span {
+    font-size: 25px;
+  }
+  .nav {
+    margin-top: 20px;
+  }
+  main {
+    margin-left: 70px;
+  }
+  .content {
+    padding: 18px;
+  }
+  header {
+    padding: 0 18px;
+    height: 70px;
+  }
+  .search {
+    min-width: 0;
+  }
+  .search input {
+    width: 100%;
+    min-width: 0;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+  .section-heading span {
+    display: none;
+  }
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+  .login-story {
+    padding: 25px;
+  }
+  .login-story > .eyebrow {
+    margin-top: 35px;
+  }
+  .login-story h1 {
+    font-size: 35px;
+  }
+  .login-art,
+  .login-story > small {
+    display: none;
+  }
+  .login-story p {
+    margin: 15px 0;
+  }
+  .login-panel {
+    padding: 35px 25px;
+  }
+  footer small {
+    display: none;
+  }
+}
+.release-notes {
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.recovery-dialog {
+  max-width: 520px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+  .card > .poster {
+    transition: none;
+  }
+}

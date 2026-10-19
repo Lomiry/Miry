@@ -1,10 +1,10 @@
 # 安装、历史校验与第三方资料
 
-最新正式版为 v1.0.5。普通用户下载对应版本的 `Miry-Setup-vX.Y.Z.exe`，退出 Miry 后安装。升级前备份配置并保留用户数据，不要手动清除 AppData。采用 Windows x64 当前用户安装，安装程序包含 mpv；缺少 WebView2 时官方引导程序可能需要联网。更新由用户手动下载安装，应用不提供后台自动更新。
+最新正式版为 v1.0.6；OFFICIAL 文件名为 `Miry-OFFICIAL-1.0.6-x64-setup.exe`。普通用户下载对应版本的 `Miry-Setup-vX.Y.Z.exe`，退出 Miry 后安装。升级前备份配置并保留用户数据，不要手动清除 AppData。采用 Windows x64 当前用户安装，安装程序包含 mpv；缺少 WebView2 时官方引导程序可能需要联网。更新由用户手动下载安装，应用不提供后台自动更新。
 
 安装程序未数字签名，Windows SmartScreen 可能提示警告。请从本仓库的 Releases 获取文件，并核对下表中的 SHA256。用户账号与设置保存在独立 AppData 中，与安装目录分离。
 
-Miry 为个人维护、非商业的闭源客户端。公开仓库及 GitHub 自动生成的 Source code ZIP/tar.gz 只包含介绍、更新记录及公开第三方资料，不包含 Miry 应用源码。第三方源码独立免费提供，其许可、原始源码、补丁、精确依赖、构建配方与版权告知见各版本入口。
+Miry 为个人维护的非商业客户端。v1.0.6 提供[完整应用源码](../../source/README.md)；MIT 按明确范围适用，第三方例外和 291 项继承路径权属待证见[许可披露](../../source/RIGHTS-STATUS.md)。历史 v1.0.0–v1.0.5 自动源码包的原供应范围保持不变。
 
 ## 每个版本的安装程序
 
@@ -18,6 +18,7 @@ Miry 为个人维护、非商业的闭源客户端。公开仓库及 GitHub 自�
 | v1.0.3 | [Miry-Setup-v1.0.3.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.3/Miry-Setup-v1.0.3.exe) | 57,661,510 | `07c4eedffb6b220012d164b6547e0ca767ded5203f564e9901311e92be056b46` |
 | v1.0.4 | [Miry-Setup-v1.0.4.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.4/Miry-Setup-v1.0.4.exe) | 57,675,702 | `f0a4f607c03443975a3a15760834e3e231d0668d04609174f54c558058f49ac7` |
 | v1.0.5 | [Miry-Setup-v1.0.5.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.5/Miry-Setup-v1.0.5.exe) | 57,680,893 | `73048dc30fe56d48a0c3a27d4593df6e23c071169bc033628ad9cfa0c022601f` |
+| v1.0.6 | [Miry-OFFICIAL-1.0.6-x64-setup.exe](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-OFFICIAL-1.0.6-x64-setup.exe) | 68,620,227 | `9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77` |
 
 ## 每个版本的第三方资料
 
@@ -29,6 +30,7 @@ Miry 为个人维护、非商业的闭源客户端。公开仓库及 GitHub 自�
 | v1.0.3 | [说明](../third-party/v1.0.3/THIRD-PARTY-SOURCES.md) | [JSON](../third-party/v1.0.3/THIRD-PARTY-SOURCES.json) | [SHA256](../third-party/v1.0.3/SHA256.txt) |
 | v1.0.4 | [说明](../third-party/v1.0.4/THIRD-PARTY-SOURCES.md) | [JSON](../third-party/v1.0.4/THIRD-PARTY-SOURCES.json) | [SHA256](../third-party/v1.0.4/SHA256.txt) |
 | v1.0.5 | [说明](../third-party/v1.0.5/THIRD-PARTY-SOURCES.md) | [JSON](../third-party/v1.0.5/THIRD-PARTY-SOURCES.json) | [SHA256](../third-party/v1.0.5/SHA256.txt) |
+| v1.0.6 | [说明](../third-party/v1.0.6/THIRD-PARTY-SOURCES.md) | [JSON](../third-party/v1.0.6/THIRD-PARTY-SOURCES.json) | [SHA256](../third-party/v1.0.6/SHA256.txt) |
 
 v1.0.1–v1.0.5 使用同一套第三方组件和对应源码分册；需要完整材料时保存以下三册和相应版本索引。每册可独立解压。普通用户无需下载源码分册。
 
@@ -50,3 +52,5 @@ mpv 是独立进程；mpv/FFmpeg 组合按适用的 GPLv3-or-later 条款提供�
 - 各版本：真实远程 Emby、长时间播放和部分 HDR / Dolby Vision / AVR / DPI 环境需实机验证。Miry 不修改 Windows 刷新率，也不自动切换系统 HDR。
 
 本页由 v1.0.0–v1.0.5 Release 的维护说明及已有公开资料整理；历史验收范围不因更新排版而扩大。功能变更见 [CHANGELOG](../../CHANGELOG.md)。
+
+本次 v1.0.6 的冻结安装包、源码映射及验证限制见[正式说明](v1.0.6.md)。

@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "kind": "Exact retained source/recipe delivery verification; not legal clearance or reproducible rebuild",
+  "index_sha256": "c16f315025b308f926d8718e7481063da540667df34cf043b05541347aecb3e4",
+  "index_source": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/THIRD-PARTY-SOURCES.json",
+  "anonymous_index_access": true,
+  "volumes": [
+    {
+      "name": "Miry-v1.0.1-third-party-sources-1.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-1.zip",
+      "sha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "bytes": 1791428285,
+      "status": "PASS"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-2.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-2.zip",
+      "sha256": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "bytes": 1790458555,
+      "status": "PASS"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-3.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-3.zip",
+      "sha256": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+      "bytes": 490257003,
+      "status": "PASS"
+    }
+  ],
+  "indexed_members_verified": 1281,
+  "package_sources": 223,
+  "runtime_hash_entries": 138,
+  "binary_package_recipe_bindings": 108,
+  "mpv_revision_options_unchanged": true,
+  "modifications": "mpv original unmodified per retained source record; MSYS2 patches/PKGBUILD retained in exact source archives",
+  "newly_rebuilt_runtime": false,
+  "legal_holder_unicode_patent_gates_closed": false
+}

@@ -1,0 +1,52 @@
+#! /usr/bin/env perl
+# Copyright 2005-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+
+# October 2005.
+#
+# Montgomery multiplication routine for x86_64. While it gives modest
+# 9% improvement of rsa4096 sign on Opteron, rsa512 sign runs more
+# than twice, >2x, as fast. Most common rsa1024 sign is improved by
+# respectful 50%. It remains to be seen if loop unrolling and
+# dedicated squaring routine can provide further improvement...
+
+# July 2011.
+#
+# Add dedicated squaring procedure. Performance improvement varies
+# from platform to platform, but in average it's ~5%/15%/25%/33%
+# for 512-/1024-/2048-/4096-bit RSA *sign* benchmarks respectively.
+
+# August 2011.
+#
+# Unroll and modulo-schedule inner loops in such manner that they
+# are "fallen through" for input lengths of 8, which is critical for
+# 1024-bit RSA *sign*. Average performance improvement in comparison
+# to *initial* version of this module from 2005 is ~0%/30%/40%/45%
+# for 512-/1024-/2048-/4096-bit RSA *sign* benchmarks respectively.
+
+# June 2013.
+#
+# Optimize reduction in squaring procedure and improve 1024+-bit RSA
+# sign performance by 10-16% on Intel Sandy Bridge and later
+# (virtually same on non-Intel processors).
+
+# August 2013.
+#
+# Add MULX/ADOX/ADCX code path.

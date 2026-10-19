@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows-0078D4?style=flat-square" alt="Windows" />
-  <img src="https://img.shields.io/badge/Version-1.0.5-287C63?style=flat-square" alt="Version 1.0.5" />
+  <img src="https://img.shields.io/badge/Version-1.0.6-287C63?style=flat-square" alt="Version 1.0.6" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
-  <img src="https://img.shields.io/badge/Project-Closed--source-52525B?style=flat-square" alt="Closed-source" />
+  <img src="https://img.shields.io/badge/Project-Source--available-52525B?style=flat-square" alt="Source available; scoped licenses" />
 </p>
 
-<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.5 已发布</p>
+<p align="center"><strong>Windows 上的 Emby 桌面观看体验</strong><br />个人维护 · 非商业 · v1.0.6</p>
 
 <p align="center">
   <a href="#功能特性">功能特性</a> ·
@@ -52,20 +52,20 @@ Miry 是一款面向 Windows 的第三方 Emby 桌面客户端，使用原生 mp
 | 项目 | 当前状态 |
 | --- | --- |
 | 平台 | Windows |
-| 当前版本 | Miry v1.0.5 |
+| 当前版本 | Miry v1.0.6 |
 | 发布状态 | Stage G Release · RELEASED |
 | 主要发行形式 | Windows NSIS 安装程序 |
-| 项目性质 | 个人维护、非商业、Closed-source（闭源） |
+| 项目性质 | 个人维护、非商业；源码可查阅，许可按文件范围适用 |
 
-Miry v1.0.5 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.5) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.5/Miry-Setup-v1.0.5.exe)。
+Miry v1.0.6 已正式发布：[版本说明](https://github.com/Lomiry/Miry/releases/tag/v1.0.6) · [下载 Windows 安装程序](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-OFFICIAL-1.0.6-x64-setup.exe)。
 
-安装程序 SHA256：73048dc30fe56d48a0c3a27d4593df6e23c071169bc033628ad9cfa0c022601f。
+安装程序 SHA256：9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77。
 
 安装程序包含 mpv 运行时，采用当前用户安装；用户数据保存在独立的 AppData 中。WebView2 缺失时由官方引导程序安装，可能需要联网。
 
 About 中可手动检查新版本并查看发布页面。当前不提供自动下载安装或后台更新。
 
-更新内容见 [更新日志](CHANGELOG.md)。1.0.5 将多线路管理移至“网络 / 线路”，优化连接与线路管理的主题配色、按钮状态及窄窗口布局，并修复独立登录页背景与文字对比度；保留既有 Smart Route、搜索排序、分页和播放功能。
+更新内容见 [更新日志](CHANGELOG.md)。1.0.6 增加四种画面模式，并提供[完整应用源码](source/README.md)、PUBLIC 构建入口及第三方材料。许可范围及待证事项见 [RIGHTS-STATUS](source/RIGHTS-STATUS.md)。
 
 本仓库用于项目介绍、开发进度展示和第三方服务接入审核。
 
@@ -108,8 +108,4 @@ Miry 展示和播放的媒体来自用户自行配置的 Emby 服务器。本应
 
 ## License
 
-Miry 当前为闭源项目。
-
-本仓库仅用于项目介绍、开发进度展示和第三方服务接入审核，不代表 Miry 源代码以开源许可证发布。
-
-安装程序所含 mpv 和其他第三方组件遵循各自许可证。v1.0.5 沿用完全相同的运行时及依赖，完整第三方对应源码、构建说明和校验材料继续免费提供，精确获取方式见 [当前版本源码说明](https://github.com/Lomiry/Miry/blob/69678aaf466628e8068d817c0184a363721a54bd/docs/third-party/v1.0.5/THIRD-PARTY-SOURCES.md) · [完整源码索引（JSON 下载）](https://raw.githubusercontent.com/Lomiry/Miry/69678aaf466628e8068d817c0184a363721a54bd/docs/third-party/v1.0.5/THIRD-PARTY-SOURCES.json)；原始分册保持在 [v1.0.1 Release](https://github.com/Lomiry/Miry/releases/tag/v1.0.1)。第三方源码不含 Miry 应用源码；普通用户只需下载安装程序。
+[完整应用源码](source/README.md)现按明确许可范围提供。MIT 只适用于有权许可的 Miry 自有材料；291 项继承路径权属仍待证，第三方与文件级例外保留原许可。见 [MIT](source/LICENSE)、[精确范围](source/LICENSE-SCOPE.json)、[第三方材料](docs/third-party/v1.0.6/THIRD-PARTY-SOURCES.md)与[待证披露](source/RIGHTS-STATUS.md)。不宣称全应用已获 MIT 清权。

@@ -1,0 +1,53 @@
+#! /usr/bin/env perl
+# Copyright 2010-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+
+# This file was adapted to AArch64 from the 32-bit version in ghash-armv4.pl. It
+# implements the multiplication algorithm described in:
+#
+# Câmara, D.; Gouvêa, C. P. L.; López, J. & Dahab, R.: Fast Software
+# Polynomial Multiplication on ARM Processors using the NEON Engine.
+#
+# http://conradoplg.cryptoland.net/files/2010/12/mocrysen13.pdf
+#
+# The main distinction to keep in mind between 32-bit NEON and AArch64 SIMD is
+# AArch64 cannot compute over the upper halves of SIMD registers. In 32-bit
+# NEON, the low and high halves of the 128-bit register q0 are accessible as
+# 64-bit registers d0 and d1, respectively. In AArch64, dN is the lower half of
+# vN. Where the 32-bit version would use the upper half, this file must keep
+# halves in separate registers.
+#
+# The other distinction is in syntax. 32-bit NEON embeds lane information in the
+# instruction name, while AArch64 uses suffixes on the registers. For instance,
+# left-shifting 64-bit lanes of a SIMD register in 32-bit would be written:
+#
+#     vshl.i64 q0, q0, #1
+#
+# in 64-bit, it would be written:
+#
+#     shl v0.2d, v0.2d, #1
+#
+# See Programmer's Guide for ARMv8-A, section 7 for details.
+# http://infocenter.arm.com/help/topic/com.arm.doc.den0024a/DEN0024A_v8_architecture_PG.pdf
+#
+# Finally, note the 8-bit and 64-bit polynomial multipliers in AArch64 differ
+# only by suffix. pmull vR.8h, vA.8b, vB.8b multiplies eight 8-bit polynomials
+# and is always available. pmull vR.1q, vA.1d, vB.1d multiplies a 64-bit
+# polynomial and is conditioned on the PMULL extension. This file emulates the
+# latter with the former.

@@ -1,0 +1,28 @@
+[package]
+name = "keyboard-types"
+version = "0.8.3"
+authors = ["Pyfisch <pyfisch@posteo.org>"]
+description = "Contains types to define keyboard related events."
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-windowing/keyboard-types"
+keywords = ["keyboard", "input", "event", "webdriver"]
+edition = "2021"
+# 1.61 with `std` feature, 1.81 without.
+rust-version = "1.61"
+
+[features]
+default = ["std"]
+serde = ["dep:serde", "bitflags/serde"]
+std = ["serde?/std"]
+webdriver = ["dep:unicode-segmentation", "std"]
+
+[dependencies]
+bitflags = "2"
+serde = { version = "1.0.0", optional = true, default-features = false, features = [
+    "derive",
+] }
+unicode-segmentation = { version = "1.2.0", optional = true }
+
+[package.metadata.docs.rs]
+all-features = true

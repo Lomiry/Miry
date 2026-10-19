@@ -1,0 +1,1359 @@
+{
+  "schema": "MIRY-R1.1-B-SOURCE-MAP.v1",
+  "A2_ZIP_sha256": "b5d6e2d24afcd02720b534ea6d8e26093f2fbacdb96ee3edadf3bfd8d13e3014",
+  "I2_baseline": "45c329d4dcf9c6dfb64a67c720cce84b90672a40",
+  "status": "R1.1-B NOTICE REMEDIATION CANDIDATE / INDEPENDENT REVIEW REQUIRED / LEGAL INTERPRETATION REQUIRED / NOT RELEASED",
+  "components": [
+    {
+      "id": "unic-char-property@0.9.0",
+      "software": "unic-char-property",
+      "version": "0.9.0",
+      "group": "R1.1-B",
+      "registry": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "a8c57a407d9b6fa02b4795eb81c5b6652060a15a7903ea981f3d723e6c0be221",
+      "archive_url": "https://static.crates.io/crates/unic-char-property/unic-char-property-0.9.0.crate",
+      "archive_sha256": "a8c57a407d9b6fa02b4795eb81c5b6652060a15a7903ea981f3d723e6c0be221",
+      "archive_bytes": 6809,
+      "upstream_repository": "https://github.com/open-i18n/rust-unic",
+      "source_commit": "5878605364af97a3358368a6eaef02104af2e016",
+      "source_directory": "unic/char/property",
+      "authors": [
+        "The UNIC Project Developers"
+      ],
+      "license_expression": "MIT OR Apache-2.0",
+      "selected_implementation_license": "MIT",
+      "selection_scope": "implementation only; independent Unicode data terms retained separately",
+      "legal_paths": [
+        "tools/mpv/licenses/rust/unic-0.9.0/COPYRIGHT.md",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-MIT",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-APACHE",
+        "tools/mpv/licenses/rust/unic-0.9.0/AUTHORS",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt"
+      ],
+      "source_headers": [
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+          "notice_sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+          "source_occurrences": [
+            {
+              "crate": "unic-char-property",
+              "member": "src/lib.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "200af9360e201caaa404fea0c8ec5387fa3ead07f8c056adf56d869768b0201b",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "src/macros.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "969bde9782647b7b8acd8fea1721372eb41e747a6a11de0b7dd8ac9b286759f2",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "src/pkg_info.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "src/property.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "f0e34e995306fef0d2a11bac0f7c385d936f6c7d68aed2ec3e33fc7f5eea57ee",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "src/range_types.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "269d781d752c90c0d8d24a299c4d6318ce5d47d843120f019a53df036030def9",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "src/tables.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "1f2a0213d78fc55a6421df8c74b490b9fd60f37a0b882aacccc6838af14b5279",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "tests/bool_property_macro.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "ce18763a5f7eb86925b0fbad1129dd770c9ddefbab76c1ea27d0a437acb20514",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "tests/enum_property_macro.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "3d19cbdfc9f174dbbba696f791f10659af0d1bc5676969e7f84f269faed174f8",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-property",
+              "member": "tests/tables_tests.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "94c4e5f1fcf6b7914deb9295c7e7b3840a5310718e5ea875ae3bc01c7349e0da",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            }
+          ]
+        }
+      ],
+      "generated_data": false,
+      "version_metadata_only": false,
+      "production_features": "NOT VERIFIED",
+      "final_linkage": "NOT VERIFIED",
+      "installer_inclusion": "NOT VERIFIED",
+      "user_visibility": "NOT VERIFIED",
+      "legal_review": "LEGAL INTERPRETATION REQUIRED"
+    },
+    {
+      "id": "unic-char-range@0.9.0",
+      "software": "unic-char-range",
+      "version": "0.9.0",
+      "group": "R1.1-B",
+      "registry": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "0398022d5f700414f6b899e10b8348231abf9173fa93144cbc1a43b9793c1fbc",
+      "archive_url": "https://static.crates.io/crates/unic-char-range/unic-char-range-0.9.0.crate",
+      "archive_sha256": "0398022d5f700414f6b899e10b8348231abf9173fa93144cbc1a43b9793c1fbc",
+      "archive_bytes": 7020,
+      "upstream_repository": "https://github.com/open-i18n/rust-unic",
+      "source_commit": "5878605364af97a3358368a6eaef02104af2e016",
+      "source_directory": "unic/char/range",
+      "authors": [
+        "The UNIC Project Developers"
+      ],
+      "license_expression": "MIT OR Apache-2.0",
+      "selected_implementation_license": "MIT",
+      "selection_scope": "implementation only; independent Unicode data terms retained separately",
+      "legal_paths": [
+        "tools/mpv/licenses/rust/unic-0.9.0/COPYRIGHT.md",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-MIT",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-APACHE",
+        "tools/mpv/licenses/rust/unic-0.9.0/AUTHORS",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2018.txt"
+      ],
+      "source_headers": [
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+          "notice_sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+          "source_occurrences": [
+            {
+              "crate": "unic-char-range",
+              "member": "benches/benchmarks.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "43c24a525f93c2417e09e4a3914523faf5802e8d4e33697070ddb429ef16fbe0",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "examples/macro_use_std_tests.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "f96109f197e7750ed5ab10041542a5b59a0f3a791e52cc88ebfe5e098b05711e",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/iter.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "aeb949486a521f8c273d7875536d030643f74603112ef6688bafdd639bd8f487",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/iter_fused.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "2ab4a76b8e9610163deda5c602881c2b8e9696f607580a04bb4e17754e4f8f9b",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/iter_trusted_len.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "b89e6d7dbbc2f46a1b66015b1b5d2bc12d91309880847d4f980f7b39ff4a8945",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/lib.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "955ee0b9069740fd1ee724943562f9189b7eb29b49d79c8c352a6f193c12c3ec",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/macros.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "7f0a7eedfdd31a0d5f10b16f342524663b4f2c82a0c97728f8677d0d29490241",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/pkg_info.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/range.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "5ce555d9cf8513c76f3b45002a3eed4a07cfe8a51e769f9888270091d319cb05",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "src/step.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "66cbc3e291f1014f994c88b61a741e4cd84e9ef62debef5e160b4ae4f5211bd7",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-char-range",
+              "member": "tests/iter_tests.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "5af9a84509e992e83d1ee90e86ec1e88352edf7926013b4c7cbdfe1f90c61b7a",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            }
+          ]
+        },
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2018.txt",
+          "notice_sha256": "74dedb5058c59f9212e5a65acb84bc9e8daa3541436c1d4c19bcc1ade1d75e51",
+          "source_occurrences": [
+            {
+              "crate": "unic-char-range",
+              "member": "src/par_iter.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "d6a213e83fc3bd0b0d248c0a7e42fe1b8e24eeca1424195c4638c7328795d018",
+              "copyright": [
+                "// Copyright 2018 The UNIC Project Developers."
+              ]
+            }
+          ]
+        }
+      ],
+      "generated_data": false,
+      "version_metadata_only": false,
+      "production_features": "NOT VERIFIED",
+      "final_linkage": "NOT VERIFIED",
+      "installer_inclusion": "NOT VERIFIED",
+      "user_visibility": "NOT VERIFIED",
+      "legal_review": "LEGAL INTERPRETATION REQUIRED"
+    },
+    {
+      "id": "unic-common@0.9.0",
+      "software": "unic-common",
+      "version": "0.9.0",
+      "group": "R1.1-B",
+      "registry": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "80d7ff825a6a654ee85a63e80f92f054f904f21e7d12da4e22f9834a4aaa35bc",
+      "archive_url": "https://static.crates.io/crates/unic-common/unic-common-0.9.0.crate",
+      "archive_sha256": "80d7ff825a6a654ee85a63e80f92f054f904f21e7d12da4e22f9834a4aaa35bc",
+      "archive_bytes": 2558,
+      "upstream_repository": "https://github.com/open-i18n/rust-unic",
+      "source_commit": "5878605364af97a3358368a6eaef02104af2e016",
+      "source_directory": "unic/common",
+      "authors": [
+        "The UNIC Project Developers"
+      ],
+      "license_expression": "MIT OR Apache-2.0",
+      "selected_implementation_license": "MIT",
+      "selection_scope": "implementation only; independent Unicode data terms retained separately",
+      "legal_paths": [
+        "tools/mpv/licenses/rust/unic-0.9.0/COPYRIGHT.md",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-MIT",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-APACHE",
+        "tools/mpv/licenses/rust/unic-0.9.0/AUTHORS",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt"
+      ],
+      "source_headers": [
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+          "notice_sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+          "source_occurrences": [
+            {
+              "crate": "unic-common",
+              "member": "src/lib.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "726d922245ebdf3bc474d48edf032b9af7fe24fc79ee17d87e2d295103e39ea0",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-common",
+              "member": "src/pkg_info.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-common",
+              "member": "src/version.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "ee5f50444acc2df5f9cd4ec97bd81444c6425b55fd37327c254ccd1736270898",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            }
+          ]
+        }
+      ],
+      "generated_data": false,
+      "version_metadata_only": false,
+      "production_features": "NOT VERIFIED",
+      "final_linkage": "NOT VERIFIED",
+      "installer_inclusion": "NOT VERIFIED",
+      "user_visibility": "NOT VERIFIED",
+      "legal_review": "LEGAL INTERPRETATION REQUIRED"
+    },
+    {
+      "id": "unic-ucd-ident@0.9.0",
+      "software": "unic-ucd-ident",
+      "version": "0.9.0",
+      "group": "R1.1-B",
+      "registry": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "e230a37c0381caa9219d67cf063aa3a375ffed5bf541a452db16e744bdab6987",
+      "archive_url": "https://static.crates.io/crates/unic-ucd-ident/unic-ucd-ident-0.9.0.crate",
+      "archive_sha256": "e230a37c0381caa9219d67cf063aa3a375ffed5bf541a452db16e744bdab6987",
+      "archive_bytes": 16128,
+      "upstream_repository": "https://github.com/open-i18n/rust-unic",
+      "source_commit": "8a6ce83063d90b91ae2ce59eddb803edd393fca9",
+      "source_directory": "unic/ucd/ident",
+      "authors": [
+        "The UNIC Project Developers"
+      ],
+      "license_expression": "MIT OR Apache-2.0",
+      "selected_implementation_license": "MIT",
+      "selection_scope": "implementation only; independent Unicode data terms retained separately",
+      "legal_paths": [
+        "tools/mpv/licenses/rust/unic-0.9.0/COPYRIGHT.md",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-MIT",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-APACHE",
+        "tools/mpv/licenses/rust/unic-0.9.0/AUTHORS",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017-2019.txt",
+        "tools/mpv/licenses/rust/unic-0.9.0/UNICODE-2017-DATA-LICENSE.txt"
+      ],
+      "source_headers": [
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+          "notice_sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+          "source_occurrences": [
+            {
+              "crate": "unic-ucd-ident",
+              "member": "src/pkg_info.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-ident",
+              "member": "tests/lexical_class_tests.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "080030f251c4eeb4fe546ee4e3782de3f7625452b60f75f6ad11446834d1dc75",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-ident",
+              "member": "tests/unicode_version_tests.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "7d47a648cb707facf02088e79adcc1b283fab414128d8bb71529aa41b22cfa25",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            }
+          ]
+        },
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017-2019.txt",
+          "notice_sha256": "6d22cfbf9bbcc99e4305e1bfdb3cf450ad0d80f84fe9eb66803fd246a3c8359f",
+          "source_occurrences": [
+            {
+              "crate": "unic-ucd-ident",
+              "member": "src/id.rs",
+              "start_byte": 0,
+              "end_byte": 434,
+              "full_source_sha256": "4272423b2b2a15c62bdfa515e7a3bd99cede8bd96f04d270026ec643f8c66b00",
+              "copyright": [
+                "// Copyright 2017-2019 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-ident",
+              "member": "src/lib.rs",
+              "start_byte": 0,
+              "end_byte": 434,
+              "full_source_sha256": "b855a13e55e654ea7e19c5d4ac0cf2fe17653ad6cae8d3559d35d041619c1fea",
+              "copyright": [
+                "// Copyright 2017-2019 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-ident",
+              "member": "src/pattern.rs",
+              "start_byte": 0,
+              "end_byte": 434,
+              "full_source_sha256": "2804e1e3bde17edfcdafe467b0a5f20b9d4ce5c7501f76fc11138db4cb4f296f",
+              "copyright": [
+                "// Copyright 2017-2019 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-ident",
+              "member": "src/xid.rs",
+              "start_byte": 0,
+              "end_byte": 434,
+              "full_source_sha256": "c844753b9166b7d4a9a784e0e5025b6e0831bd9ba0d66086b1eb117257d452c3",
+              "copyright": [
+                "// Copyright 2017-2019 The UNIC Project Developers."
+              ]
+            }
+          ]
+        }
+      ],
+      "generated_data": true,
+      "version_metadata_only": false,
+      "production_features": "NOT VERIFIED",
+      "final_linkage": "NOT VERIFIED",
+      "installer_inclusion": "NOT VERIFIED",
+      "user_visibility": "NOT VERIFIED",
+      "legal_review": "LEGAL INTERPRETATION REQUIRED"
+    },
+    {
+      "id": "unic-ucd-version@0.9.0",
+      "software": "unic-ucd-version",
+      "version": "0.9.0",
+      "group": "R1.1-B",
+      "registry": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "96bd2f2237fe450fcd0a1d2f5f4e91711124f7857ba2e964247776ebeeb7b0c4",
+      "archive_url": "https://static.crates.io/crates/unic-ucd-version/unic-ucd-version-0.9.0.crate",
+      "archive_sha256": "96bd2f2237fe450fcd0a1d2f5f4e91711124f7857ba2e964247776ebeeb7b0c4",
+      "archive_bytes": 2246,
+      "upstream_repository": "https://github.com/open-i18n/rust-unic",
+      "source_commit": "5878605364af97a3358368a6eaef02104af2e016",
+      "source_directory": "unic/ucd/version",
+      "authors": [
+        "The UNIC Project Developers"
+      ],
+      "license_expression": "MIT OR Apache-2.0",
+      "selected_implementation_license": "MIT",
+      "selection_scope": "implementation only; independent Unicode data terms retained separately",
+      "legal_paths": [
+        "tools/mpv/licenses/rust/unic-0.9.0/COPYRIGHT.md",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-MIT",
+        "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-APACHE",
+        "tools/mpv/licenses/rust/unic-0.9.0/AUTHORS",
+        "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt"
+      ],
+      "source_headers": [
+        {
+          "notice_path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+          "notice_sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+          "source_occurrences": [
+            {
+              "crate": "unic-ucd-version",
+              "member": "src/lib.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "51d52da8220e430f32523aa5972708e698fca29fea8b64a4cbdc67d3d1830f37",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-version",
+              "member": "src/pkg_info.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-version",
+              "member": "src/unicode_version.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "bc2fe0341c2a60909f1ef7e56593b836344ca4b4ae8f73e7f7aa07259963dd03",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            },
+            {
+              "crate": "unic-ucd-version",
+              "member": "tests/basic_tests.rs",
+              "start_byte": 0,
+              "end_byte": 429,
+              "full_source_sha256": "8d3597a7c3365b5516a2e6200386b5e8dac836aa6f90b8a329ff120f0c54f207",
+              "copyright": [
+                "// Copyright 2017 The UNIC Project Developers."
+              ]
+            }
+          ]
+        }
+      ],
+      "generated_data": false,
+      "version_metadata_only": true,
+      "production_features": "NOT VERIFIED",
+      "final_linkage": "NOT VERIFIED",
+      "installer_inclusion": "NOT VERIFIED",
+      "user_visibility": "NOT VERIFIED",
+      "legal_review": "LEGAL INTERPRETATION REQUIRED"
+    }
+  ],
+  "legal_documents": [
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/COPYRIGHT.md",
+      "bytes": 608,
+      "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+      "A2_member": "evidence/r1/legal/8a6ce83063d90b91ae2ce59eddb803edd393fca9-COPYRIGHT.md",
+      "A2_member_sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+      "source_kind": "exact frozen original",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/8a6ce83063d90b91ae2ce59eddb803edd393fca9-COPYRIGHT.md",
+        "bytes": 608,
+        "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+        "original_id": "8a6ce83063d90b91ae2ce59eddb803edd393fca9-COPYRIGHT.md",
+        "original_url": "https://raw.githubusercontent.com/open-i18n/rust-unic/8a6ce83063d90b91ae2ce59eddb803edd393fca9/COPYRIGHT.md",
+        "original_bytes": 608,
+        "original_sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+        "start_byte": 0,
+        "end_byte": 608,
+        "role": "UNIC exact-version upstream legal original"
+      },
+      "component_ids": [
+        "unic-char-property@0.9.0",
+        "unic-char-range@0.9.0",
+        "unic-common@0.9.0",
+        "unic-ucd-ident@0.9.0",
+        "unic-ucd-version@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-MIT",
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "A2_member": "evidence/r1/legal/8a6ce83063d90b91ae2ce59eddb803edd393fca9-LICENSE-MIT",
+      "A2_member_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "source_kind": "exact frozen original",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/8a6ce83063d90b91ae2ce59eddb803edd393fca9-LICENSE-MIT",
+        "bytes": 1023,
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "original_id": "8a6ce83063d90b91ae2ce59eddb803edd393fca9-LICENSE-MIT",
+        "original_url": "https://raw.githubusercontent.com/open-i18n/rust-unic/8a6ce83063d90b91ae2ce59eddb803edd393fca9/LICENSE-MIT",
+        "original_bytes": 1023,
+        "original_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "start_byte": 0,
+        "end_byte": 1023,
+        "role": "UNIC exact-version upstream legal original"
+      },
+      "component_ids": [
+        "unic-char-property@0.9.0",
+        "unic-char-range@0.9.0",
+        "unic-common@0.9.0",
+        "unic-ucd-ident@0.9.0",
+        "unic-ucd-version@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/LICENSE-APACHE",
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "A2_member": "evidence/r1/legal/8a6ce83063d90b91ae2ce59eddb803edd393fca9-LICENSE-APACHE",
+      "A2_member_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "source_kind": "exact frozen original",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/8a6ce83063d90b91ae2ce59eddb803edd393fca9-LICENSE-APACHE",
+        "bytes": 10847,
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "original_id": "8a6ce83063d90b91ae2ce59eddb803edd393fca9-LICENSE-APACHE",
+        "original_url": "https://raw.githubusercontent.com/open-i18n/rust-unic/8a6ce83063d90b91ae2ce59eddb803edd393fca9/LICENSE-APACHE",
+        "original_bytes": 10847,
+        "original_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "start_byte": 0,
+        "end_byte": 10847,
+        "role": "UNIC exact-version upstream legal original"
+      },
+      "component_ids": [
+        "unic-char-property@0.9.0",
+        "unic-char-range@0.9.0",
+        "unic-common@0.9.0",
+        "unic-ucd-ident@0.9.0",
+        "unic-ucd-version@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/AUTHORS",
+      "bytes": 664,
+      "sha256": "2748c1a1fba7616917c61d455e8d715ab952671ead63f2026ad0124410596b09",
+      "A2_member": "evidence/r1/legal/8a6ce83063d90b91ae2ce59eddb803edd393fca9-AUTHORS",
+      "A2_member_sha256": "2748c1a1fba7616917c61d455e8d715ab952671ead63f2026ad0124410596b09",
+      "source_kind": "exact frozen original",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/8a6ce83063d90b91ae2ce59eddb803edd393fca9-AUTHORS",
+        "bytes": 664,
+        "sha256": "2748c1a1fba7616917c61d455e8d715ab952671ead63f2026ad0124410596b09",
+        "original_id": "8a6ce83063d90b91ae2ce59eddb803edd393fca9-AUTHORS",
+        "original_url": "https://raw.githubusercontent.com/open-i18n/rust-unic/8a6ce83063d90b91ae2ce59eddb803edd393fca9/AUTHORS",
+        "original_bytes": 664,
+        "original_sha256": "2748c1a1fba7616917c61d455e8d715ab952671ead63f2026ad0124410596b09",
+        "start_byte": 0,
+        "end_byte": 664,
+        "role": "generator/version/source attribution evidence, not executed"
+      },
+      "component_ids": [
+        "unic-char-property@0.9.0",
+        "unic-char-range@0.9.0",
+        "unic-common@0.9.0",
+        "unic-ucd-ident@0.9.0",
+        "unic-ucd-version@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017.txt",
+      "bytes": 429,
+      "sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+      "A2_member": "evidence/r1/legal/UNIC-9c4fabf0f5d0e420.notice.txt",
+      "A2_member_sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+      "source_kind": "exact frozen source-header excerpt",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/headers/UNIC-9c4fabf0f5d0e420.notice.txt",
+        "bytes": 429,
+        "sha256": "9c4fabf0f5d0e420aac5d4034fd4ea6ba829f7613533d44c596a28978fdce864",
+        "source_occurrences": [
+          {
+            "crate": "unic-char-property",
+            "member": "src/lib.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "200af9360e201caaa404fea0c8ec5387fa3ead07f8c056adf56d869768b0201b",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "src/macros.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "969bde9782647b7b8acd8fea1721372eb41e747a6a11de0b7dd8ac9b286759f2",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "src/pkg_info.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "src/property.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "f0e34e995306fef0d2a11bac0f7c385d936f6c7d68aed2ec3e33fc7f5eea57ee",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "src/range_types.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "269d781d752c90c0d8d24a299c4d6318ce5d47d843120f019a53df036030def9",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "src/tables.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "1f2a0213d78fc55a6421df8c74b490b9fd60f37a0b882aacccc6838af14b5279",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "tests/bool_property_macro.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "ce18763a5f7eb86925b0fbad1129dd770c9ddefbab76c1ea27d0a437acb20514",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "tests/enum_property_macro.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "3d19cbdfc9f174dbbba696f791f10659af0d1bc5676969e7f84f269faed174f8",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-property",
+            "member": "tests/tables_tests.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "94c4e5f1fcf6b7914deb9295c7e7b3840a5310718e5ea875ae3bc01c7349e0da",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "benches/benchmarks.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "43c24a525f93c2417e09e4a3914523faf5802e8d4e33697070ddb429ef16fbe0",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "examples/macro_use_std_tests.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "f96109f197e7750ed5ab10041542a5b59a0f3a791e52cc88ebfe5e098b05711e",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/iter.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "aeb949486a521f8c273d7875536d030643f74603112ef6688bafdd639bd8f487",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/iter_fused.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "2ab4a76b8e9610163deda5c602881c2b8e9696f607580a04bb4e17754e4f8f9b",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/iter_trusted_len.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "b89e6d7dbbc2f46a1b66015b1b5d2bc12d91309880847d4f980f7b39ff4a8945",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/lib.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "955ee0b9069740fd1ee724943562f9189b7eb29b49d79c8c352a6f193c12c3ec",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/macros.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "7f0a7eedfdd31a0d5f10b16f342524663b4f2c82a0c97728f8677d0d29490241",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/pkg_info.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/range.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "5ce555d9cf8513c76f3b45002a3eed4a07cfe8a51e769f9888270091d319cb05",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "src/step.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "66cbc3e291f1014f994c88b61a741e4cd84e9ef62debef5e160b4ae4f5211bd7",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-char-range",
+            "member": "tests/iter_tests.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "5af9a84509e992e83d1ee90e86ec1e88352edf7926013b4c7cbdfe1f90c61b7a",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-common",
+            "member": "src/lib.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "726d922245ebdf3bc474d48edf032b9af7fe24fc79ee17d87e2d295103e39ea0",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-common",
+            "member": "src/pkg_info.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-common",
+            "member": "src/version.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "ee5f50444acc2df5f9cd4ec97bd81444c6425b55fd37327c254ccd1736270898",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-ident",
+            "member": "src/pkg_info.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-ident",
+            "member": "tests/lexical_class_tests.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "080030f251c4eeb4fe546ee4e3782de3f7625452b60f75f6ad11446834d1dc75",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-ident",
+            "member": "tests/unicode_version_tests.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "7d47a648cb707facf02088e79adcc1b283fab414128d8bb71529aa41b22cfa25",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-version",
+            "member": "src/lib.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "51d52da8220e430f32523aa5972708e698fca29fea8b64a4cbdc67d3d1830f37",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-version",
+            "member": "src/pkg_info.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "37cbe4efd0b0205d251e1ef7714b23e3be27052c8a0de6b1ae3cbf3aefae1fe5",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-version",
+            "member": "src/unicode_version.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "bc2fe0341c2a60909f1ef7e56593b836344ca4b4ae8f73e7f7aa07259963dd03",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-version",
+            "member": "tests/basic_tests.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "8d3597a7c3365b5516a2e6200386b5e8dac836aa6f90b8a329ff120f0c54f207",
+            "copyright": [
+              "// Copyright 2017 The UNIC Project Developers."
+            ]
+          }
+        ],
+        "role": "exact complete source legal prefix, not rewritten"
+      },
+      "component_ids": [
+        "unic-char-property@0.9.0",
+        "unic-char-range@0.9.0",
+        "unic-common@0.9.0",
+        "unic-ucd-ident@0.9.0",
+        "unic-ucd-version@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2018.txt",
+      "bytes": 429,
+      "sha256": "74dedb5058c59f9212e5a65acb84bc9e8daa3541436c1d4c19bcc1ade1d75e51",
+      "A2_member": "evidence/r1/legal/UNIC-74dedb5058c59f92.notice.txt",
+      "A2_member_sha256": "74dedb5058c59f9212e5a65acb84bc9e8daa3541436c1d4c19bcc1ade1d75e51",
+      "source_kind": "exact frozen source-header excerpt",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/headers/UNIC-74dedb5058c59f92.notice.txt",
+        "bytes": 429,
+        "sha256": "74dedb5058c59f9212e5a65acb84bc9e8daa3541436c1d4c19bcc1ade1d75e51",
+        "source_occurrences": [
+          {
+            "crate": "unic-char-range",
+            "member": "src/par_iter.rs",
+            "start_byte": 0,
+            "end_byte": 429,
+            "full_source_sha256": "d6a213e83fc3bd0b0d248c0a7e42fe1b8e24eeca1424195c4638c7328795d018",
+            "copyright": [
+              "// Copyright 2018 The UNIC Project Developers."
+            ]
+          }
+        ],
+        "role": "exact complete source legal prefix, not rewritten"
+      },
+      "component_ids": [
+        "unic-char-range@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/SOURCE-NOTICE-2017-2019.txt",
+      "bytes": 434,
+      "sha256": "6d22cfbf9bbcc99e4305e1bfdb3cf450ad0d80f84fe9eb66803fd246a3c8359f",
+      "A2_member": "evidence/r1/legal/UNIC-6d22cfbf9bbcc99e.notice.txt",
+      "A2_member_sha256": "6d22cfbf9bbcc99e4305e1bfdb3cf450ad0d80f84fe9eb66803fd246a3c8359f",
+      "source_kind": "exact frozen source-header excerpt",
+      "upstream_evidence": {
+        "path": "qa/licensing/P2-R1/evidence/headers/UNIC-6d22cfbf9bbcc99e.notice.txt",
+        "bytes": 434,
+        "sha256": "6d22cfbf9bbcc99e4305e1bfdb3cf450ad0d80f84fe9eb66803fd246a3c8359f",
+        "source_occurrences": [
+          {
+            "crate": "unic-ucd-ident",
+            "member": "src/id.rs",
+            "start_byte": 0,
+            "end_byte": 434,
+            "full_source_sha256": "4272423b2b2a15c62bdfa515e7a3bd99cede8bd96f04d270026ec643f8c66b00",
+            "copyright": [
+              "// Copyright 2017-2019 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-ident",
+            "member": "src/lib.rs",
+            "start_byte": 0,
+            "end_byte": 434,
+            "full_source_sha256": "b855a13e55e654ea7e19c5d4ac0cf2fe17653ad6cae8d3559d35d041619c1fea",
+            "copyright": [
+              "// Copyright 2017-2019 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-ident",
+            "member": "src/pattern.rs",
+            "start_byte": 0,
+            "end_byte": 434,
+            "full_source_sha256": "2804e1e3bde17edfcdafe467b0a5f20b9d4ce5c7501f76fc11138db4cb4f296f",
+            "copyright": [
+              "// Copyright 2017-2019 The UNIC Project Developers."
+            ]
+          },
+          {
+            "crate": "unic-ucd-ident",
+            "member": "src/xid.rs",
+            "start_byte": 0,
+            "end_byte": 434,
+            "full_source_sha256": "c844753b9166b7d4a9a784e0e5025b6e0831bd9ba0d66086b1eb117257d452c3",
+            "copyright": [
+              "// Copyright 2017-2019 The UNIC Project Developers."
+            ]
+          }
+        ],
+        "role": "exact complete source legal prefix, not rewritten"
+      },
+      "component_ids": [
+        "unic-ucd-ident@0.9.0"
+      ]
+    },
+    {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/UNICODE-2017-DATA-LICENSE.txt",
+      "bytes": 2847,
+      "sha256": "b1e77f690c2819db24ebc22356a6ad70909ddaa9d84bc41a10714428b73d1847",
+      "source_kind": "byte composition: exact original title + ONE generated LF separator + exact original PRE",
+      "response_A2_member": "evidence/history/20170620190040.html",
+      "response_sha256": "6e1ac9056574635b40b6d198f09ec063e4cece2c7295593f10194cac9b23f8a5",
+      "source_url": "https://web.archive.org/web/20170620190040id_/http://www.unicode.org/copyright.html",
+      "source_capture_UTC": "2017-06-20T19:00:40Z",
+      "segments": [
+        {
+          "kind": "original title",
+          "start": 12912,
+          "end_exclusive": 12969,
+          "bytes": 57,
+          "sha256": "98670e9bed61fc5795f60636903123642f8667713e7b100b34c023630e99263a"
+        },
+        {
+          "kind": "generated separator",
+          "hex": "0a",
+          "bytes": 1
+        },
+        {
+          "kind": "original PRE contents",
+          "start": 12985,
+          "end_exclusive": 15774,
+          "bytes": 2789,
+          "sha256": "2eee2f322d0c112d6811e8598ac36b5246e474f1667a948edfa6d7b99daef10c"
+        }
+      ],
+      "not_equal_to_entire_HTML_or_standalone_upstream_file": true,
+      "copyright_years": "1991-2017",
+      "component_ids": [
+        "unic-ucd-ident@0.9.0"
+      ]
+    }
+  ],
+  "unicode_data": {
+    "unicode_version": "10.0.0",
+    "generator_repository": "https://github.com/open-i18n/rust-unic",
+    "generator_commit": "8a6ce83063d90b91ae2ce59eddb803edd393fca9",
+    "data_mirror_repository": "https://github.com/open-i18n/data-unicode-ucd",
+    "data_mirror_commit": "2a2044479b3c4915ef4213adf1dfd6236dba24c8",
+    "official_inputs": [
+      {
+        "name": "ReadMe.txt",
+        "official_url": "https://www.unicode.org/Public/10.0.0/ucd/ReadMe.txt",
+        "bytes": 507,
+        "sha256": "7e9ff2ef4828f9119eea17ada0b35697106ed2885521bfa854b126cea910802e",
+        "mirror_commit": "2a2044479b3c4915ef4213adf1dfd6236dba24c8",
+        "mirror_url": "https://raw.githubusercontent.com/open-i18n/data-unicode-ucd/2a2044479b3c4915ef4213adf1dfd6236dba24c8/data/ReadMe.txt",
+        "mirror_git_blob_sha1": "1ba7a9d9da2fc8f14652468a1a249a24c8bcda7e",
+        "official_mirror_byte_equality": "VERIFIED",
+        "included_in_review_package": true,
+        "review_scope": "version metadata/headers included; bulk property data intentionally omitted"
+      },
+      {
+        "name": "DerivedCoreProperties.txt",
+        "official_url": "https://www.unicode.org/Public/10.0.0/ucd/DerivedCoreProperties.txt",
+        "bytes": 960758,
+        "sha256": "e6ca152259189ec4bc2297e93c6c88f86e162cc52814198263497f3c9b46cbe9",
+        "mirror_commit": "2a2044479b3c4915ef4213adf1dfd6236dba24c8",
+        "mirror_url": "https://raw.githubusercontent.com/open-i18n/data-unicode-ucd/2a2044479b3c4915ef4213adf1dfd6236dba24c8/data/DerivedCoreProperties.txt",
+        "mirror_git_blob_sha1": "16cd9b88bf53336d66f6d3ee078c79757f27bd75",
+        "official_mirror_byte_equality": "VERIFIED",
+        "included_in_review_package": false,
+        "review_scope": "version metadata/headers included; bulk property data intentionally omitted"
+      },
+      {
+        "name": "PropList.txt",
+        "official_url": "https://www.unicode.org/Public/10.0.0/ucd/PropList.txt",
+        "bytes": 119340,
+        "sha256": "58dbf8fedbd5bf67a3bd5c10eda2f2acf2eae59df5f77884a6f158e98f75cf8c",
+        "mirror_commit": "2a2044479b3c4915ef4213adf1dfd6236dba24c8",
+        "mirror_url": "https://raw.githubusercontent.com/open-i18n/data-unicode-ucd/2a2044479b3c4915ef4213adf1dfd6236dba24c8/data/PropList.txt",
+        "mirror_git_blob_sha1": "9a2d0e4b1c6d84b395b1bb0c6eeb3ba4dbe43881",
+        "official_mirror_byte_equality": "VERIFIED",
+        "included_in_review_package": false,
+        "review_scope": "version metadata/headers included; bulk property data intentionally omitted"
+      }
+    ],
+    "tables": [
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/id_start.rsv",
+        "bytes": 25335,
+        "sha256": "6970896f4c4f7145e918435c07756585ead65f67007016ebdb7169a3dd4da5d3",
+        "source_file": "DerivedCoreProperties.txt",
+        "property": "ID_Start",
+        "ranges": 585,
+        "codepoints": 125334,
+        "crate_compile_condition": "id (optional)",
+        "source_to_table_byte_reconstruction": "VERIFIED",
+        "algorithm": "Parse actual official Unicode10 property intervals; sort scalar values; coalesce consecutive scalars; reproduce pinned Rust formatter/preamble using lowercase escape_unicode hex",
+        "generator_executed": false,
+        "independent_audit_reconstruction": true,
+        "final_feature_activation": "NOT VERIFIED",
+        "final_object_linkage": "NOT VERIFIED",
+        "copyright_header_preserved_in_generated_table": false
+      },
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/id_continue.rsv",
+        "bytes": 29805,
+        "sha256": "9d9ece7d9bf899756b3556861e5cd66ebd6ca3afb128f7cec235d4c4067c6917",
+        "source_file": "DerivedCoreProperties.txt",
+        "property": "ID_Continue",
+        "ranges": 689,
+        "codepoints": 128108,
+        "crate_compile_condition": "id (optional)",
+        "source_to_table_byte_reconstruction": "VERIFIED",
+        "algorithm": "Parse actual official Unicode10 property intervals; sort scalar values; coalesce consecutive scalars; reproduce pinned Rust formatter/preamble using lowercase escape_unicode hex",
+        "generator_executed": false,
+        "independent_audit_reconstruction": true,
+        "final_feature_activation": "NOT VERIFIED",
+        "final_object_linkage": "NOT VERIFIED",
+        "copyright_header_preserved_in_generated_table": false
+      },
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/xid_start.rsv",
+        "bytes": 25636,
+        "sha256": "4b8bc5ef14ee67842dfaeda5bad56527f61789881aa59611599e31b2df5f55b4",
+        "source_file": "DerivedCoreProperties.txt",
+        "property": "XID_Start",
+        "ranges": 592,
+        "codepoints": 125311,
+        "crate_compile_condition": "xid (crate default)",
+        "source_to_table_byte_reconstruction": "VERIFIED",
+        "algorithm": "Parse actual official Unicode10 property intervals; sort scalar values; coalesce consecutive scalars; reproduce pinned Rust formatter/preamble using lowercase escape_unicode hex",
+        "generator_executed": false,
+        "independent_audit_reconstruction": true,
+        "final_feature_activation": "NOT VERIFIED",
+        "final_object_linkage": "NOT VERIFIED",
+        "copyright_header_preserved_in_generated_table": false
+      },
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/xid_continue.rsv",
+        "bytes": 30106,
+        "sha256": "c32d3408d51272db0a78d70e328d8805ef1593e8e2479526aec6a11b61ad8c97",
+        "source_file": "DerivedCoreProperties.txt",
+        "property": "XID_Continue",
+        "ranges": 696,
+        "codepoints": 128089,
+        "crate_compile_condition": "xid (crate default)",
+        "source_to_table_byte_reconstruction": "VERIFIED",
+        "algorithm": "Parse actual official Unicode10 property intervals; sort scalar values; coalesce consecutive scalars; reproduce pinned Rust formatter/preamble using lowercase escape_unicode hex",
+        "generator_executed": false,
+        "independent_audit_reconstruction": true,
+        "final_feature_activation": "NOT VERIFIED",
+        "final_object_linkage": "NOT VERIFIED",
+        "copyright_header_preserved_in_generated_table": false
+      },
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/pattern_syntax.rsv",
+        "bytes": 1257,
+        "sha256": "381a11d21247cab907401b49d1f2326e34d090cea9e438d8c36462485aa96ee6",
+        "source_file": "PropList.txt",
+        "property": "Pattern_Syntax",
+        "ranges": 28,
+        "codepoints": 2760,
+        "crate_compile_condition": "pattern (optional)",
+        "source_to_table_byte_reconstruction": "VERIFIED",
+        "algorithm": "Parse actual official Unicode10 property intervals; sort scalar values; coalesce consecutive scalars; reproduce pinned Rust formatter/preamble using lowercase escape_unicode hex",
+        "generator_executed": false,
+        "independent_audit_reconstruction": true,
+        "final_feature_activation": "NOT VERIFIED",
+        "final_object_linkage": "NOT VERIFIED",
+        "copyright_header_preserved_in_generated_table": false
+      },
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/pattern_white_space.rsv",
+        "bytes": 314,
+        "sha256": "46ea34ac91437824629ef28ff96e933e55063ac1f577a21b3894da29b4faeb4a",
+        "source_file": "PropList.txt",
+        "property": "Pattern_White_Space",
+        "ranges": 5,
+        "codepoints": 11,
+        "crate_compile_condition": "pattern (optional)",
+        "source_to_table_byte_reconstruction": "VERIFIED",
+        "algorithm": "Parse actual official Unicode10 property intervals; sort scalar values; coalesce consecutive scalars; reproduce pinned Rust formatter/preamble using lowercase escape_unicode hex",
+        "generator_executed": false,
+        "independent_audit_reconstruction": true,
+        "final_feature_activation": "NOT VERIFIED",
+        "final_object_linkage": "NOT VERIFIED",
+        "copyright_header_preserved_in_generated_table": false
+      }
+    ],
+    "version_metadata_tables": [
+      {
+        "crate": "unic-ucd-ident",
+        "member": "tables/unicode_version.rsv",
+        "bytes": 135,
+        "sha256": "a2efcb89606ee821ff9ac5595e5126a65f2b00b70ca1054c1884f741827ab230",
+        "unicode_version": "10.0.0",
+        "source": "Unicode10 ReadMe via pinned readme parser and emit_unicode_version",
+        "version_metadata_equality": "VERIFIED",
+        "rights_comment": "version fact alone is not a determination of copyrightability"
+      },
+      {
+        "crate": "unic-ucd-version",
+        "member": "tables/unicode_version.rsv",
+        "bytes": 135,
+        "sha256": "a2efcb89606ee821ff9ac5595e5126a65f2b00b70ca1054c1884f741827ab230",
+        "unicode_version": "10.0.0",
+        "source": "Unicode10 ReadMe via pinned readme parser and emit_unicode_version",
+        "version_metadata_equality": "VERIFIED",
+        "rights_comment": "version fact alone is not a determination of copyrightability"
+      }
+    ],
+    "historical_data_license": {
+      "path": "tools/mpv/licenses/rust/unic-0.9.0/UNICODE-2017-DATA-LICENSE.txt",
+      "bytes": 2847,
+      "sha256": "b1e77f690c2819db24ebc22356a6ad70909ddaa9d84bc41a10714428b73d1847",
+      "source_kind": "byte composition: exact original title + ONE generated LF separator + exact original PRE",
+      "response_A2_member": "evidence/history/20170620190040.html",
+      "response_sha256": "6e1ac9056574635b40b6d198f09ec063e4cece2c7295593f10194cac9b23f8a5",
+      "source_url": "https://web.archive.org/web/20170620190040id_/http://www.unicode.org/copyright.html",
+      "source_capture_UTC": "2017-06-20T19:00:40Z",
+      "segments": [
+        {
+          "kind": "original title",
+          "start": 12912,
+          "end_exclusive": 12969,
+          "bytes": 57,
+          "sha256": "98670e9bed61fc5795f60636903123642f8667713e7b100b34c023630e99263a"
+        },
+        {
+          "kind": "generated separator",
+          "hex": "0a",
+          "bytes": 1
+        },
+        {
+          "kind": "original PRE contents",
+          "start": 12985,
+          "end_exclusive": 15774,
+          "bytes": 2789,
+          "sha256": "2eee2f322d0c112d6811e8598ac36b5246e474f1667a948edfa6d7b99daef10c"
+        }
+      ],
+      "not_equal_to_entire_HTML_or_standalone_upstream_file": true,
+      "copyright_years": "1991-2017",
+      "component_ids": [
+        "unic-ucd-ident@0.9.0"
+      ]
+    },
+    "source_reconstruction": "R1 historical automated result, NOT rerun in B",
+    "source_archive_read_in_B": false,
+    "conversion_explanation": "tools/mpv/licenses/rust/unic-0.9.0/DATA-PROVENANCE-AND-TRANSFORMATION.md",
+    "legal_classification": "LEGAL INTERPRETATION REQUIRED",
+    "modified_data_notice_obligation": "NOT ASSERTED; factual transformation explanation is separate from upstream legal text"
+  },
+  "whole_historical_HTML": "QA ONLY"
+}

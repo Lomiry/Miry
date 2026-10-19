@@ -1,0 +1,304 @@
+.theater-shell .content {
+  height: var(--app-height);
+  max-width: none;
+  padding: 16px;
+}
+.player-theater {
+  height: calc(var(--app-height) - 32px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: #000;
+}
+.player-theater .player-heading {
+  flex: none;
+  padding: 10px 16px;
+  gap: 10px;
+  background: var(--bg);
+}
+.player-theater .player-heading strong {
+  font-size: 15px;
+}
+.player-theater .player-heading small {
+  font-size: 11px;
+}
+.playback-heading-actions button {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.desktop-frame .player-theater .playback-stage,
+.player-theater .playback-stage {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+}
+.player-theater .player-console {
+  flex: none;
+  padding: 8px 14px 10px;
+  background: var(--bg);
+}
+.player-timeline {
+  gap: 10px;
+}
+.player-timeline time {
+  font-size: 11px;
+  min-width: 40px;
+}
+.player-timeline .seek {
+  height: 16px;
+}
+.player-buttons,
+.player-dock .player-buttons {
+  gap: 6px 12px;
+  margin-top: 6px;
+}
+.transport-primary,
+.transport-tools {
+  gap: 5px;
+}
+.player-buttons button,
+.player-dock .player-buttons button {
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  gap: 5px;
+}
+.player-buttons button svg {
+  width: 16px;
+  height: 16px;
+}
+.player-buttons .transport-play {
+  min-width: 64px;
+}
+.player-volume {
+  gap: 4px;
+}
+.player-volume > span {
+  display: none;
+}
+.player-volume input {
+  width: 58px;
+}
+.player-theater .player-heading,
+.player-theater .player-console {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.player-theater.chrome-fading .player-heading,
+.player-theater.chrome-hidden .player-heading,
+.player-theater.chrome-fading .player-console,
+.player-theater.chrome-hidden .player-console {
+  opacity: 0;
+  transition-duration: 280ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.player-theater.chrome-fading .player-heading,
+.player-theater.chrome-hidden .player-heading {
+  transform: translateY(-8px);
+}
+.player-theater.chrome-fading .player-console,
+.player-theater.chrome-hidden .player-console {
+  transform: translateY(10px);
+}
+.player-theater.chrome-hidden .player-heading,
+.player-theater.chrome-hidden .player-console {
+  pointer-events: none;
+}
+.player-fullscreen {
+  height: 100dvh;
+  border-radius: 0;
+}
+.fullscreen-player .content {
+  height: 100dvh;
+  padding: 0;
+}
+.player-fullscreen .player-console {
+  padding: 7px 16px 9px;
+}
+.player-settings > .quick-play-tools {
+  margin: 0 0 16px;
+}
+.chrome-preference {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 1 auto !important;
+}
+.chrome-preference input {
+  width: 15px !important;
+  height: 15px;
+  accent-color: var(--accent);
+}
+.player-dock {
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+.player-dock .player-console {
+  padding-top: 2px;
+}
+.player-dock .player-heading {
+  padding-bottom: 4px;
+}
+.player-dock .player-heading small {
+  display: none;
+}
+.history-remove {
+  margin-top: 8px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+}
+.history-remove:hover {
+  color: var(--text);
+  background: transparent;
+}
+.player-buttons button {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  min-height: var(--control-height);
+}
+.player-buttons button:hover:not(:disabled) {
+  background: var(--surface-raised);
+}
+.player-buttons .transport-play {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.player-buttons .transport-play:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.player-timeline input[type="range"] {
+  height: 24px;
+  cursor: pointer;
+}
+.player-heading .playback-heading-actions button {
+  background: transparent;
+  color: var(--muted);
+}
+.player-heading .playback-heading-actions button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.player-track-panel,
+.player-more-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+.player-track-panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.player-track-panel select {
+  width: 180px;
+  max-width: 25vw;
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font: inherit;
+}
+.player-track-panel button,
+.player-more-panel button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--control-height);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  background: transparent;
+  font-size: var(--font-sm);
+}
+.player-track-panel button:hover,
+.player-more-panel button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.player-more-panel button[aria-label="停止播放"] {
+  color: var(--danger);
+}
+.player-settings {
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border-color: var(--line-strong);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+}
+.player-settings select,
+.player-settings input {
+  background: var(--bg);
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+.player-theater .player-heading small {
+  color: var(--muted);
+}
+.player-theater .player-heading {
+  padding: 8px 16px;
+}
+.player-theater .player-heading strong {
+  font-weight: 500;
+}
+.player-theater .player-heading,
+.player-theater .player-console {
+  flex-shrink: 0;
+}
+.player-dock .transport-primary button span {
+  display: none;
+}
+@media (max-width: 980px) {
+  .player-buttons {
+    justify-content: space-between;
+  }
+  .transport-primary button:not(.transport-play) span {
+    display: none;
+  }
+  .transport-tools button span {
+    display: none;
+  }
+  .player-volume input {
+    width: 48px;
+  }
+}
+@media (max-width: 980px) {
+  .player-buttons {
+    justify-content: space-between;
+  }
+  .player-volume input {
+    width: 48px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-theater .player-heading,
+  .player-theater .player-console {
+    transition: none;
+    transform: none !important;
+  }
+}
+/* Mask address fields without the WebView password-reveal affordance. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}

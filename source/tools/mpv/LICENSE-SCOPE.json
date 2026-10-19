@@ -1,0 +1,1763 @@
+{
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 Lomiry",
+  "owner_confirmation": "Owner chat 2026-10-19 confirms Lomiry and 2026; MIT authorized for licensable Miry-owned material",
+  "covered_new_miry_material": [
+    "README.md",
+    "THIRD-PARTY-EXCEPTIONS.md",
+    "LICENSE-SCOPE.json",
+    "tools/mpv/RECIPIENT-README.md",
+    "tools/mpv/licenses/rust-v106/RECIPIENT-README.md"
+  ],
+  "pending_first_party": [
+    {
+      "path": ".gitignore",
+      "sha256": "91b52c4a0d6901ae46fc001d2895ab3c01de9b28e517cf98640bfb5ee1128d00",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "DEMO-ARTWORK.md",
+      "sha256": "12391aa4054c5ef83ffe95994867beca6607bdb048d500a8d10d6cdb93e526c8",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "docs/PROVIDER-PUBLIC-BUILDS.md",
+      "sha256": "1bd4c2b1c1eac3b25d07e27368a8da99cbce73856df64b2c460cae7baf71a2d1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "index.html",
+      "sha256": "5a3b42ddb026906994db93375ef1c37f005863a12f0c9b29fc87479b09882b59",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "f6f0f43409813cbf096c7fa1865ec083fed2750e0eb38b4e07c3bfd56c00e6a2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "package.json",
+      "sha256": "22267a41b9a3e5463e4738f9445a378606fac70cf32eb93a8acf0dc49bf2731f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "scripts/bootstrap-runtime.ps1",
+      "sha256": "2407dce1c2eca6ab09cb64a82a1cf584234f6d63f2be7f32aab65a5756a9e488",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "scripts/complete-windows-icon.mjs",
+      "sha256": "5af847ad60fa7bbde285b263beed3ed6662c2d8c1cacc416d6f6ae94aabf35fa",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "scripts/generate-icons.ps1",
+      "sha256": "144b8b584dafc82c7b007148efe03a23b3b825cd4e063a1f95de3616d7821a8b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "scripts/run-desktop.ps1",
+      "sha256": "94f260b4f7936b85cc94fae034381f59900fa9cb241d3a819b1828c07a120bd9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "scripts/tauri.mjs",
+      "sha256": "100154390fbb597e49d2d0cff02fb8bda30fcb34315d01103c0040b5f87730a0",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "scripts/version.test.ts",
+      "sha256": "be308ca26d5c01c719b7f5d27f14886de53b2598831dfb4689a3a3ea1e26949b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "sha256": "9b878e0fbe91f1d58627340e6a7ba6be7c55da1fed441dee49d637a14324d444",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "6ac4edd574bdc61d87c4ecdbffcf7249c2672cec704e52eb2b274b4bb2b39994",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "sha256": "a37bce7aaea1c0457fadd52caa193773b213cafd45e8dd32d7d48b164f560d42",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/capabilities/default.json",
+      "sha256": "10eb28fff3181b1168beaeb10193bdc7869172766515a679710857ae80aff937",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/capabilities/player-ui.json",
+      "sha256": "c3adb93ba7d0d84eef5a954c0d53d230a5e0dff2c42fa9d2ff6bd1df08a075fd",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/provider_build.rs",
+      "sha256": "bf5185bde6393079c1643c32d0ace0ed1cb56830131008655abc14800e70187a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/child_job.rs",
+      "sha256": "f8fc4b70378e7009f924d5a014a3b886488a2cea625485b3abb6571340f2d58c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/danmaku.rs",
+      "sha256": "fbb1d56fe89540b552e66941dd801ced1b79218479eb02cd102cc334d2dd85e8",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/desktop.rs",
+      "sha256": "4225d80530c7b8508b3f1cbaa1c36836f2b83704c02949b8ef899f05149fe748",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/display.rs",
+      "sha256": "d2dfd9bc50a3264b08e9d4e38bb274b611a7c6c75a979eacd7827791e801e0ab",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "d0a01cf9c9283a745163827ba26ad5be0262dd1faa59cbe623428826eab97b9c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/main.rs",
+      "sha256": "e8e6f930eba0d97bdc1ff50af3c2ecc081be83b6641a650c30bee92697f2b65c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/network.rs",
+      "sha256": "8a3989894d29e243b05019ee5de95a85bd55194b9abb679f41cc6e22a22840cf",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/network_ipc_tests.rs",
+      "sha256": "0c9cb47e5cb98382441a9b17f871ecc20b10dbd627af59c079eeb34f23adac4a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/online_danmaku.rs",
+      "sha256": "e315557145aa5c6c177707150cc1090a524dcfbff55858e9675cf980262b61e3",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/player.rs",
+      "sha256": "0ae37fb50f1836b2ed17f6dcdd9738edad6f6c109240d5598578c91b828b11c5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/player_ui.rs",
+      "sha256": "7a870d81283bb7922d446312aa125f079e54e1cd7e2b0f486ec2055d91918a17",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/quality.rs",
+      "sha256": "a0abe528e71857c102fbe2f12fdf382df4b1ce9a7ab93359339010351d61b689",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/recovery.rs",
+      "sha256": "4fc42a63a0b11331653155077d96bb4935a6b4824bd9a0ef3daaffe010ff3460",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/release.rs",
+      "sha256": "c0af10be21ceecf22e133dd0b99241bcb4a92449704ef2d485ae56ccfadd1442",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/routes.rs",
+      "sha256": "4f1d60e319524ba2a7f8a25f5310e4624265484284fbfde6ee1dfb100dbfca87",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/shortcuts.rs",
+      "sha256": "396ab7e710d6859f6141b1974ef32c28bb0f5fa54dc830ef215f25b666c5062b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/surface.rs",
+      "sha256": "9f3cbe61b669c38786b2cdbceddda94d63eee02918cf99997ceb6bf7c3bf0968",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/system_media.rs",
+      "sha256": "80b1ce0970d55b7a1c4366f8c85a9b4acd54516b3e1e020d908cc70cd3feb257",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/video_fit.rs",
+      "sha256": "f461a210f431dee982dff876153d3628f3b466b6b6e44f50cb81eeec8974705f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/src/window_state.rs",
+      "sha256": "a0aa787cfbe9bcf136b1026d1dcfe9bfc6a7a564e2698174d29a3b7ae39b71c7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "sha256": "4a17d6be33c837b5f6064316d8a51f8c163c0c3c236da97f1cb2f1394e37fdc4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.connection.test.tsx",
+      "sha256": "40b1d924d87491f65cad757259a6a58f6707e660c9a0c43fce3c604ed0476070",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.discovery.test.tsx",
+      "sha256": "47112a6bed60bfa5565b58d14feed309db6170ce6f287532e444bf577404e9b1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.features.test.tsx",
+      "sha256": "25c3fd75c5fd95b0d8c931c596581c2b10daaed6a5ef8a74021cac16f8e93b0f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.library.test.tsx",
+      "sha256": "c57a4863678d7dd4905ae58c2105ba805987e356ad6d8956718b535fd0588419",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.native.test.tsx",
+      "sha256": "441839d8f0e15e6f2d751be7fc7526d3f2915abae1ba12568f9bc9b94bbfb056",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.privacy.test.tsx",
+      "sha256": "65eb47b53acf06e9db864712cae9db91e145457098c490ede99390d8a25b5e37",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.remarks.test.tsx",
+      "sha256": "8b74620e90f01d76eb994527cb2b9a445b9f010568dfb07afc6b5d042d3fa9d5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.routes.test.tsx",
+      "sha256": "b97cb90711fc62a79bd5dec41df27a20396a483f1621ff100850d67586f958d4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.search.test.tsx",
+      "sha256": "c063dc4ca7512c839a6deba2c56f05971622a5b67a4a2bf9b90e09578e9a35cc",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.test.tsx",
+      "sha256": "292aa023dc508dd0e4975a2f0d39e68a8eae638f02e54b3ee90047f7eaa9bbb6",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "4f709e832e80f7959a13887e74aa2e5cb10c2e92d77b408349f1e60321cefa57",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/AppFavorites.test.tsx",
+      "sha256": "3e67b3de1fab1a1b00d9164acca250b5bb22563958aa634bc6cfe713615c0526",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/AppMetadata.test.tsx",
+      "sha256": "3c1696e779b5791cf5af27bf92e0406e4a185c3a541d6aea68a1a3e215bb8e2a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/aggregate.test.ts",
+      "sha256": "1826bf543848c63d4aacebce5bf879ddca8a264f42867213ad1e42ed614d2b8e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/aggregate.ts",
+      "sha256": "65e251fdef760b5c34f6c0745aeece778c19865cff6523d93555b515da397bdc",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/artwork.ts",
+      "sha256": "279c31b3b3c074539fd70a83ccbd81ba7a1f21b1c957e5977c0a59978046ba4f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/cache.test.ts",
+      "sha256": "be1efc77722570ada5867646c5d7b250b7a940c8c735a022ef7fd94771a084d9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/cache.ts",
+      "sha256": "8edc1bd8b100bd55dd2dfd33f34578ff56dca4bc0bd46229ca1670f9acdc4217",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/client.test.ts",
+      "sha256": "87bef58e27956c2ac645ec72140a8bc1a1ff5b16a3d11b7105e7c59be491727f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/client.ts",
+      "sha256": "d619fd8cc387b5b58130cbb5f2f66fc2990378c241dfc1e3bfdd0d857daaa507",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/diagnostics.test.ts",
+      "sha256": "8dfb53b4b343aac63099c0f9b4f9daa48bf788f0351864d9e319897458d3485e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/diagnostics.ts",
+      "sha256": "b020029aa98781b379efd34d6661a3fdd54cd975014c98d10931846d1d03af78",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/favorites.test.ts",
+      "sha256": "f237c68db97bbcafa904868158d18b79d81eb220a4cedd251c613ccf6727240e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/favorites.ts",
+      "sha256": "a00a3f54f7b209c5d62b397c104203d998d4e04fb30c17524cede4df82a9383f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/historyArtwork.test.ts",
+      "sha256": "bbe706825f688d5b3cb4f34d6568a5113947813a8ebf1dbb6d34db0ac9d761f6",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/historyArtwork.ts",
+      "sha256": "7bde6689aac18c81285674ae6e552a833ec541ba1ba366dc4cdfa9d8625bf9c7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/homeRecommendations.test.ts",
+      "sha256": "430129fc30d1a9ea53067529027e0d24dec99422029cbe74406971ba2989ddf3",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/homeRecommendations.ts",
+      "sha256": "4399e028443ac376f52242a38c3497c1bdb88978ba1284dad9a837500513ff9f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/library.test.ts",
+      "sha256": "562a4b5125a8443598577184c33477639146d253cbfa9e0353712997a054a781",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/library.ts",
+      "sha256": "9546fbbb2e21a62f45422e7e233a8ffcfa9d63d03a12bd07782e6c5b407f528a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/pagination.test.ts",
+      "sha256": "4a2d414ae7d70fa8341bc1cb8a80674413b28de37144392eaa29ee1d68734b1a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/pagination.ts",
+      "sha256": "27fc32f8fd58d28b4e5a30fab0c133dbfa67922d6e6aa334a82f55740bad5bd8",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/person.test.ts",
+      "sha256": "b63dcaa336cd83380449fd4c95563b86eb5d0045a2e9a96c8a998e06a269ec91",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/resolutionIndex.test.ts",
+      "sha256": "45c854b0548e60c91f5f402b143cc4f7d52d94352e75116a7fdec2610383225b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/api/resolutionIndex.ts",
+      "sha256": "0373de0cf79294fcd5d917e6b1cc88377d326bb1fa985d0e7c3471d1e4df9555",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/AppIcon.tsx",
+      "sha256": "5eed589ad95fd8d2bde121faed73f7aa78ca8a984f5b547cc1ae7fa9216555de",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/AppearanceSettings.test.tsx",
+      "sha256": "342ef5a6da7bd9d8178349346b0bb297ccb1a44bd6383b4669c45905f842b9d5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/AppearanceSettings.tsx",
+      "sha256": "9ac3ead9176597d350de595e1ba7f0749b25bc7d89e72523de45befaf3f0f6d1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Artwork.tsx",
+      "sha256": "7416a94c4c60704668211c59098f6024f726596ad803502ccd237dd89858c423",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/CardSystem.test.tsx",
+      "sha256": "6b313bee15ada521763fbb7b4feb55906d47183fad2a86cf4f9bcc3e82130652",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Checkbox.tsx",
+      "sha256": "d96752c5a390d24a3ab7845d740b0bb141120ab89f595a983445ab0ff700377d",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/CollectionArtwork.tsx",
+      "sha256": "61396b2d298684f33825d6f99079a3254decaf1f4699fb15229e2a0b70731d4c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/ContentState.tsx",
+      "sha256": "353d075eef86a7e049d029989c88f080f5237a6e76d44e16032b5fb8ee121066",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/ContinueWatchingCard.tsx",
+      "sha256": "426676b1edef8c2abfc934b5e9d31b860f6ec102b461c13e65a2a34416ba747b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/DanmakuSettings.tsx",
+      "sha256": "9410126745d887af854599bab4a6fc581a3501a853bd807760be167c5953beb5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/DesktopSettings.release.test.tsx",
+      "sha256": "e86bd3d2160e5fddf60cf1fcffd0370ef69c42232073972899972c00d75e7fe5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/DesktopSettings.tsx",
+      "sha256": "35c7bad6747973b2246a3352ee11e0d94d1a33c6537fb441e206d2c3155f3179",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/DropdownMenu.tsx",
+      "sha256": "3a10f0827cc401664d2f50091b6ee234ca48e9db03f0e9b8b873f22cc8d00425",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/EpisodeBrowser.test.tsx",
+      "sha256": "d2c18de5a716605e5efeb81d648aeef9e1760a358e8f9606a8a1ac93d72ebcec",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/EpisodeBrowser.tsx",
+      "sha256": "e6ebb0e813b93261c2a36b6b95b78e6d406c22023bcd463f377977091dbb4952",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/EpisodeCard.tsx",
+      "sha256": "ded1d2f87abb0deb95bb004beeaaff55313f7b8e08e6a2dcc4f166571758b8ff",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/FavoriteButton.tsx",
+      "sha256": "de1eb3f58bc6b9c9d99232b1d248a83dd5514b5dc61cab39dcad1bf3a7d2a235",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Feedback.test.tsx",
+      "sha256": "fc29f9e147246286d9f9a818e999e3c6fa4c39b228598feb3fe7a10034219f74",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/HomeView.test.tsx",
+      "sha256": "75ffdd0c3ce0c5f9c756ab4d9a852220225c33c5e11267ad60e998ffabca106e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/HomeView.tsx",
+      "sha256": "31992487d5b031b88be1c24fe2bf616e933e5a5eb3ce7731dfec8cc08d695c3f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/IconButton.tsx",
+      "sha256": "4020241cf968d69747b06e958297f299caab36f3c561664611b1137820dd348d",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/ItemActions.test.tsx",
+      "sha256": "f202e148c09a9bae0d9b161919f95f2b1ea56835e09c17c47e2f9964cc049618",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/ItemActions.tsx",
+      "sha256": "3304b225fab01752b0ade4067ccf73203c9b8fe62fea5b24ffc8495af3b71fc4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/LibraryFilters.tsx",
+      "sha256": "b34fe0f14da5818101b2972aea381c16fef89fe128b2673b87738f2a1dbee359",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/LibraryManager.tsx",
+      "sha256": "f05c546584ec9d3fe5a3168d91cd6e3a6e27d0c50a9de11b1cecc024a2cdf782",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/LibraryMetadata.test.tsx",
+      "sha256": "0b2c3e0c33ccab59b41d70f6300d7bb8cc4bc7bd0b995e5c95bc51b9209e7ad6",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/LibraryPagination.tsx",
+      "sha256": "6f9ad2b0b1c2ae35f1968ef3b800601df21d90ab1ecb1fb4fc3ae6fd25255f49",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaCard.test.tsx",
+      "sha256": "c4f8421a48645fefca52fcf5336542713de0c0b76ead6f8ae4a1123c72286043",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaCard.tsx",
+      "sha256": "8220083ae0cb2f783115bf3783c79389f84259d083eb922f16cbcf3221ce8071",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaDetail.test.tsx",
+      "sha256": "305c3ae3b3932e4f71464423c672093bace5347c1222a402328411c4309265d3",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaDetail.tsx",
+      "sha256": "3d7312972ec579ff1f025397b359b6ec79eab61d481e198ff205570ae5678817",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaListRow.test.tsx",
+      "sha256": "40a196028124fad4cbdf728f893588cdd0196e4ffecad021f330d62866cc586c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaListRow.tsx",
+      "sha256": "996a8347bcfbeb5806d24ddac83bd64f0af563854b519a0c2d7be5a3c3b8de49",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaMeta.tsx",
+      "sha256": "7894ded88097401916775e8379350539ec807093f494b8fb68a9b517bad5bc92",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaProgress.tsx",
+      "sha256": "5461e2eeeb67520345669f8fe515401444e9f1c1bf5b4cb98ccb36b5e520eaf7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaShelf.test.tsx",
+      "sha256": "fc48ed292ab9bdb9347fbbb998da49b66daf56013567427d7086c21e6956ce2a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MediaShelf.tsx",
+      "sha256": "7deceedd31ad98a7fe8c5aa56796ac6039a0eb37ba9613ac748689a6b16c7d6e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/MenuItem.tsx",
+      "sha256": "4326ad4c4b2194eb4abc5e5908dcfdf0d12e806f1aa6859be3fb262e0edd667d",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/OnlineDanmakuMenu.test.tsx",
+      "sha256": "14aa7625951783493f87609149737bd6158a6d54494439faa5d744e4a7cd285b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/OnlineDanmakuMenu.tsx",
+      "sha256": "fbe06e2d1fb34b1d2014b5929fa65375c09946480a742df13b874a1b1651fe50",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PageHeader.tsx",
+      "sha256": "fee3c9f271ef88db4259f79b3517aec7a800a89a811bb8bf2268b3fb066ab6dd",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PageSizeControl.test.tsx",
+      "sha256": "889ee9a39c86a9f45122eed0e8ac6c47156ddce6d0461fa84a8918884cd999fa",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PageSizeControl.tsx",
+      "sha256": "dfcc35dbf280dce1cfb9a6764c97a16977f0025edb439622c53c9bd5480bac90",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Pagination.test.tsx",
+      "sha256": "9d8b8b6d918c54591447487f097c60d55557e63bb2ad631a2bd325cbe47f4be1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Pagination.tsx",
+      "sha256": "142ca023dfa1d87a577ee6ccc74749b0fb2a538f7678803f534ae5991fdbecee",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/People.tsx",
+      "sha256": "991fd8ddf52b7193e3dd2babd5291ab19d43c57eb99fcabb118fd42d4d3d84a7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerChrome.test.tsx",
+      "sha256": "45eada4627e47814bea215d340a895ce3102965ab9fdaa94fd81892585bef19d",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerChrome.tsx",
+      "sha256": "1dcebd4481f9f33dc9aa9fc98500e8edb4c40dbd80216e9556cde212306d40c3",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerOverlayWindow.test.tsx",
+      "sha256": "1c6caceaced3b949ac74bc4926f2207536bc56e3e4e36a623e1c1440b2be9482",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerOverlayWindow.tsx",
+      "sha256": "9d331de01c8403ec172ff98405394aaca41aedd281aa6e4bc832ee78a0f8d238",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerPanel.test.tsx",
+      "sha256": "12014e1146a823d1c3c437784f88fbb478cbc57247c4d06cc94b748cc8bcffee",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerPanel.tsx",
+      "sha256": "58f183762023ddfd19565f77096d9348e813598285a3b9c166ef29a8fd557dca",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PlayerSlider.tsx",
+      "sha256": "97cdb22fd49952dfdb1e3dadc6e062cefb95105db06c56b552804635f7b530aa",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Popover.tsx",
+      "sha256": "22f867973154ed67460a28a0b5d827a7281220952e35680f22b217a20a854734",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Poster.test.tsx",
+      "sha256": "066325ba3fdab3637a00ab9f6aab22f5c2f0c85754a7ae06a38b637b1158d368",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Poster.tsx",
+      "sha256": "d846429fc76ad00c9d019a8a18ad995b43c809af509490b791b505a4e0677428",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PosterCard.tsx",
+      "sha256": "62bee02d99df21485674d5db64e93b439a088d037d1ed809ac56d25365b1a287",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/PosterFallback.tsx",
+      "sha256": "7eb78e8dbb2fc0b172951d311ec227700db4647eaea12b6f5b80ce4d37ad3dc7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/QualitySettings.test.tsx",
+      "sha256": "910fd1ae7c84ca7a44ec6d387aa052b59751f36aabdd1de98cbf8db9b9a4ae3a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/QualitySettings.tsx",
+      "sha256": "245f5a7c5530260173ad20396e6db760f1707ceb2af4c19878509ee2d1d0f2af",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/QueuePanel.tsx",
+      "sha256": "54062fb091cad3d66d2f1f6ba587721d016703ab6d8af493c87f0f4e29b576f9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/QuickPlay.test.tsx",
+      "sha256": "bffa5663e545515c017a7b8d3ad75d1c78400851b4b0ad6fba5991d482755ffc",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/QuickPlay.tsx",
+      "sha256": "00237d3b8c9424622838919ebda9ecff8b9dbbaa726ddd59a1a2d9a532de46c7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/RecoveryDialog.tsx",
+      "sha256": "afbed417e07f65e7ec2d60d678d1871c79742387d8999e53f045d99e5d98c66a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/RoutePanel.operations.test.tsx",
+      "sha256": "c532701c552dc9bb2867b910ad57ae3c61aec82b9b6a0d077b56dafeef725977",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/RoutePanel.test.tsx",
+      "sha256": "059ccfe3e2df069f006226f77709845eb95c941eac8efd4db19493c5dc3f9c0a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/RoutePanel.tsx",
+      "sha256": "e2fb42695add5016172947694ed92c85eca33ba5001379b310e8ab93d85c9f2f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SearchBar.test.tsx",
+      "sha256": "a4900d0b80fcc21b60f73463996969930b29f25a1382036bbc1dd03204f74ab2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SearchBar.tsx",
+      "sha256": "8038f12dec7d6fcb878eda61c9c02a8d3a8c7928fafcc1e68706c83d2b535799",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SectionHeader.tsx",
+      "sha256": "12284ee4c889fe07ba63364b6901e255b58792f78c813ec5fecc3ff17684c463",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Select.test.tsx",
+      "sha256": "0897cb0e04cb485062025a55a4154d09b264832634fda470708d03c556137a13",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Select.tsx",
+      "sha256": "bc873b6dc043dd7b239e5c1e84aaf9fceb95a8c9449cfb52d476170500872089",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SettingField.test.tsx",
+      "sha256": "99e9b3216ebf93c95b4b2e820db84ebb363105312e0d89233ce72f1ace83dce9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SettingField.tsx",
+      "sha256": "2b888425ef8ab0179d38c62c327349fb675d222b3444717b3589330c22dd59df",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SettingsPanel.test.tsx",
+      "sha256": "09b2cd22d8196c32eeba1ec3c20eb53176af18f8142aa6abea240826f942c2c4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SettingsPanel.tsx",
+      "sha256": "170136d04d1a859ccf27c60f7c9379b3f2d2a6e112df7a926f09e6a8dbb5fd02",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/ShortcutSettings.test.tsx",
+      "sha256": "a427a28202d9e5f6ecc198fb5765aa1070e3f81a451ed6a192b894fe57b5dc25",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/ShortcutSettings.tsx",
+      "sha256": "cdee2f6efc4982579fa296a58bd4cc6f49d5ca6060e44ec062ae7161ff0348c7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Sidebar.test.tsx",
+      "sha256": "4af571b335b0aa534d65937df3bc35a8e4d59c56842ef99cf3dc1dd3c8e75f78",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Sidebar.tsx",
+      "sha256": "c5a86c3dc716fc6b77bd79e9f222d2a34605301722249b658907603e9a28d7e0",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SidebarLibraries.test.tsx",
+      "sha256": "b22d70cd595642172d6724f6b9014b7deed06bb795a3a3a2be65d0fa66121636",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SidebarLibraries.tsx",
+      "sha256": "6b2b51b79735a9318014f95a56d26e4953234fe252876469488c7e80b3a9e9d5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Skeleton.tsx",
+      "sha256": "7ef731bd427e65a073a9780f331c6b5d304ded08097d50e5abbe90103dfc37c1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SubtitleSlider.test.tsx",
+      "sha256": "b18dd4519257a8239ba8482520d95c018d4f4233656bdd6410fa4a6d471dd9ca",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/SubtitleSlider.tsx",
+      "sha256": "271e06bae3e47bed5419d3e14d3f96e2d7ca90ed89c5ef382a1f2d3b117dd369",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Toast.tsx",
+      "sha256": "394caab13203f17fbcb3e7b2d2177be24c2da9eba442a3e4b30c0cb51b7bfea2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/Tooltip.tsx",
+      "sha256": "1d3d3268afe6269386a628ba40484db7c7a44d57ffdf8c804ab7eeade0e0db6f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/TooltipHost.test.tsx",
+      "sha256": "ec8e791c687b2a97e43b408d0bf1878c02d0e60c0057c4a416e43e9ee203245a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/TooltipHost.tsx",
+      "sha256": "e074ecd0b5f8416f727467de2b06a69fd615b42666e76b6cf61a9654656dd25c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/VideoViewport.test.tsx",
+      "sha256": "b069a965b351af9bd72c54163d8a30a035f768b60dfcaf9d21169aacda9bfe78",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/VideoViewport.tsx",
+      "sha256": "48d4cd836b2711c9e81880dc5b4440146171b35a2d860e697e7821eac19e5f10",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/WindowFrame.test.tsx",
+      "sha256": "b999ee03f9b880fb43bee85c6ac03b69109ebfa810e611d32fea3d9ebd735feb",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/WindowFrame.tsx",
+      "sha256": "16537c17c30bf67d30c2cbf85eccd31d768b49c32476b72625db4ed28f310dc6",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/components/useDialogFocus.ts",
+      "sha256": "84dda8f8a2e48325108ba8b89a673b61d0f77e08d18fc400f8a49f0a001eb1c9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/controls.css",
+      "sha256": "0cde5755bebe5933b8c319236d3aa6abd9d16f0d17bae3690f32f2ce65d3613a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/DanmakuLayer.test.tsx",
+      "sha256": "98c122f0e707333c0d11a5493a75728bcee088e0328e3a7ff606acafb523426b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/DanmakuLayer.tsx",
+      "sha256": "36784f60cbcb67376c0c8c12ea3c10c0199eb9b229be8658db01e560869fa3b5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/dandanplay.test.ts",
+      "sha256": "70110ad0b2544ee5899bf951226ac6128b110d72dc044dde23c41cd1d3a762ef",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/dandanplay.ts",
+      "sha256": "533bea47dd52400ae2ccea557c1641536046e87051aaa2fc30a8c7401cf0966e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/load.test.ts",
+      "sha256": "a986d89f80fd069fe64ea546a2b25244d17318c5e817fe909b2b8fb588916700",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/load.ts",
+      "sha256": "3df04e522252e4628e15232b268fe973b1e871ef1ac24c4190af7a16d8c9f1c6",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/online.test.ts",
+      "sha256": "d551c7e4542a0ad25b5d5f99afb91f5e75b9549bfc2fabde47568f50dff47f59",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/online.ts",
+      "sha256": "8af96c58a53a44338968d2c941dfab1e5041f099b1f2597ca824112ceb3b7a42",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/online.worker.ts",
+      "sha256": "3b6899556b9a825efe821fa797e33fea9e3c31d388251d030313c31d9302c37d",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlineError.test.ts",
+      "sha256": "3f8cb1e854c1ad40e436a6dd7492679d7c87eac689df111b36b6bde1b5386d4f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlineError.ts",
+      "sha256": "8ede389b49d495698a7e5b91b3b713f0ed288cba6739b771076875b574abe31e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlineLoad.test.ts",
+      "sha256": "61bad4a83c2d0c6377cdf65f4faa7f40dc4b0984e82b94b6e747c4aea38a5848",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlineLoad.ts",
+      "sha256": "9410a94dc73474f373a0dee270b28784d45cf82520293c62222a1785ddbd74c9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlineParser.test.ts",
+      "sha256": "e6b07720be9cb49038c0a52752ef1aab16877346f2aeb84f8306ede87e67abf5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlineParser.ts",
+      "sha256": "2f46cb7c2733ec9e18e515a56340476904ac67c9d9f44148e2e76085a46d5254",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/onlinePerformance.test.ts",
+      "sha256": "4092f967130e26591f845f243252d63d23b6d688fbd31e7eaacff881b57ae0f2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/parser.test.ts",
+      "sha256": "e15891e23c1e6d9f59efa9fb2b15ea3e3b50289e154fd7dc93c10b87af3378c4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/parser.ts",
+      "sha256": "1ec1aeb5ee2554ed97940001d801568886d294af329ec72c6c330648f09815fa",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/parser.worker.ts",
+      "sha256": "86105a23eb27e7d0b3819b5fb9e10d25985170dd4595de0b08f4504a0f4d9c15",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/requestBudget.test.ts",
+      "sha256": "051c97513fc6365ddcf71139bc98f592b05a35fa3b2f4633acbea7bf7b377c8b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/requestDiagnostics.ts",
+      "sha256": "dc9dd35c0f23f5beee539c83532a452ab6461d32e9bbeffa9356080777b5ea39",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/requestLifecycle.test.tsx",
+      "sha256": "776276bd79b2bcf851ccd3c1a6796c9044fd2503134752ca4ca531a0a8efc5de",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/scheduler.test.ts",
+      "sha256": "fda0dfa7a34ed17abc2c81637bcf4bbf7427f8243e9eba35fbd7f3fcafaf370f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/scheduler.ts",
+      "sha256": "3a7537e63210c38bdb3a2588ae75a7ce56019f50f04a3d9198710c0fa7008ae5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/searchDiagnostics.test.ts",
+      "sha256": "a8adef0a63f0a56fb6f4dcb19ab501c64a77832c72a8919e9486bca0fb05f00c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/searchDiagnostics.ts",
+      "sha256": "b79106cc0b2322af6b46a1f29daab9e8dc5b91bfe40a7ac07840008bbd23113e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/sharedRequests.ts",
+      "sha256": "d1344bc376250cb99c27cfb8856715a378b2088f30917e9aac35724d1c994d4a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/types.ts",
+      "sha256": "812ed64f4be9280d14507ba623ebed57f4aa9dd2bca9687ca1bf4c759bb2f1f0",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/useDanmaku.test.tsx",
+      "sha256": "9b216ec71f695f94f0be19179d2eb716513d6d009964f98fc651f579ad371d5b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/useDanmaku.ts",
+      "sha256": "e474489785cf3437c8cff26a0a7c40090e4772cc4d5c6177045c2cdd87baef1a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/useDanmakuClock.test.ts",
+      "sha256": "5923c236dfb2cd4a1494e356ab33f8b6b0d568d5eb98b12284f5f5f78432badd",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/useDanmakuClock.ts",
+      "sha256": "7f8fa615e56ad537c9d3dafb3b9b7955860c63e10b819a33d96ed8874fe4a5db",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/useLocalDanmaku.test.tsx",
+      "sha256": "dd826aa7101cbb6a39509fbb9b926d958d20b5bade2999d48eeaf8395992dfb1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/danmaku/useLocalDanmaku.ts",
+      "sha256": "9a434d82e61da47d8759aaa778a6fdcdebc634458af2de6cd3d2339137683e20",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/demo.ts",
+      "sha256": "b7a582a77ce652414fcbfe105b3e09ee3d203b0a26039d857ed5f1d4961e7e3b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/components.css",
+      "sha256": "a3a162a35aad5d8785166d80ede89e47d730658ce2e047a759c6941362f03d6b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/desktop.css",
+      "sha256": "67ae1825857dbcb43e036223cbdd1127f1e9bec3d99f8f6bea0c284c0122712c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/layout.css",
+      "sha256": "23a79675f364bc2f501481bee70ba1cf98aa536fbea44a7d0d23b69d1bfb7b79",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/list.css",
+      "sha256": "4b84b8084f1b071a0cd952c826a84cde8f0240db63a4ba0ff38f21d87d723926",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/player.css",
+      "sha256": "93f1e60326ee99b3d2f718915eee22483e04b4bab506a5eec735cf19a9c9389f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/polish.css",
+      "sha256": "056e17cc407663d2bf50e37b9d90c8baf546989140ca8cc92ed2aaa63700c8f4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/design/tokens.css",
+      "sha256": "72f05f1abc43c976fd44121c4b98dcc9ce4ce7c9ca74d82a78535ff808f62638",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/discovery.css",
+      "sha256": "d59104c9df6a18fbfea961986ed059ee3c1b5a758514960c6798fe9c02153837",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/features.css",
+      "sha256": "c11cf982aaa92554032c7e6f644a30922d62a238d4974c1d150b053950f899a0",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/main.tsx",
+      "sha256": "258173da4f7fd21b1fc6ec1bc846b4e80aaf2e3a6553f6e0f792b6308212632f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/motion.css",
+      "sha256": "6e28d00171810b5b011fc3cffb679f8d763da784d9cadd27e50168ad0f375385",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player.css",
+      "sha256": "818ce628770a30f6eecd756ae00727c7a8d5e837f518d9457a13f3eda03ad8bc",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/desktop.test.ts",
+      "sha256": "6bf49de507f2074f9078d04c9ec210dbee859272ce3625777e8dfe35738b9cd2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/desktop.ts",
+      "sha256": "21663ee382305693dc95f55ee5b7b4ab35c2a3c41fe56cd095fca17fdd785fae",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/formatTime.ts",
+      "sha256": "bd7892c3dfe7d1af98c1688e23db46347c6df45e6f30dfcae92d41c4b235e52c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/motion.ts",
+      "sha256": "253cf8cfeeabc4fe01411ad2061f0451a0d44eb450c0501d3db62e4ba79f3094",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/playback.test.ts",
+      "sha256": "c494e6055e5d3a5243ed9e45b03848069b27a35e690e8e1a094db673bf575be1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/playback.ts",
+      "sha256": "52bd2c454bdf77903f97f13999d086cce3cd8d1b9eb756ad86c76b15425520cc",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/playbackCompatibility.test.ts",
+      "sha256": "5c989398e9f92539005bbc3a402a0813bfb90de87c9a952f7387051a0b0bc2b3",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/preview.test.ts",
+      "sha256": "f569ffebb5bc105e33141437755990f8ce84cd57ed08520139070f3cc89298b9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/preview.ts",
+      "sha256": "a25944e50fe11dd34d0dc9d3cd0ee5b59bb9128c3f9e85776530c1552d76d39d",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/quality.test.ts",
+      "sha256": "b6fc3804c3e036f56c004b7fe28f00845824228b014a1f1b58fff34852f1bbc5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/quality.ts",
+      "sha256": "bda91bdf900b18d48d491164c1a169f89ac89a8e9798d02977dbd4bc0f7ec47f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/queue.test.ts",
+      "sha256": "36731252b929339a2e4cb3f0f730aaafadbd95ff06534f646644644421cba81c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/queue.ts",
+      "sha256": "e9b17ad9f5e6a07bcf62a951d5527def37f555c39e07b568758165a8513994f9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/quickPlay.test.ts",
+      "sha256": "d48b9d5dc3c06bd17b1c7dc5f38ee122521274960503be567601507f73fc17b2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/quickPlay.ts",
+      "sha256": "0cdae3e627e3288d1ce4340f1c48ba36a6303d685c079f4427113e875f8539b6",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/recovery.ts",
+      "sha256": "d8772e115f24b81135fe47b4f0af4bcb50880af1ab09250ada622ea1ff920156",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/resolution.test.ts",
+      "sha256": "b1cf450c9622ab8d56e7a6edd2620a481b0c5912c10bf5b7c0037c2524d5b490",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/resolution.ts",
+      "sha256": "ac1f2a26c5ecc76e38727ef002112c6a29cbfb56a1b2a27e0caa02aca9550bd2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/routeHealth.test.ts",
+      "sha256": "84b68af4cde3ab50b3fe75c51e8b6615c2e7ff51cbf8ce7a9326166a70daa848",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/routeHealth.ts",
+      "sha256": "703337e5dec0c2f11f126a6be5aa799f846bdcbddaf2352a76aa634f0d016702",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/segments.test.ts",
+      "sha256": "a3fa78b4c52bdd9f8c7b24a34a6e64aad68e6cb2952c44386ed6ece3fd295642",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/segments.ts",
+      "sha256": "ee9ba6db293aaee08bdf9a77d24e0765ce82007d8f8a1023c0979da891826154",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/shortcuts.test.ts",
+      "sha256": "687fa8be84c7172ccfc6d9c92db65f3420cb14f5c0679f094d1d62dc01fa974b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/shortcuts.ts",
+      "sha256": "aa10426f8b17e74f39e11fffbc3dce7423cbf923b363826f56cf00885eb2f692",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/smartRoutes.test.ts",
+      "sha256": "4ebab7de6b5475ca76d1f635a180f4c69bc5f46e8af0b8378b4ae53bb3e7a32e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/smartRoutes.ts",
+      "sha256": "b1a905cc25fb523a9f78232934fe31787cac372a96016a8b8e3a229f8086ea4f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/transcode.test.ts",
+      "sha256": "e20b57eaa30f22de6e15c55d6d8102cf95b6893d50c94b4762bae30209d7a499",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/uiModel.test.ts",
+      "sha256": "41bb9b3fdc7e92c8b170b45a5e88bca2766266cedc3193fa96fdc9003d026e32",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/uiModel.ts",
+      "sha256": "91ca1db5763e9ce77fd260794226c0577b1cbcd33c536d8b7634374b5e7d6eaa",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/usePlayerChrome.test.tsx",
+      "sha256": "b77cd0ae34bad5828488c2c115dac9481130f44a8aea4a23042f6e9f2952371a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/usePlayerChrome.ts",
+      "sha256": "a031284a3a92db41e0a1476aac1af6e477f1844a1c5a26531b57edd6af232885",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/usePlayerOverlay.test.tsx",
+      "sha256": "5f05616a50a19c6fda1d2099f76dcf9e38eb3bf0ddfc9fe2b3375cfe1e8a88b7",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/usePlayerOverlay.ts",
+      "sha256": "80584328c35175c895f043b0be8cc847f85349e7d0fa1f202851f57fb941faf8",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/usePlayerPopover.test.tsx",
+      "sha256": "22854527b2094566599c7a2125844bd0723dca511c0d9f517a4563666b290af8",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/usePlayerPopover.ts",
+      "sha256": "482d02ab253a8357230592cabf0364d9f23741d7d64cf0edd416475e05c08ebb",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/player/videoFit.ts",
+      "sha256": "578a5177d4a4084ef733e7648815de3f9ae54abae0e957fb73a2e2e91f065835",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/privacy.test.ts",
+      "sha256": "9c814da9ffd9298a7bb6f2b6fc1278372da513b9b2b0e40acdeedebab993932e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/privacy.ts",
+      "sha256": "99d7d1959506d7a5ba3d790bb4434c026b1ff4bd06f9505307d445c0d0a980fd",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/release-source.json",
+      "sha256": "59adf7fb07a3dde0ecc6be8c8615514b12a8335751cc01a58cd01156f387d589",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/release.ts",
+      "sha256": "4f4120eb48e5de58ae7ff1865d4a1fda80aa458d30e0697b9bab5349a58170fe",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/account.ts",
+      "sha256": "7370bef9ead0478acc6fedc0458a9e5bd9b883ff13583742c8013acd0e1c454c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/appearance.test.ts",
+      "sha256": "48f0d2fc162e06e261ec1b562c23212208a9e7f83d93fe3a57cd972044a325d1",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/appearance.ts",
+      "sha256": "409ac520889f1036aac8f249897cdc527d929d7e87d41ae6e048a00df5147bef",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/browsePreferences.test.ts",
+      "sha256": "b66f4547dd53c32406c73fb5de08afdfd0bdaa47c964a44b146e63a6b483f9af",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/browsePreferences.ts",
+      "sha256": "d9fe6a0f5c3dbd468bd4a5ac6de87b91d43cec63e5094809da4de376cf1cf397",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/connectionRemarks.test.ts",
+      "sha256": "14a1e11a13e0ea646a2d6ab674bba5ff31efad99876e5cdc3f544c65c19fae24",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/connectionRemarks.ts",
+      "sha256": "7d7f4d8b5a82881159b10dc01387b9001b8f11e774abda1a19dd59b84fb4ef8b",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/connections.test.ts",
+      "sha256": "7bfeb496ee6c551234faa0afe57dd242e515265f1431b1fdcda9ab24fd8f6c3a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/connections.ts",
+      "sha256": "b62fa405150dfd146585032d4293edf46614ff0d14f5e1845c81116564434f85",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/history.test.ts",
+      "sha256": "9ecdba57afc0382c9e417625e6031050c4f6de1070b4ca5cc32f3eb0c0f23b9f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/history.ts",
+      "sha256": "f30b3e0ef568fca041b2406ada3504b4e1af704f3e193b4c4ef4d29ca6423fad",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/libraryPreferences.test.ts",
+      "sha256": "50bf3efe838a3fc72523faf88859d181ec33895805f733deff1960ec5447decd",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/libraryPreferences.ts",
+      "sha256": "c10f533022830025caeccc12d6b3ec17479514031a530afe2ea7a8cb2c350e67",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/loginHints.test.ts",
+      "sha256": "d9510c6f1ba890165b3c335ff9a4b5519e5d03a3d9b84c3621f606acce13a6f9",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/loginHints.ts",
+      "sha256": "fb77fdeda2edf50f317c16feab0819b338aea6d1d0d79f0921a06290725d4630",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/routes.test.ts",
+      "sha256": "b6266e288b60a92454ed52536627956d2a0812808b35c39817a9567c1b52bc64",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/routes.ts",
+      "sha256": "88c51021ac2e4f56a46953e8fe266e42b47758376c273a4ded3dae3dacacafa4",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/searchHistory.test.ts",
+      "sha256": "f3aeaf74f3f5c4b198de857e293ca7a836f919abd4eed52ef6b373cadaf0d91f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/searchHistory.ts",
+      "sha256": "3a9415c08565ab0874b34b3db471ef963afdf6250783c712d4eac2ece1cb2222",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/settings.opacity.test.tsx",
+      "sha256": "e7130960bd943198a324aaa749d5dd05d6e8f17bce9fe8c4c43850ac028e2b27",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/settings.test.ts",
+      "sha256": "105eadaa644b5af5e912aba73ad2401fc0549e7d2f6f5ea95fe0d38ad8ce0e85",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/settings.ts",
+      "sha256": "a767029e14318ba67e336ad3e7a4ec3723f7e3ae8bbb7e2ae7d5b0347ed7f7eb",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/watchLater.test.ts",
+      "sha256": "5aa74d504ca4980003701d8cc2f898b3b38640bc7888cf5a03249731655ede98",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/stores/watchLater.ts",
+      "sha256": "3996c7dc04ad77a1bbd2b8149a171be479d1c34ca04fc204e4bcc6955a2b6bc2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/style.css",
+      "sha256": "622fec49a6fa8d2d55ee989ed23b5479cce3540f078bcfd7e032961e9444ff31",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/testSelect.ts",
+      "sha256": "f33fbeb0c4e7040a1524b8e19707ef8091640c703ec134ffd70117d045850654",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/types/emby.ts",
+      "sha256": "c36ea4c3c71b24e74eefdfb60ff06151d7e03498591944956c0130a8915e9843",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/version.ts",
+      "sha256": "1a3e9b57e8d906ba8b112e85e908f2c2a57b93af00f5cb99f7648fcd79bee98c",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "src/window.css",
+      "sha256": "02f89e403e1c0b38be90c14ff93e105a0a0d126919dd76200c35efafc5c626ff",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "713b3d770d95aa35bbd97ac64dca82b0d6f6c7b9cf1ae5c11808051a8762ba1a",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "e315f329f42e75cae3b79a210535b967079076c7eafdaa716c7c88f0830b58a2",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "启动桌面版.cmd",
+      "sha256": "96f4d191a213b6dcdb2c5c5853c55a41c20b2d761d1b489d4adbeb05275ebb45",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "启动预览.cmd",
+      "sha256": "2becd403c09532ffae45a321fc782593184f8d8656e0ce3414250df018bd0a6f",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    },
+    {
+      "path": "编译桌面版.cmd",
+      "sha256": "2841bea6bb6c80360a87585fb4237c124e37ed20bdc8f5ebae1a9439a213583e",
+      "result": "OWNERSHIP_EVIDENCE_PENDING",
+      "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
+    }
+  ],
+  "excluded": "All third-party originals, dependency data/source, runtime, imported artwork and unresolved ownership paths",
+  "application_wide_MIT_clearance": false,
+  "historical_gates_closed": 0
+}

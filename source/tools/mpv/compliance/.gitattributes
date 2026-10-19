@@ -1,0 +1,3 @@
+*.crate binary
+*.txt -text
+webview2-sdk/* -text

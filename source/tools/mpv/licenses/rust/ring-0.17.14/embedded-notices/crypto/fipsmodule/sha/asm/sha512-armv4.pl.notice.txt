@@ -1,0 +1,58 @@
+#! /usr/bin/env perl
+# Copyright 2007-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+
+# SHA512 block procedure for ARMv4. September 2007.
+
+# This code is ~4.5 (four and a half) times faster than code generated
+# by gcc 3.4 and it spends ~72 clock cycles per byte [on single-issue
+# Xscale PXA250 core].
+#
+# July 2010.
+#
+# Rescheduling for dual-issue pipeline resulted in 6% improvement on
+# Cortex A8 core and ~40 cycles per processed byte.
+
+# February 2011.
+#
+# Profiler-assisted and platform-specific optimization resulted in 7%
+# improvement on Coxtex A8 core and ~38 cycles per byte.
+
+# March 2011.
+#
+# Add NEON implementation. On Cortex A8 it was measured to process
+# one byte in 23.3 cycles or ~60% faster than integer-only code.
+
+# August 2012.
+#
+# Improve NEON performance by 12% on Snapdragon S4. In absolute
+# terms it's 22.6 cycles per byte, which is disappointing result.
+# Technical writers asserted that 3-way S4 pipeline can sustain
+# multiple NEON instructions per cycle, but dual NEON issue could
+# not be observed, see http://www.openssl.org/~appro/Snapdragon-S4.html
+# for further details. On side note Cortex-A15 processes one byte in
+# 16 cycles.
+
+# Byte order [in]dependence. =========================================
+#
+# Originally caller was expected to maintain specific *dword* order in
+# h[0-7], namely with most significant dword at *lower* address, which
+# was reflected in below two parameters as 0 and 4. Now caller is
+# expected to maintain native byte order for whole 64-bit values.

@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "sdk": "1.0.3800.47",
+  "source": "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/1.0.3800.47/microsoft.web.webview2.1.0.3800.47.nupkg",
+  "package_sha256": "56c9f26bdd07916a2d1949fb58a5c7e434dfa1173577dca879206050c4e718db",
+  "bytes": 8973762,
+  "target": "x86_64-pc-windows-msvc",
+  "exact_loader_members": [
+    {
+      "member": "build/native/x64/WebView2LoaderStatic.lib",
+      "build_input": "x64/WebView2LoaderStatic.lib",
+      "sha256": "89c6b872783b8f6c3cedbff618adb42082d455c615453ae10cfc753f1e8f25d8",
+      "bytes": 10500472,
+      "matches": true
+    },
+    {
+      "member": "build/native/x64/WebView2Loader.dll",
+      "build_input": "x64/WebView2Loader.dll",
+      "sha256": "86545b66cdb0603bc26b626fb9ad610cb6e71f28d468f5ea66df23b03dda96d5",
+      "bytes": 160880,
+      "matches": true
+    }
+  ],
+  "linkage": "MSVC static attribute in webview2-com-sys src/lib.rs; final link evidence separate",
+  "binaries_committed": false,
+  "installed_runtime": "NOT VERIFIED"
+}

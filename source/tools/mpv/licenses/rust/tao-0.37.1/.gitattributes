@@ -1,0 +1,5 @@
+# Preserve byte identity; the existing main LICENSE content is unchanged.
+LICENSE -text
+# Original 75-line prefix ends with a blank line. Preserve it verbatim.
+W3C-UI-EVENTS-NOTICE -text whitespace=-blank-at-eof
+P2-G4-NOTICE-STAGING.md -text

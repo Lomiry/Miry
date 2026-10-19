@@ -1,0 +1,232 @@
+{
+  "schema": "P2-D0.6-B2-FILE-NOTICE.v1",
+  "component_id": "brotli-decompressor@6.0.1",
+  "name": "brotli-decompressor",
+  "version": "6.0.1",
+  "archive_sha256": "941cd9bd4ddab83cb46fa5a2d428f1c857b24ac78cb876cf7beb710840934bd7",
+  "cargo_license_raw": "BSD-3-Clause/MIT",
+  "expression_normalization": "NONE",
+  "source_revision": "e4f3bf3326256a5dc23e5fa9276d803f6a4ad527",
+  "b1_acceptance": {
+    "basis": "User D0.6-B2 instruction: B1 passed offline independent review; engineering implementation authorized, not final legal approval",
+    "package": "Miry-v106-P2-R1.1-D0.6-B1-Review-Package.zip",
+    "sha256": "a2a9b429d31806de64468f69fcc40a871fd1c3b3864fce07f843820d6071c025",
+    "manifest_sha256": "efdd61c20082703ff8456ba3f4f5066e20ecb95a6ea73423a98333e8ccd4fcf2",
+    "evidence_id_convention": "B1-01 through B1-12 are B2 cross-reference IDs for exact accepted B1 package members, not identifiers invented by the B1 report"
+  },
+  "file_notices": [
+    {
+      "source_file": "src/context.rs",
+      "source_sha256": "8fe7865962916fa7ce820b9fb407e6a2dd9b9c373191ad4a41c507b6be373e40",
+      "copyright": "Copyright 2013 Google Inc. All Rights Reserved.",
+      "license_statement": "Distributed under MIT license.",
+      "original_header_utf8": "// Copyright 2013 Google Inc. All Rights Reserved.\n//\n// Distributed under MIT license.\n// See file LICENSE for detail or copy at https://opensource.org/licenses/MIT\n//\n\n",
+      "header_sha256": "7fe5314b810fcfed0918ce649a5ccf59d25536a8b1cf65f94e8be96daf499461",
+      "header_start_byte": 93,
+      "header_end_byte": 263,
+      "full_license_resource": "tools/mpv/licenses/rust/brotli-9.0.0/LICENSE.MIT",
+      "full_license_sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+      "evidence_ids": [
+        "B1-01",
+        "B1-02",
+        "B1-03",
+        "B1-04",
+        "B1-06",
+        "B1-07",
+        "B1-10",
+        "B1-11"
+      ],
+      "scope": "Only src/context.rs; no inference for other crate files"
+    }
+  ],
+  "root_notice": {
+    "resource": "tools/mpv/licenses/rust/brotli-decompressor-6.0.1/LICENSE",
+    "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae",
+    "copyright": "Copyright (c) 2016 Dropbox, Inc.",
+    "license": "BSD-3-Clause",
+    "evidence_ids": [
+      "B1-09"
+    ],
+    "scope": "Preserved crate root notice; exact contribution ownership is LEGAL_REVIEW_REQUIRED; does not supersede the Google file header"
+  },
+  "history": {
+    "initial_dropbox_port": "3c32e43b16ee0b2736685c2b6ebfdc0db0cd7dc7",
+    "initial_commit_statement": "Direct port of the C brotli decompressor to Rust",
+    "bsd_introduction": "bed1dbbf65ad973c00969e483257e288b96e2cc9",
+    "dropbox_2018_extension": "8234c4931cc2682fc3ad07adb83e194d94b352b7",
+    "google_initial_matching_witness": "23934731f55d06e5b83701bf82c2f53bb9ddf56d",
+    "google_2018_matching_witness": "35e69fc7cf9421ab04ffc9d52cb36d07fa12984a",
+    "table_comparisons": [
+      {
+        "comparison": "initial table",
+        "left": "upstream/dropbox/initial-context.rs.txt",
+        "right": "upstream/google/pre-port-context.h.txt",
+        "count": 1792,
+        "exact_integer_sequence_match": true,
+        "canonical_integer_sequence_sha256": "679b58e3528f9738d61b29c2fb0f6df691fa7862c6e01dd9b0f101a9944f5e64",
+        "limitation": "Corroboration of explicit port/history evidence; numeric identity alone does not prove license inheritance or exact donor commit."
+      },
+      {
+        "comparison": "initial offsets",
+        "left": "upstream/dropbox/initial-context.rs.txt",
+        "right": "upstream/google/pre-port-context.h.txt",
+        "count": 8,
+        "exact_integer_sequence_match": true,
+        "canonical_integer_sequence_sha256": "ea6fef68a0dded5f31092f5787e42ee0f6ae8981adfcf6750b26a5a2c5b6e966",
+        "limitation": "Corroboration of explicit port/history evidence; numeric identity alone does not prove license inheritance or exact donor commit."
+      },
+      {
+        "comparison": "2018 expanded table",
+        "left": "upstream/dropbox/pinned/src__context.rs.txt",
+        "right": "upstream/google/large-window-context.h.txt",
+        "count": 2048,
+        "exact_integer_sequence_match": true,
+        "canonical_integer_sequence_sha256": "49ff36def6df214e78334ea4bd25236f67bea07356452a447206c42302006390",
+        "limitation": "Corroboration of explicit port/history evidence; numeric identity alone does not prove license inheritance or exact donor commit."
+      },
+      {
+        "comparison": "v1.0.9 table",
+        "left": "upstream/dropbox/pinned/src__context.rs.txt",
+        "right": "upstream/google/v1.0.9/c__common__context.c.txt",
+        "count": 2048,
+        "exact_integer_sequence_match": true,
+        "canonical_integer_sequence_sha256": "49ff36def6df214e78334ea4bd25236f67bea07356452a447206c42302006390",
+        "limitation": "Corroboration of explicit port/history evidence; numeric identity alone does not prove license inheritance or exact donor commit."
+      }
+    ],
+    "unique_google_donor_sha_confirmed": false,
+    "relationship": "Explicit C-to-Rust direct port, followed by table/layout adaptation; source history and full numeric comparisons corroborate the relationship. Numeric equality alone is not proof of complete license inheritance."
+  },
+  "historical_mit_versions": [
+    {
+      "copyright": "Copyright (c) 2009, 2010, 2013-2015 by the Brotli Authors.",
+      "sha256": "6e86408ccace4d14d2a9116cb81fe9fbab65f51fb01e123596e1ff5f010abe0c",
+      "evidence_id": "B1-05",
+      "retention": "Exact historical original retained in B1 evidence package; historical copyright line retained here. Whether separate distribution of this historical text is required remains LEGAL_REVIEW_REQUIRED."
+    },
+    {
+      "copyright": "Copyright (c) 2009, 2010, 2013-2016 by the Brotli Authors.",
+      "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+      "evidence_id": "B1-07",
+      "resource": "tools/mpv/licenses/rust/brotli-9.0.0/LICENSE.MIT",
+      "retention": "Existing resource reused without byte changes; sharing a resource path does not transfer brotli 9.0.0 identity to this component."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "B1-01",
+      "b1_member": "local-crate/src__context.rs.txt",
+      "sha256": "8fe7865962916fa7ce820b9fb407e6a2dd9b9c373191ad4a41c507b6be373e40",
+      "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/e4f3bf3326256a5dc23e5fa9276d803f6a4ad527/src/context.rs",
+      "revision": "e4f3bf3326256a5dc23e5fa9276d803f6a4ad527",
+      "source_path": "src/context.rs",
+      "role": "crate source; exact fixed Dropbox source bytes"
+    },
+    {
+      "id": "B1-02",
+      "b1_member": "upstream/dropbox/initial-context.rs.txt",
+      "sha256": "8ab97b767d61aee9130bdaba208aadaafaaf49f6605fceecb99a415395f38901",
+      "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/3c32e43b16ee0b2736685c2b6ebfdc0db0cd7dc7/src/context.rs",
+      "revision": "3c32e43b16ee0b2736685c2b6ebfdc0db0cd7dc7",
+      "source_path": "src/context.rs",
+      "role": "initial direct C-to-Rust port"
+    },
+    {
+      "id": "B1-03",
+      "b1_member": "upstream/dropbox/large-window-context.rs.txt",
+      "sha256": "8fe7865962916fa7ce820b9fb407e6a2dd9b9c373191ad4a41c507b6be373e40",
+      "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/8234c4931cc2682fc3ad07adb83e194d94b352b7/src/context.rs",
+      "revision": "8234c4931cc2682fc3ad07adb83e194d94b352b7",
+      "source_path": "src/context.rs",
+      "role": "2018 expanded table; byte-identical through 6.0.1"
+    },
+    {
+      "id": "B1-04",
+      "b1_member": "upstream/google/pre-port-context.h.txt",
+      "sha256": "6fadd26bccbb7045dc68a7be03cba0dcffd8872fe626698902cdfc84d8eb585b",
+      "url": "https://github.com/google/brotli/blob/23934731f55d06e5b83701bf82c2f53bb9ddf56d/dec/context.h",
+      "revision": "23934731f55d06e5b83701bf82c2f53bb9ddf56d",
+      "source_path": "dec/context.h",
+      "role": "historical matching witness; not a uniquely proven donor"
+    },
+    {
+      "id": "B1-05",
+      "b1_member": "upstream/google/pre-port-LICENSE.txt",
+      "sha256": "6e86408ccace4d14d2a9116cb81fe9fbab65f51fb01e123596e1ff5f010abe0c",
+      "url": "https://github.com/google/brotli/blob/23934731f55d06e5b83701bf82c2f53bb9ddf56d/LICENSE",
+      "revision": "23934731f55d06e5b83701bf82c2f53bb9ddf56d",
+      "source_path": "LICENSE",
+      "role": "2015 copyright-ending historical MIT original"
+    },
+    {
+      "id": "B1-06",
+      "b1_member": "upstream/google/large-window-context.h.txt",
+      "sha256": "27924012e1fdf35d85a8a2d9752dde5fb54b7655d5b06c22072231a19a1e6de9",
+      "url": "https://github.com/google/brotli/blob/35e69fc7cf9421ab04ffc9d52cb36d07fa12984a/c/common/context.h",
+      "revision": "35e69fc7cf9421ab04ffc9d52cb36d07fa12984a",
+      "source_path": "c/common/context.h",
+      "role": "2018 expanded-table historical matching witness"
+    },
+    {
+      "id": "B1-07",
+      "b1_member": "upstream/google/large-window-LICENSE.txt",
+      "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+      "url": "https://github.com/google/brotli/blob/35e69fc7cf9421ab04ffc9d52cb36d07fa12984a/LICENSE",
+      "revision": "35e69fc7cf9421ab04ffc9d52cb36d07fa12984a",
+      "source_path": "LICENSE",
+      "role": "2016 copyright-ending MIT original reused byte-for-byte"
+    },
+    {
+      "id": "B1-08",
+      "b1_member": "upstream/google/v1.0.9/LICENSE.txt",
+      "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+      "url": "https://github.com/google/brotli/blob/e61745a6b7add50d380cfd7d3883dd6c62fc2c71/LICENSE",
+      "revision": "e61745a6b7add50d380cfd7d3883dd6c62fc2c71",
+      "source_path": "LICENSE",
+      "role": "later v1.0.9 corroboration; not the original donor"
+    },
+    {
+      "id": "B1-09",
+      "b1_member": "local-crate/LICENSE.txt",
+      "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae",
+      "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/e4f3bf3326256a5dc23e5fa9276d803f6a4ad527/LICENSE",
+      "revision": "e4f3bf3326256a5dc23e5fa9276d803f6a4ad527",
+      "source_path": "LICENSE",
+      "role": "Dropbox 2016 BSD root notice retained without override of Google header"
+    },
+    {
+      "id": "B1-10",
+      "b1_member": "upstream/dropbox/initial-commit.json",
+      "sha256": "a0dfa8a8d825498c74fbe769d36083e517cfcdc7bc3beb83b9376e58e6c7696f",
+      "url": "https://github.com/dropbox/rust-brotli-decompressor/commit/3c32e43b16ee0b2736685c2b6ebfdc0db0cd7dc7",
+      "revision": "3c32e43b16ee0b2736685c2b6ebfdc0db0cd7dc7",
+      "role": "accepted B1 historical commit evidence"
+    },
+    {
+      "id": "B1-11",
+      "b1_member": "upstream/dropbox/context-2018-commit.json",
+      "sha256": "13454760bda0f221e18e2b58843d2ea4adbfbd26791e2a9293dc285ae3c5b5d8",
+      "url": "https://github.com/dropbox/rust-brotli-decompressor/commit/8234c4931cc2682fc3ad07adb83e194d94b352b7",
+      "revision": "8234c4931cc2682fc3ad07adb83e194d94b352b7",
+      "role": "accepted B1 historical commit evidence"
+    },
+    {
+      "id": "B1-12",
+      "b1_member": "upstream/google/license-2016-change.json",
+      "sha256": "a462293c3e05712633f594310461d183f7fd3456bd0495e776bc4cf57be4f626",
+      "url": "https://github.com/google/brotli/commit/29d31d5921b0a2b323ac24e7f7d0cdc9a3c0dd08",
+      "revision": "29d31d5921b0a2b323ac24e7f7d0cdc9a3c0dd08",
+      "role": "accepted B1 historical commit evidence"
+    }
+  ],
+  "other_crate_files": "NOT VERIFIED by this file-level patch",
+  "legal_review": "LEGAL_REVIEW_REQUIRED",
+  "installer_inclusion": "NOT VERIFIED",
+  "release": "NOT RELEASED",
+  "limitations": [
+    "Unique Google donor SHA was not recorded by Dropbox in the accepted evidence.",
+    "Cargo slash expression is not interpreted as SPDX OR or AND.",
+    "Final distribution sufficiency, contribution boundaries and 2015/2016 historical notice requirements require legal review.",
+    "This engineering candidate does not resume or complete the 183-component B-class audit."
+  ]
+}

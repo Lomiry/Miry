@@ -1,0 +1,12 @@
+# I2: scoped B1 originals/map and G1 shared original; other groups retain their reviewed nested rules.
+libass/** -text
+libvorbis/** -text
+libtheora/** -text
+libvpx/** -text
+B1-SOURCE-MAP.json -text
+rust/webview2-rs-0.39.1/LICENSE -text
+# I2-created entry points use stable LF; no legal originals are reformatted.
+THIRD-PARTY-COMPONENTS.json text eol=lf
+THIRD-PARTY-NOTICE-INDEX.md text eol=lf
+# B1 approved libvpx original has a final blank line; preserve it verbatim.
+libvpx/LICENSE whitespace=-blank-at-eof

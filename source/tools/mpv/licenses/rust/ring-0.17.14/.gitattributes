@@ -1,0 +1,10 @@
+# Preserve G2 extracted original legal bytes and the mapped NOTICE index.
+embedded-notices/** -text
+P2-G2-NOTICE-STAGING.md -text
+# Existing six byte-verified upstream texts stay unchanged on future checkout.
+LICENSE -text
+LICENSE-BoringSSL -text
+LICENSE-other-bits -text
+src/polyfill/once_cell/LICENSE-APACHE -text
+src/polyfill/once_cell/LICENSE-MIT -text
+third_party/fiat/LICENSE -text

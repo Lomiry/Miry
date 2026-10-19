@@ -1,0 +1,32 @@
+{
+  "version": "v1.0.6",
+  "source_baseline": "abfa6577564ddd38d826d987b0f96098c4b2a28b",
+  "installer_sha256": "9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77",
+  "runtime_volumes": [
+    {
+      "name": "Miry-v1.0.1-third-party-sources-1.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-1.zip",
+      "sha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "bytes": 1791428285,
+      "status": "PASS"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-2.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-2.zip",
+      "sha256": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "bytes": 1790458555,
+      "status": "PASS"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-3.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-3.zip",
+      "sha256": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+      "bytes": 490257003,
+      "status": "PASS"
+    }
+  ],
+  "exact_runtime_source_index": "../../../source/tools/mpv/compliance/runtime/THIRD-PARTY-SOURCES.json",
+  "local_delivery": "../../../source/tools/mpv/compliance/DELIVERY.json",
+  "rights": "../../../source/RIGHTS-STATUS.md",
+  "large_volumes_reuploaded": false
+}

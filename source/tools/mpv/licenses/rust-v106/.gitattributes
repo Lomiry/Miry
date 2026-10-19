@@ -1,0 +1,2 @@
+# Original R1.3 bytes must survive Git checkout without line-ending conversion.
+* -text

@@ -1,0 +1,7 @@
+# Keep sealed recipient records byte-identical on checkouts with autocrlf enabled.
+/LICENSE-SCOPE.json -text
+/tools/mpv/LICENSE-SCOPE.json -text
+/tools/mpv/compliance/** -text
+/tools/mpv/LICENSE-MIRY -text
+/tools/mpv/RECIPIENT-README.md -text
+/tools/mpv/THIRD-PARTY-EXCEPTIONS.md -text

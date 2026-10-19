@@ -1,0 +1,5 @@
+* -text
+.gitattributes text eol=lf
+P2-G6-NOTICE-STAGING.md text eol=lf
+OPENCORE-AMR-NB-3GPP-ATTRIBUTION whitespace=-blank-at-eol
+OPENCORE-AMR-WB-3GPP-ATTRIBUTION whitespace=-blank-at-eol

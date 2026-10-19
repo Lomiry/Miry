@@ -1,0 +1,46 @@
+#! /usr/bin/env perl
+# Copyright 2015-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+
+# March 2015
+#
+# "Teaser" Montgomery multiplication module for ARMv8. Needs more
+# work. While it does improve RSA sign performance by 20-30% (less for
+# longer keys) on most processors, for some reason RSA2048 is not
+# faster and RSA4096 goes 15-20% slower on Cortex-A57. Multiplication
+# instruction issue rate is limited on processor in question, meaning
+# that dedicated squaring procedure is a must. Well, actually all
+# contemporary AArch64 processors seem to have limited multiplication
+# issue rate, i.e. they can't issue multiplication every cycle, which
+# explains moderate improvement coefficients in comparison to
+# compiler-generated code. Recall that compiler is instructed to use
+# umulh and therefore uses same amount of multiplication instructions
+# to do the job. Assembly's edge is to minimize number of "collateral"
+# instructions and of course instruction scheduling.
+#
+# April 2015
+#
+# Squaring procedure that handles lengths divisible by 8 improves
+# RSA/DSA performance by 25-40-60% depending on processor and key
+# length. Overall improvement coefficients are always positive in
+# comparison to compiler-generated code. On Cortex-A57 improvement
+# is still modest on longest key lengths, while others exhibit e.g.
+# 50-70% improvement for RSA4096 sign. RSA2048 sign is ~25% faster
+# on Cortex-A57 and ~60-100% faster on others.

@@ -1,0 +1,4 @@
+# Exact legal bytes and generated metadata are opaque; preserve original line endings.
+* -text
+UNICODE-2017-DATA-LICENSE.txt whitespace=-blank-at-eof
+SOURCE-NOTICE-*.txt whitespace=-blank-at-eof

@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "baseline": "d5129d30697cdd3a726d83b9d9cc340cea4a8955",
+  "scope": "B1 only; P1-P5 unresolved",
+  "originalCandidateSha256": "bb5293084a2734fc1992862a91c2c47873e384ca06d7b7bce4a11dcedce0c9b9",
+  "sourceStatus": "SOURCE FILE PRESENT",
+  "stagingStatus": "STAGING INTEGRATION READY",
+  "newInstallerContainsFiles": "NOT VERIFIED",
+  "publicSourceAvailability": "NOT VERIFIED; P5 unchanged",
+  "components": [
+    {
+      "component": "libass",
+      "upstreamVersion": "0.17.5",
+      "packageName": "mingw-w64-ucrt-x86_64-libass",
+      "packageVersion": "0.17.5-1",
+      "spdx": "ISC",
+      "upstreamHome": "https://github.com/libass/libass",
+      "binaryPackage": "mingw-w64-ucrt-x86_64-libass-0.17.5-1-any.pkg.tar.zst",
+      "binaryPackageSha256": "4385fd47a77784478878f0f03f2d9afa59a5ac71facb7cad1dfe19c555e75762",
+      "sourcePart": "Miry-v1.0.1-third-party-sources-1.zip",
+      "sourcePartSha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "sourceZipMember": "msys2-sources/mingw-w64-libass-0.17.5-1.src.tar.zst",
+      "sourceArchiveSha256": "4a68edae2c1454ffcf7cf0a6fccf6930c876caa5fe2422cdb0b34d1fc0f5fb03",
+      "sourceArchiveUrl": "https://repo.msys2.org/mingw/sources/mingw-w64-libass-0.17.5-1.src.tar.zst",
+      "recipeMember": "mingw-w64-libass/PKGBUILD",
+      "recipeSha256": "7a5bd281e45fe9261942c547ccc94d196b837e754d55fe7db73b713626848527",
+      "upstreamArchiveMember": "mingw-w64-libass/libass-0.17.5.tar.xz",
+      "upstreamArchiveSha256": "2dca25c0e0c837ddf00b52011b3f82cac1e4ddd3ad018227806b0c2288864acc",
+      "notices": [
+        {
+          "path": "tools/mpv/licenses/libass/COPYING",
+          "upstreamMember": "libass-0.17.5/COPYING",
+          "sha256": "f7e30699d02798351e7f839e3d3bfeb29ce65e44efa7735c225464c4fd7dfe9c",
+          "bytes": 755,
+          "role": "original copyright/conditions/disclaimer"
+        }
+      ],
+      "binaries": [
+        {
+          "path": "tools/mpv/libass-9.dll",
+          "sha256": "cb2b46133b3bd9630384148bd7229e987af9703208d4329fc2215f4170b8dc6b",
+          "bytes": 345174
+        }
+      ]
+    },
+    {
+      "component": "libvorbis",
+      "upstreamVersion": "1.3.7",
+      "packageName": "mingw-w64-ucrt-x86_64-libvorbis",
+      "packageVersion": "1.3.7-3",
+      "spdx": "BSD-3-Clause",
+      "upstreamHome": "https://xiph.org/",
+      "binaryPackage": "mingw-w64-ucrt-x86_64-libvorbis-1.3.7-3-any.pkg.tar.zst",
+      "binaryPackageSha256": "d013d2c7489b175299f9ea8bd9b70cf456337943b0f13e6eb470beb6c3fc251f",
+      "sourcePart": "Miry-v1.0.1-third-party-sources-1.zip",
+      "sourcePartSha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "sourceZipMember": "msys2-sources/mingw-w64-libvorbis-1.3.7-3.src.tar.zst",
+      "sourceArchiveSha256": "429f3219de93435cbaa7737627b3b548ba8917d09c525f2005b9283ac5b39142",
+      "sourceArchiveUrl": "https://repo.msys2.org/mingw/sources/mingw-w64-libvorbis-1.3.7-3.src.tar.zst",
+      "recipeMember": "mingw-w64-libvorbis/PKGBUILD",
+      "recipeSha256": "38f4410bcfba376befc9031b4c204e9abc1d5949d2e617c53497cdb19db5316a",
+      "upstreamArchiveMember": "mingw-w64-libvorbis/libvorbis-1.3.7.tar.gz",
+      "upstreamArchiveSha256": "0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab",
+      "notices": [
+        {
+          "path": "tools/mpv/licenses/libvorbis/COPYING",
+          "upstreamMember": "libvorbis-1.3.7/COPYING",
+          "sha256": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+          "bytes": 1470,
+          "role": "original copyright/conditions/disclaimer"
+        }
+      ],
+      "binaries": [
+        {
+          "path": "tools/mpv/libvorbis-0.dll",
+          "sha256": "d1b40d7f33171ccb8cd2a238bea36c01176c54de5bf22afae332fb33f26a008f",
+          "bytes": 179630
+        },
+        {
+          "path": "tools/mpv/libvorbisenc-2.dll",
+          "sha256": "971cfa7c8866653aae9760a317dc3838e821f3911d9c6a8a8ef90f4a13de798f",
+          "bytes": 577914
+        }
+      ]
+    },
+    {
+      "component": "libtheora",
+      "upstreamVersion": "1.2.0",
+      "packageName": "mingw-w64-ucrt-x86_64-libtheora",
+      "packageVersion": "1.2.0-1",
+      "spdx": "BSD-3-Clause",
+      "upstreamHome": "https://www.theora.org",
+      "binaryPackage": "mingw-w64-ucrt-x86_64-libtheora-1.2.0-1-any.pkg.tar.zst",
+      "binaryPackageSha256": "7c5d7caadc7da0b293ccb3eb8ed9d00f335fd62527a16cfd2a4fddca43d8de11",
+      "sourcePart": "Miry-v1.0.1-third-party-sources-1.zip",
+      "sourcePartSha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "sourceZipMember": "msys2-sources/mingw-w64-libtheora-1.2.0-1.src.tar.zst",
+      "sourceArchiveSha256": "2390e994f10cb3e3e5f32898010ecede4e61bd10d47cfe4d1500ed8c7a774e85",
+      "sourceArchiveUrl": "https://repo.msys2.org/mingw/sources/mingw-w64-libtheora-1.2.0-1.src.tar.zst",
+      "recipeMember": "mingw-w64-libtheora/PKGBUILD",
+      "recipeSha256": "6febdba0e00b0385072bb558eb9f9ab61c12f7604571b8c18afc2274a3455f54",
+      "upstreamArchiveMember": "mingw-w64-libtheora/libtheora-1.2.0.tar.gz",
+      "upstreamArchiveSha256": "279327339903b544c28a92aeada7d0dcfd0397b59c2f368cc698ac56f515906e",
+      "notices": [
+        {
+          "path": "tools/mpv/licenses/libtheora/COPYING",
+          "upstreamMember": "libtheora-1.2.0/COPYING",
+          "sha256": "8417fad7da775735564e209484a2e011e0fa201e94f01fdbee6e4977e478e6fc",
+          "bytes": 1470,
+          "role": "original copyright/conditions/disclaimer"
+        },
+        {
+          "path": "tools/mpv/licenses/libtheora/LICENSE",
+          "upstreamMember": "libtheora-1.2.0/LICENSE",
+          "sha256": "2c902950c73a63cd285dc0c36573de9c5fefe66d49312949c51d941f33e92932",
+          "bytes": 960,
+          "role": "original patent statement"
+        }
+      ],
+      "binaries": [
+        {
+          "path": "tools/mpv/libtheoradec-2.dll",
+          "sha256": "0b9877e581421abe4090abacf2cd8c04df6de00520d7a34b9f41b46a11a02a80",
+          "bytes": 97913
+        },
+        {
+          "path": "tools/mpv/libtheoraenc-2.dll",
+          "sha256": "ed0fb82d04220070d2f53832a9cb653546ddce2c704a53bfacae7597666db4d7",
+          "bytes": 247882
+        }
+      ]
+    },
+    {
+      "component": "libvpx",
+      "upstreamVersion": "1.17.0",
+      "packageName": "mingw-w64-ucrt-x86_64-libvpx",
+      "packageVersion": "1.17.0-1",
+      "spdx": "BSD-3-Clause",
+      "upstreamHome": "https://www.webmproject.org/",
+      "binaryPackage": "mingw-w64-ucrt-x86_64-libvpx-1.17.0-1-any.pkg.tar.zst",
+      "binaryPackageSha256": "8ff6919dbb88ea26ce28d22fd81d6f0d6e200cf56a4dd81ffc2d33124fe98024",
+      "sourcePart": "Miry-v1.0.1-third-party-sources-1.zip",
+      "sourcePartSha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "sourceZipMember": "msys2-sources/mingw-w64-libvpx-1.17.0-1.src.tar.zst",
+      "sourceArchiveSha256": "7b322fffe50501d26bbbb489135e5001f6096da2529ad992c712c00c94bb38dd",
+      "sourceArchiveUrl": "https://repo.msys2.org/mingw/sources/mingw-w64-libvpx-1.17.0-1.src.tar.zst",
+      "recipeMember": "mingw-w64-libvpx/PKGBUILD",
+      "recipeSha256": "ec57aa54095093c69364d4870f84176a6470ff6eed74bea64954ed4ebec74592",
+      "upstreamArchiveMember": "mingw-w64-libvpx/libvpx-1.17.0.tar.gz",
+      "upstreamArchiveSha256": "1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a",
+      "notices": [
+        {
+          "path": "tools/mpv/licenses/libvpx/LICENSE",
+          "upstreamMember": "libvpx-1.17.0/LICENSE",
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+          "bytes": 1537,
+          "role": "original copyright/conditions/disclaimer"
+        },
+        {
+          "path": "tools/mpv/licenses/libvpx/PATENTS",
+          "upstreamMember": "libvpx-1.17.0/PATENTS",
+          "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+          "bytes": 1436,
+          "role": "original patent statement"
+        }
+      ],
+      "binaries": [
+        {
+          "path": "tools/mpv/libvpx-1.dll",
+          "sha256": "759bb95b0cd6c75bfce910f003b26a2d95ed3c94ef1a20dcfd4c89a0569f2016",
+          "bytes": 4405542
+        }
+      ]
+    }
+  ]
+}

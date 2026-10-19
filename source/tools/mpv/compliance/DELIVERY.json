@@ -1,0 +1,449 @@
+{
+  "base": "270d09ec7ef6604eec868dcf7426c50b97076a13",
+  "result": "PARTIAL; NOT RELEASED",
+  "rescan": false,
+  "source_and_data": [
+    {
+      "component": "option-ext@0.2.0",
+      "archive": "sources/option-ext-0.2.0.crate",
+      "sha256": "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d",
+      "members": [
+        {
+          "member": "option-ext-0.2.0/.cargo_vcs_info.json",
+          "sha256": "a39230404ac7fee558f4bb1de8449a6aeafcc064d63228bcc32428e0e4366dd8",
+          "bytes": 94,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/.gitignore",
+          "sha256": "2af33de9c3bbcf406c0258dc6c860f3274508525636089c6356611dc46b5175b",
+          "bytes": 36,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/Cargo.toml",
+          "sha256": "ecd67cb17a0586f1406b7d494ef93191ed8ebf149db46667a7778052d94e1e6c",
+          "bytes": 866,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/Cargo.toml.orig",
+          "sha256": "202b034590ddf9857aaa639982f7fa8d0b2d36abc4e8223b0211bcd104e34180",
+          "bytes": 399,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/LICENSE.txt",
+          "sha256": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+          "bytes": 16727,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/README.md",
+          "sha256": "4778f769203e879f816c7b8538f427dd542755fe2efde9ee2193815b199c8648",
+          "bytes": 1602,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/src/impl.rs",
+          "sha256": "2f0b6f0421c4d37b1a8f0412cf71e9720cb8c5ddcec61ac802474e40ab8a3f9b",
+          "bytes": 490,
+          "modified": false
+        },
+        {
+          "member": "option-ext-0.2.0/src/lib.rs",
+          "sha256": "5a0a1fb2ca896a06bcbc32024c8fe64be682170585be6313ba3ff2a87672d1fc",
+          "bytes": 2397,
+          "modified": false
+        }
+      ],
+      "modifications": [],
+      "source_cache_comparison": "PASS; all archive members byte-identical to isolated build cache",
+      "result": "已补齐",
+      "recipient_delivery": "Complete archive shipped offline with candidate",
+      "anonymous_public_access": "NOT VERIFIED; publication not authorized"
+    },
+    {
+      "component": "publicsuffix@2.3.0",
+      "archive": "sources/publicsuffix-2.3.0.crate",
+      "sha256": "6f42ea446cab60335f76979ec15e12619a2165b5ae2c12166bef27d283a9fadf",
+      "members": [
+        {
+          "member": "publicsuffix-2.3.0/.cargo_vcs_info.json",
+          "sha256": "d0fa391c1a9b1f1800b5a9b30303071aee7336f17d4c5dabdb13c5867a11a670",
+          "bytes": 94,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/.github/workflows/ci.yml",
+          "sha256": "176932fdc549e1223a5607c89f0bf780d9a4681178af182790033e2f68e33ee4",
+          "bytes": 1199,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/.gitignore",
+          "sha256": "97503c8cf1fc53fd41e237662402477c0ab257225d25fe21470494a0b1bbec3c",
+          "bytes": 24,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/Cargo.toml",
+          "sha256": "cf233493e9a4eacf5275824a984976854608634da3ad626dadda5b3cfb7b5943",
+          "bytes": 1576,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/Cargo.toml.orig",
+          "sha256": "eb37129bb176cf2f204c9f71a196a6f3961b12a1bdb82f1cc04d5fac5a48d4e3",
+          "bytes": 1272,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/LICENSE",
+          "sha256": "f09adf500d35265ee63ef552f8e61487e09ee549da66eaf0ec7924e3ad7cf14b",
+          "bytes": 1074,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/README.md",
+          "sha256": "969658bab3f22a03172be92da712a403f8833aa488b75d2604d3e9fd2557c2e3",
+          "bytes": 2442,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/benches/benches.rs",
+          "sha256": "913908b9ec8a515104ef76567938cf8833bef0b42d32f807091860293f02864e",
+          "bytes": 543,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/src/error.rs",
+          "sha256": "69c1fb66d9fa70f2c19f2817d25bb6a27e765a8351fe92a5d46e85bb7ed0478f",
+          "bytes": 995,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/src/lib.rs",
+          "sha256": "7e6fa08ee5cd64e550433774cd02a4df0310fb60f78966a4bd741fc7a88bc5d1",
+          "bytes": 12791,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/tests/list.rs",
+          "sha256": "7437b6f3af502231fec2e736cc71953a861384ddfcdb6ba5757fd15be0ad897a",
+          "bytes": 9198,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/tests/public_suffix_list.dat",
+          "sha256": "88ba7239ff5d73a9fd4037aca6007dc8d1a8de22af34463b56e2a2585a74e6fc",
+          "bytes": 230741,
+          "modified": false
+        },
+        {
+          "member": "publicsuffix-2.3.0/tests/tests.txt",
+          "sha256": "61a3a502cf471d1a919d5e43c10e910023b0c4230e1db506f8e2ff0b47d2234e",
+          "bytes": 2320,
+          "modified": false
+        }
+      ],
+      "modifications": [],
+      "source_cache_comparison": "PASS; all archive members byte-identical to isolated build cache",
+      "result": "已补齐",
+      "recipient_delivery": "Complete archive shipped offline with candidate",
+      "anonymous_public_access": "NOT VERIFIED; publication not authorized"
+    },
+    {
+      "component": "webpki-roots@1.0.9",
+      "archive": "sources/webpki-roots-1.0.9.crate",
+      "sha256": "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a",
+      "members": [
+        {
+          "member": "webpki-roots-1.0.9/.cargo_vcs_info.json",
+          "sha256": "9bed1ddf509d1ff839a7e59629cb8b62e243c318a1b2ad5c07ec8d11284e5290",
+          "bytes": 106,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/Cargo.lock",
+          "sha256": "06344cee218ea63aa3347918e469d8360fb736840ec9d080a186c9e5c72b3e96",
+          "bytes": 18592,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/Cargo.toml",
+          "sha256": "c065fa807b0670e11a766526477abf5af99074821f2fe9d6117770229884ccff",
+          "bytes": 1645,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/Cargo.toml.orig",
+          "sha256": "1c85ac4ecfc28ebb6f1be161fb190617c51b7d8c6568a251ae6e66cfa7b2396d",
+          "bytes": 737,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/LICENSE",
+          "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8",
+          "bytes": 2371,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/README.md",
+          "sha256": "3f785bbd28b6628dadc4203a9368b729453aaa65df454e54a0c2f8a7a42395f5",
+          "bytes": 1151,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/src/lib.rs",
+          "sha256": "581232b6fb8d5b8df315d34c798099ee759cb4930ffed77c331e7b38fed82b15",
+          "bytes": 404248,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/tests/codegen.rs",
+          "sha256": "06afca3127ffc684836406544e44ccfbb7cd0ae7ae15102c42bc62d076765ecd",
+          "bytes": 6145,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/tests/data/tubitak/inter.der",
+          "sha256": "bf32da954571659aaf715c13ee703e3643dfcbaeee2d82110ca68eb57cb67ce0",
+          "bytes": 1654,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/tests/data/tubitak/root.der",
+          "sha256": "46edc3689046d53a453fb3104ab80dcaec658b2660ea1629dd7e867990648716",
+          "bytes": 1127,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/tests/data/tubitak/subj.der",
+          "sha256": "8f0d491077ddc360e7416620af2cf4a8a4010e5b6f5a6d0f557f4f2499a38029",
+          "bytes": 1649,
+          "modified": false
+        },
+        {
+          "member": "webpki-roots-1.0.9/tests/verify.rs",
+          "sha256": "ef69aafbd92ba96b74325569025b44b04b021d526217ef69e7c3d46d83414632",
+          "bytes": 7792,
+          "modified": false
+        }
+      ],
+      "modifications": [],
+      "source_cache_comparison": "PASS; all archive members byte-identical to isolated build cache",
+      "result": "已补齐",
+      "recipient_delivery": "Complete archive shipped offline with candidate",
+      "anonymous_public_access": "NOT VERIFIED; publication not authorized"
+    }
+  ],
+  "mpl": {
+    "result": "已补齐",
+    "scope": "Exact option-ext/publicsuffix archives including tests; file grants retained",
+    "modifications": "None relative to locked archives; no project patches",
+    "build": "npm ci; npm run build; cargo build --release --locked. Restore pinned mpv separately. See root README.",
+    "publication_gate": "Credential-free public source location still pending separate authorization"
+  },
+  "cdla": {
+    "result": "已补齐",
+    "version": "webpki-roots@1.0.9",
+    "data": "Exact src/lib.rs and tests/data members in sources/webpki-roots-1.0.9.crate",
+    "agreement": "CDLA-Permissive-2.0.txt",
+    "results_exception_claimed": false
+  },
+  "webview2": {
+    "result": "SDK/Loader 材料已补齐；实际 Runtime 部署仍待核实",
+    "wrapper": "webview2-com/sys 0.39.1",
+    "sdk": "1.0.3800.47 (retained nuspec)",
+    "target": "x86_64-pc-windows-msvc",
+    "linkage": "Exact official x64 Loader inputs match NuGet SDK 1.0.3800.47; MSVC static link declaration in locked crate. Final PE import check recorded in private acceptance; no full link map captured.",
+    "materials": [
+      {
+        "path": "webview2-sdk/LICENSE.txt",
+        "sha256": "0af8f1b807512aae39c2ac1aa4d0cae65cabecb6fd554b8439a5162a0d6eca55",
+        "bytes": 1487
+      },
+      {
+        "path": "webview2-sdk/NOTICE.txt",
+        "sha256": "106423785c5b7eba0a8e61d1837f2132e9c828e20ad530f565d981c1df60dd90",
+        "bytes": 3894
+      },
+      {
+        "path": "webview2-sdk/Microsoft.Web.WebView2.nuspec",
+        "sha256": "31e49576d10d4a5abf4318850e6d3fde457800e6228610a5854a4251af56b5ff",
+        "bytes": 1367
+      },
+      {
+        "build_input": "x64/WebView2LoaderStatic.lib",
+        "sha256": "89c6b872783b8f6c3cedbff618adb42082d455c615453ae10cfc753f1e8f25d8",
+        "bytes": 10500472
+      },
+      {
+        "build_input": "x64/WebView2Loader.dll",
+        "sha256": "86545b66cdb0603bc26b626fb9ad610cb6e71f28d468f5ea66df23b03dda96d5",
+        "bytes": 160880
+      },
+      {
+        "build_input": "src/lib.rs",
+        "sha256": "9e8ead3a21710d872bcc1d6ed214af1b91eca24e158733305bb77b1199247ea1",
+        "bytes": 1866
+      },
+      {
+        "build_input": "build.rs",
+        "sha256": "deafb36ba38083bd048fadb28b2266a94322bb5a793e85f4c50a040cf3da5c8a",
+        "bytes": 2742
+      }
+    ],
+    "runtime": "NOT VERIFIED; installer configured downloadBootstrapper; installed version/terms not measured",
+    "sdk_package_verification": "webview2-sdk/PACKAGE-VERIFICATION.json"
+  },
+  "runtime": {
+    "result": "已补齐（精确源码、补丁、配方及访问；历史权利和来源争议未解除）",
+    "mpv_commit": "a1f50f2c38206dc943f331cf5a5b02f97a0ce219",
+    "source_archive_hashes": {
+      "Miry-v1.0.1-third-party-sources-1.zip": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "Miry-v1.0.1-third-party-sources-2.zip": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "Miry-v1.0.1-third-party-sources-3.zip": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e"
+    },
+    "index": "runtime/THIRD-PARTY-SOURCES.json",
+    "requirement": "Final v1.0.6 release presentation still requires separate publication authorization",
+    "patent_amr_lerc": "仍待核实；历史权利/来源结论未解除",
+    "verification": "runtime/VERIFICATION.json",
+    "recipient_instructions": "runtime/RECIPIENT-README.md",
+    "volumes": [
+      {
+        "name": "Miry-v1.0.1-third-party-sources-1.zip",
+        "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-1.zip",
+        "sha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+        "bytes": 1791428285,
+        "status": "PASS"
+      },
+      {
+        "name": "Miry-v1.0.1-third-party-sources-2.zip",
+        "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-2.zip",
+        "sha256": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+        "bytes": 1790458555,
+        "status": "PASS"
+      },
+      {
+        "name": "Miry-v1.0.1-third-party-sources-3.zip",
+        "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-3.zip",
+        "sha256": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+        "bytes": 490257003,
+        "status": "PASS"
+      }
+    ],
+    "anonymous_access": "PASS; all three volumes downloaded anonymously and fixed SHA256 verified; v1.0.1 index supplied offline",
+    "source_index_obsolete_link": "v1.0.3 asset returned HTTP 404; do not use it as the recipient index"
+  },
+  "holder_evidence": [
+    {
+      "issue_id": "B8-002-HOLDER",
+      "component": "cookie_store@0.22.1",
+      "result": "仍待核实",
+      "reason": "针对 cookie_store/serde_json/serde_with 取得权威历史 attribution 澄清或权利人文件级证据；不以 Cargo authors 填空。",
+      "action_if_grant_cannot_be_established": "必须取得授权或必须替换；不得猜测版权主体"
+    },
+    {
+      "issue_id": "B8-031-HOLDER",
+      "component": "serde_json@1.0.151",
+      "result": "仍待核实",
+      "reason": "针对 cookie_store/serde_json/serde_with 取得权威历史 attribution 澄清或权利人文件级证据；不以 Cargo authors 填空。",
+      "action_if_grant_cannot_be_established": "必须取得授权或必须替换；不得猜测版权主体"
+    },
+    {
+      "issue_id": "B8-033-HOLDER",
+      "component": "serde_with@3.24.0",
+      "result": "仍待核实",
+      "reason": "针对 cookie_store/serde_json/serde_with 取得权威历史 attribution 澄清或权利人文件级证据；不以 Cargo authors 填空。",
+      "action_if_grant_cannot_be_established": "必须取得授权或必须替换；不得猜测版权主体"
+    },
+    {
+      "issue_id": "B8-028-HOLDER",
+      "component": "ring@0.17.14",
+      "result": "仍待核实",
+      "reason": "补权威缺失 COPYRIGHT/holder 记录；无法建立已授权范围时，取得权利人明确许可或替换。",
+      "action_if_grant_cannot_be_established": "必须取得授权或必须替换；不得猜测版权主体"
+    },
+    {
+      "issue_id": "B8-035-HOLDER",
+      "component": "siphasher@1.0.4",
+      "result": "仍待核实",
+      "reason": "补权威缺失 COPYRIGHT/holder 记录；无法建立已授权范围时，取得权利人明确许可或替换。",
+      "action_if_grant_cannot_be_established": "必须取得授权或必须替换；不得猜测版权主体"
+    }
+  ],
+  "unicode": [
+    {
+      "decision_id": "EX-UNIC",
+      "result": "仍待核实",
+      "reason": "明确实现代码的备选许可候选，另列 Unicode 10 数据授权；不以实现 MIT 覆盖数据。",
+      "issue_ids": [
+        "B8-047-EXPRESSION",
+        "B8-048-EXPRESSION",
+        "B8-049-EXPRESSION",
+        "B8-050-EXPRESSION",
+        "B8-051-EXPRESSION"
+      ]
+    },
+    {
+      "decision_id": "UNIC-HISTORICAL",
+      "result": "仍待核实",
+      "reason": "按 UNIC 0.9.0 表、转换脚本、metadata 与实现逐一绑定历史授权，保留原始声明和变换说明。",
+      "issue_ids": [
+        "B8-047-UNICODE",
+        "B8-048-UNICODE",
+        "B8-049-UNICODE",
+        "B8-050-UNICODE",
+        "B8-051-UNICODE"
+      ]
+    },
+    {
+      "decision_id": "UNIC-MODERN",
+      "result": "仍待核实",
+      "reason": "保留每组件 holder/year；生成表、workspace 和测试分别标注；原文相同只复用存储。",
+      "issue_ids": [
+        "B8-011-UNICODE",
+        "B8-012-UNICODE",
+        "B8-013-UNICODE",
+        "B8-014-UNICODE",
+        "B8-015-UNICODE",
+        "B8-016-UNICODE",
+        "B8-017-UNICODE",
+        "B8-020-UNICODE",
+        "B8-024-UNICODE",
+        "B8-043-UNICODE",
+        "B8-062-UNICODE",
+        "B8-064-UNICODE",
+        "B8-065-UNICODE",
+        "B8-066-UNICODE",
+        "B8-067-UNICODE"
+      ]
+    },
+    {
+      "decision_id": "UNIC-SEGMENTATION",
+      "result": "仍待核实",
+      "reason": "对分词实现及历史/现行表分别核实来源；保留随数据的声明。",
+      "issue_ids": [
+        "B8-052-UNICODE"
+      ]
+    }
+  ],
+  "historical_gates_closed": 0,
+  "public_source_location_published": false,
+  "remaining_release_conditions": [
+    "Original-import/contribution/artwork ownership evidence; whole-application MIT clearance is not established",
+    "Five inherited holder evidence requirements and historical Unicode/source-provenance/patent/AMR/LERC questions",
+    "Account-specific Provider authorization/scope/quota and safe real input; real installed OFFICIAL service acceptance",
+    "Isolated Windows installation/reinstallation/upgrade/data preservation/uninstall and actual WebView2 Runtime deployment",
+    "Real Emby/playback/local danmaku/window/mpv recovery acceptance in that isolated identity",
+    "Independent review and separate public source/release authorization; six historical gates retained"
+  ]
+}

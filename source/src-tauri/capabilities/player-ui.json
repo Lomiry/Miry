@@ -1,0 +1,6 @@
+{
+  "identifier": "player-ui",
+  "description": "Owned player controls can exchange UI events with the main window",
+  "windows": ["player-ui"],
+  "permissions": ["core:event:default"]
+}

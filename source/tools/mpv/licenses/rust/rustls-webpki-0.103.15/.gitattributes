@@ -1,0 +1,5 @@
+# Preserve exact original G3 license/header bytes and index on checkout.
+LICENSE -text
+embedded-notices/** -text
+upstream-exceptions/** -text
+P2-G3-NOTICE-STAGING.md -text

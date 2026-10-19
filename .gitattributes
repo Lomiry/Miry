@@ -2,3 +2,7 @@
 docs/third-party/v1.0.4/* -text
 
 docs/third-party/v1.0.5/* -text
+
+# Preserve v1.0.6 source and recipient material hashes on every checkout.
+/source/** -text
+/docs/third-party/v1.0.6/* -text

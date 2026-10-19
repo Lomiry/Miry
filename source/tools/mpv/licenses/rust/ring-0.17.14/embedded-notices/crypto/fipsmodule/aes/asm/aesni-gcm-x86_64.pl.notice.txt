@@ -1,0 +1,46 @@
+#! /usr/bin/env perl
+# Copyright 2013-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+#
+#
+# AES-NI-CTR+GHASH stitch.
+#
+# February 2013
+#
+# OpenSSL GCM implementation is organized in such way that its
+# performance is rather close to the sum of its streamed components,
+# in the context parallelized AES-NI CTR and modulo-scheduled
+# PCLMULQDQ-enabled GHASH. Unfortunately, as no stitch implementation
+# was observed to perform significantly better than the sum of the
+# components on contemporary CPUs, the effort was deemed impossible to
+# justify. This module is based on combination of Intel submissions,
+# [1] and [2], with MOVBE twist suggested by Ilya Albrekht and Max
+# Locktyukhin of Intel Corp. who verified that it reduces shuffles
+# pressure with notable relative improvement, achieving 1.0 cycle per
+# byte processed with 128-bit key on Haswell processor, 0.74 - on
+# Broadwell, 0.63 - on Skylake... [Mentioned results are raw profiled
+# measurements for favourable packet size, one divisible by 96.
+# Applications using the EVP interface will observe a few percent
+# worse performance.]
+#
+# Knights Landing processes 1 byte in 1.25 cycles (measured with EVP).
+#
+# [1] http://rt.openssl.org/Ticket/Display.html?id=2900&user=guest&pass=guest
+# [2] http://www.intel.com/content/dam/www/public/us/en/documents/software-support/enabling-high-performance-gcm.pdf

@@ -1,0 +1,35 @@
+#! /usr/bin/env perl
+# Copyright 2009-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+#
+# This module implements support for Intel AES-NI extension. In
+# OpenSSL context it's used with Intel engine, but can also be used as
+# drop-in replacement for crypto/aes/asm/aes-586.pl [see below for
+# details].
+#
+# Performance.
+#
+# To start with see corresponding paragraph in aesni-x86_64.pl...
+# Instead of filling table similar to one found there I've chosen to
+# summarize *comparison* results for raw ECB, CTR and CBC benchmarks.
+# The simplified table below represents 32-bit performance relative
+# to 64-bit one in every given point. Ratios vary for different
+# encryption modes, therefore interval values.
+#

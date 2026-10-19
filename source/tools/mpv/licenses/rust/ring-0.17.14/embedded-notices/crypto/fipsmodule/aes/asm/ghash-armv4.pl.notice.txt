@@ -1,0 +1,87 @@
+#! /usr/bin/env perl
+# Copyright 2010-2018 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+#
+# April 2010
+#
+# The module implements "4-bit" GCM GHASH function and underlying
+# single multiplication operation in GF(2^128). "4-bit" means that it
+# uses 256 bytes per-key table [+32 bytes shared table]. There is no
+# experimental performance data available yet. The only approximation
+# that can be made at this point is based on code size. Inner loop is
+# 32 instructions long and on single-issue core should execute in <40
+# cycles. Having verified that gcc 3.4 didn't unroll corresponding
+# loop, this assembler loop body was found to be ~3x smaller than
+# compiler-generated one...
+#
+# July 2010
+#
+# Rescheduling for dual-issue pipeline resulted in 8.5% improvement on
+# Cortex A8 core and ~25 cycles per processed byte (which was observed
+# to be ~3 times faster than gcc-generated code:-)
+#
+# February 2011
+#
+# Profiler-assisted and platform-specific optimization resulted in 7%
+# improvement on Cortex A8 core and ~23.5 cycles per byte.
+#
+# March 2011
+#
+# Add NEON implementation featuring polynomial multiplication, i.e. no
+# lookup tables involved. On Cortex A8 it was measured to process one
+# byte in 15 cycles or 55% faster than integer-only code.
+#
+# April 2014
+#
+# Switch to multiplication algorithm suggested in paper referred
+# below and combine it with reduction algorithm from x86 module.
+# Performance improvement over previous version varies from 65% on
+# Snapdragon S4 to 110% on Cortex A9. In absolute terms Cortex A8
+# processes one byte in 8.45 cycles, A9 - in 10.2, A15 - in 7.63,
+# Snapdragon S4 - in 9.33.
+#
+# Câmara, D.; Gouvêa, C. P. L.; López, J. & Dahab, R.: Fast Software
+# Polynomial Multiplication on ARM Processors using the NEON Engine.
+#
+# http://conradoplg.cryptoland.net/files/2010/12/mocrysen13.pdf
+
+# ====================================================================
+# Note about "528B" variant. In ARM case it makes lesser sense to
+# implement it for following reasons:
+#
+# - performance improvement won't be anywhere near 50%, because 128-
+#   bit shift operation is neatly fused with 128-bit xor here, and
+#   "538B" variant would eliminate only 4-5 instructions out of 32
+#   in the inner loop (meaning that estimated improvement is ~15%);
+# - ARM-based systems are often embedded ones and extra memory
+#   consumption might be unappreciated (for so little improvement);
+#
+# Byte order [in]dependence. =========================================
+#
+# Caller is expected to maintain specific *dword* order in Htable,
+# namely with *least* significant dword of 128-bit value at *lower*
+# address. This differs completely from C code and has everything to
+# do with ldm instruction and order in which dwords are "consumed" by
+# algorithm. *Byte* order within these dwords in turn is whatever
+# *native* byte order on current platform. See gcm128.c for working
+# example...
+
+# This file was patched in BoringSSL to remove the variable-time 4-bit
+# implementation.

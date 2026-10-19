@@ -1,0 +1,4 @@
+# I2: preserve the B1 approved index suffix and its mixed original line endings.
+.gitattributes text eol=lf
+**/.gitattributes text eol=lf
+THIRD-PARTY-NOTICES.md -text

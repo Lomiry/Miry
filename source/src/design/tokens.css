@@ -1,0 +1,95 @@
+/* Miry desktop design system: native system fonts, content-led dark theme. */
+:root {
+  --bg: #0d0f10;
+  --sidebar-bg: #121516;
+  --surface: #191c1e;
+  --surface-raised: #232729;
+  --surface-hover: #2c3133;
+  --text: #f1f3f2;
+  --muted: #bac3c0;
+  --subtle: #9ba8a3;
+  --line: #ffffff21;
+  --line-strong: #ffffff38;
+  --accent: #96e2bd;
+  --accent-hover: #b5f0d1;
+  --accent-soft: #96e2bd14;
+  --accent-ink: #102c20;
+  --danger: #ffb5a9;
+  --danger-bg: #291b1b;
+  --warning: #f4d49b;
+  --overlay: #0009;
+  --focus-ring: var(--accent);
+  --scrollbar: #89958e66;
+  --artwork-bg: #232c29;
+  --bg-app: var(--bg);
+  --bg-surface: var(--surface);
+  --bg-elevated: var(--surface-raised);
+  --bg-hover: var(--surface-hover);
+  --bg-selected: var(--accent-soft);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: var(--subtle);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --poster-min: 156px;
+  --icon-target: 32px;
+  --play-target: 48px;
+  --progress-height: 3px;
+  --episode-row-height: 116px;
+  --control-height: 36px;
+  --shadow-menu: 0 8px 28px #0007;
+  --shadow-dialog: 0 16px 64px #0009;
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-enter: 220ms;
+  --ease: cubic-bezier(0.2, 0.65, 0.3, 1);
+  --font-xs: 13.5px;
+  --font-sm: 14px;
+  --font-body: 15px;
+  --font-control: 15px;
+  --font-section: 20px;
+  --font-page: 30px;
+  --sidebar-expanded-width: 224px;
+  --sidebar-width: var(--sidebar-expanded-width);
+  --sidebar-rail-width: 64px;
+  --page-gutter: 32px;
+  font-family:
+    "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei",
+    system-ui, sans-serif;
+  font-size: var(--font-body);
+  font-synthesis: none;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: dark;
+}
+@media (max-width: 1000px) {
+  :root {
+    --sidebar-expanded-width: 208px;
+    --page-gutter: 24px;
+  }
+}
+@media (max-width: 800px) {
+  :root {
+    --sidebar-expanded-width: 200px;
+    --page-gutter: 20px;
+  }
+}
+@media (min-width: 1800px) {
+  :root {
+    --page-gutter: 48px;
+  }
+}

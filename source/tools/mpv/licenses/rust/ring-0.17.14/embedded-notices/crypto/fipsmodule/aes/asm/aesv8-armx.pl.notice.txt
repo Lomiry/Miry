@@ -1,0 +1,36 @@
+#! /usr/bin/env perl
+# Copyright 2014-2016 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# ====================================================================
+# Written by Andy Polyakov <appro@openssl.org> for the OpenSSL
+# project.
+# ====================================================================
+#
+# This module implements support for ARMv8 AES instructions. The
+# module is endian-agnostic in sense that it supports both big- and
+# little-endian cases. As does it support both 32- and 64-bit modes
+# of operation. Latter is achieved by limiting amount of utilized
+# registers to 16, which implies additional NEON load and integer
+# instructions. This has no effect on mighty Apple A7, where results
+# are literally equal to the theoretical estimates based on AES
+# instruction latencies and issue rates. On Cortex-A53, an in-order
+# execution core, this costs up to 10-15%, which is partially
+# compensated by implementing dedicated code path for 128-bit
+# CBC encrypt case. On Cortex-A57 parallelizable mode performance
+# seems to be limited by sheer amount of NEON instructions...
+#
+# Performance in cycles per byte processed with 128-bit key:
+#

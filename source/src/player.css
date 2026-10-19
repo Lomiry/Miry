@@ -1,0 +1,105 @@
+.play-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 25px 0;
+}
+.compact {
+  width: auto;
+  padding: 12px 15px;
+}
+.play-error {
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 10px 0;
+}
+.player-panel {
+  background: #1a221b;
+  border: 1px solid #455739;
+  border-radius: 10px;
+  padding: 24px;
+  margin-top: 35px;
+}
+.player-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.player-heading .eyebrow {
+  margin-bottom: 10px;
+}
+.player-heading strong {
+  font-size: 17px;
+}
+.player-heading small {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.player-buttons {
+  display: flex;
+  align-items: center;
+  margin: 22px 0 15px;
+}
+.player-buttons button {
+  display: flex;
+}
+.player-buttons span {
+  font-size: 12px;
+  color: #b9c6b0;
+  margin-right: auto;
+  font-variant-numeric: tabular-nums;
+}
+.player-panel input[type="range"] {
+  accent-color: #cef396;
+  cursor: pointer;
+}
+.player-buttons input {
+  width: 100px;
+}
+.seek {
+  width: 100%;
+  margin: 10px 0 20px;
+}
+.track-controls {
+  display: flex;
+  gap: 20px;
+}
+.track-controls label {
+  font-size: 11px;
+  color: #b1c0a9;
+  flex: 1;
+}
+.track-controls select {
+  display: block;
+  margin-top: 9px;
+  padding: 10px;
+  background: #131a13;
+  color: #d3e0c7;
+  border: 1px solid #394b31;
+  border-radius: 5px;
+  max-width: 100%;
+  width: 100%;
+  font: inherit;
+}
+.player-panel .play-error {
+  margin-bottom: 0;
+}
+@media (max-width: 620px) {
+  .player-panel {
+    padding: 16px;
+  }
+  .player-buttons {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .player-buttons input {
+    width: 70px;
+  }
+  .track-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

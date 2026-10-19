@@ -1,0 +1,55 @@
+{
+  "version": "v1.0.6",
+  "source_baseline": "abfa6577564ddd38d826d987b0f96098c4b2a28b",
+  "validated_source_candidate_sha256": "c10937394606a9019c22853c867af26a08df310be58f61012f1db1d4cd34d1cc",
+  "installer": {
+    "name": "Miry-OFFICIAL-1.0.6-x64-setup.exe",
+    "bytes": 68620227,
+    "sha256": "9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77",
+    "rebuilt": false
+  },
+  "source_candidate_build_fix": [
+    {
+      "path": "scripts/bootstrap-runtime.ps1",
+      "previous_sha256": "2407dce1c2eca6ab09cb64a82a1cf584234f6d63f2be7f32aab65a5756a9e488",
+      "bytes": 5768,
+      "sha256": "81ea3137975c8fc8bf723a4b39a87139d27b7da5a9da50829722789303186bae",
+      "rights_status": "OWNERSHIP_EVIDENCE_PENDING"
+    },
+    {
+      "path": "docs/runtime-supplemental-manifest-1.0.6.json",
+      "bytes": 643351,
+      "sha256": "2a556f39c9effb86b20a8a9878b34cf3549692b425c0b2d94bb3b79dc379a75a",
+      "role": "Generated exact path/size/hash validation metadata derived from base source manifest; component rights are unchanged."
+    }
+  ],
+  "application_functionality_changed_for_release": false,
+  "dependencies_changed_for_release": false,
+  "private_git_history_included": false,
+  "application_wide_MIT_clearance": false,
+  "rights_status": "RIGHTS-STATUS.md",
+  "runtime_source_volumes": [
+    {
+      "name": "Miry-v1.0.1-third-party-sources-1.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-1.zip",
+      "sha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "bytes": 1791428285,
+      "status": "PASS"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-2.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-2.zip",
+      "sha256": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "bytes": 1790458555,
+      "status": "PASS"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-3.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-3.zip",
+      "sha256": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+      "bytes": 490257003,
+      "status": "PASS"
+    }
+  ],
+  "installer_reproducible_build": "NOT VERIFIED"
+}
