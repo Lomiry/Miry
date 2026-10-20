@@ -19,6 +19,12 @@ pub fn page_url() -> String {
         SOURCE.owner, SOURCE.repository
     )
 }
+pub(crate) fn asset_url(tag: &str, name: &str) -> String {
+    format!(
+        "https://github.com/{}/{}/releases/download/{tag}/{name}",
+        SOURCE.owner, SOURCE.repository
+    )
+}
 fn api_url() -> String {
     format!(
         "https://api.github.com/repos/{}/{}/releases/latest",
@@ -44,24 +50,24 @@ pub fn validate_page(value: &str) -> Result<(), String> {
     Ok(())
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Asset {
-    name: String,
-    size: u64,
-    browser_download_url: String,
+    pub(crate) name: String,
+    pub(crate) size: u64,
+    pub(crate) browser_download_url: String,
 }
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct ReleaseInfo {
-    version: String,
-    tag_name: String,
+    pub(crate) version: String,
+    pub(crate) tag_name: String,
     name: String,
     notes: String,
     url: String,
     published_at: Option<String>,
-    newer: bool,
-    assets: Vec<Asset>,
+    pub(crate) newer: bool,
+    pub(crate) assets: Vec<Asset>,
 }
-fn parse_release(data: Value) -> Result<ReleaseInfo, String> {
+pub(crate) fn parse_release(data: Value) -> Result<ReleaseInfo, String> {
     let tag = data["tag_name"].as_str().ok_or("缺少发布版本")?;
     if tag.len() > 64
         || data["draft"].as_bool() == Some(true)
@@ -198,6 +204,13 @@ mod tests {
     }
     #[test]
     fn release_semver_and_metadata() {
+        let current = format!("v{}", env!("CARGO_PKG_VERSION"));
+        assert!(!parse_release(release(&current)).unwrap().newer);
+        assert!(
+            !parse_release(release(&format!("{current}+build.2")))
+                .unwrap()
+                .newer
+        );
         for (tag, newer) in [
             ("v1.0.3", false),
             ("v1.0.2", false),
@@ -217,12 +230,22 @@ mod tests {
     }
     #[test]
     fn malformed_or_missing_tags_and_previews_are_rejected() {
-        for tag in ["preview", "v1", "vv1.0.1", "v01.0.1", "v1.0.1-rc.1"] {
+        for tag in [
+            "preview",
+            "v1",
+            "vv1.0.1",
+            "v01.0.1",
+            "v1.0.1-rc.1",
+            "v9.0.0-RC1",
+        ] {
             assert!(parse_release(release(tag)).is_err());
         }
         assert!(parse_release(json!({"html_url":page_url()})).is_err());
         let mut data = release("v1.0.1");
         data["draft"] = json!(true);
+        assert!(parse_release(data).is_err());
+        let mut data = release("v9.0.0");
+        data["prerelease"] = json!(true);
         assert!(parse_release(data).is_err());
     }
     #[test]
@@ -233,6 +256,11 @@ mod tests {
             "https://u:p@github.com/Lomiry/Miry/releases",
             "http://127.0.0.1:18196/qa/release",
             "https://github.com/other/repo/releases",
+            "http://github.com/Lomiry/Miry/releases",
+            "https://github.com.evil.test/Lomiry/Miry/releases",
+            "https://github.com/Lomiry/Miry/releases?redirect=evil",
+            "https://github.com/Lomiry/Miry/releases#evil",
+            "https://github.com/Lomiry/Miry/releases/download/v1.1.0/setup.exe",
         ] {
             assert!(validate_page(link).is_err());
         }

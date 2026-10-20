@@ -1,0 +1,114 @@
+{
+  "version": "1.0.7",
+  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "scope": "Windows normal/build package additions relative to published v1.0.6; no dependency license election or blanket Miry MIT grant",
+  "components": [
+    {
+      "name": "minisign-verify",
+      "version": "0.3.0",
+      "repository": "https://github.com/jedisct1/rust-minisign-verify",
+      "archive_url": "https://static.crates.io/crates/minisign-verify/minisign-verify-0.3.0.crate",
+      "archive_sha256": "871285dc19d8d0ebe0eef3d0e99a205f2a71363b122632cbbfa4a6c370a960ce",
+      "license_expression": "MIT",
+      "vcs": {
+        "git": {
+          "sha1": "96b921399b87b29e29cb5dc948b99b465ca58489"
+        },
+        "path_in_vcs": ""
+      },
+      "originals": [
+        {
+          "path": "originals/minisign-verify-0.3.0/LICENSE",
+          "archive_member": "minisign-verify-0.3.0/LICENSE",
+          "sha256": "42c8695fbc468866d9756be99af0ba4e37d733f8daa3c8827c8d80b8bec1b2f9",
+          "bytes": 2312
+        }
+      ],
+      "file_level_exceptions": "Original LICENSE includes rust-crypto attribution, original ISC-labelled third-party paragraph and Graydon Hoare/Mozilla Foundation notices; full original is preserved, not normalized from package MIT metadata."
+    },
+    {
+      "name": "rustls-platform-verifier",
+      "version": "0.7.1",
+      "repository": "https://github.com/rustls/rustls-platform-verifier",
+      "archive_url": "https://static.crates.io/crates/rustls-platform-verifier/rustls-platform-verifier-0.7.1.crate",
+      "archive_sha256": "1167586491e2b18b8bfbb293e8180ec17c201c4f076d7cb3070ca964e7598f98",
+      "license_expression": "MIT OR Apache-2.0",
+      "vcs": {
+        "git": {
+          "sha1": "252e25161a91af476cbea620e29d277592d27ec7"
+        },
+        "path_in_vcs": "rustls-platform-verifier"
+      },
+      "originals": [
+        {
+          "path": "originals/rustls-platform-verifier-0.7.1/LICENSE-APACHE",
+          "archive_member": "rustls-platform-verifier-0.7.1/LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357
+        },
+        {
+          "path": "originals/rustls-platform-verifier-0.7.1/LICENSE-MIT",
+          "archive_member": "rustls-platform-verifier-0.7.1/LICENSE-MIT",
+          "sha256": "1c7cf76689c837a68ed8d704994e52a0f2940c087958f860d17f3186afbdcc0c",
+          "bytes": 1066
+        }
+      ]
+    },
+    {
+      "name": "tauri-plugin-updater",
+      "version": "2.14.0",
+      "repository": "https://github.com/tauri-apps/plugins-workspace",
+      "archive_url": "https://static.crates.io/crates/tauri-plugin-updater/tauri-plugin-updater-2.14.0.crate",
+      "archive_sha256": "7259989d4fe11b2bf51f7d671642249b1837c4ae2da1430dc713ae38f98ceeec",
+      "license_expression": "Apache-2.0 OR MIT",
+      "vcs": {
+        "git": {
+          "sha1": "44293a5722efcaf27060504e63b17aeba721b40f"
+        },
+        "path_in_vcs": "plugins/updater"
+      },
+      "originals": [
+        {
+          "path": "originals/tauri-plugin-updater-2.14.0/LICENSE.spdx",
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE.spdx",
+          "sha256": "eb8a6c84630461b352badcab1dbe5d0168c56d377358b2b8c86b51003272d5ef",
+          "bytes": 888
+        },
+        {
+          "path": "originals/tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0",
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0",
+          "sha256": "0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9",
+          "bytes": 10173
+        },
+        {
+          "path": "originals/tauri-plugin-updater-2.14.0/LICENSE_MIT",
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE_MIT",
+          "sha256": "89ff9689dcf9dd53968785d05a26f7898bb169dbfcada8d032b3e68cf0d55607",
+          "bytes": 1089
+        }
+      ]
+    },
+    {
+      "name": "zip",
+      "version": "4.6.1",
+      "repository": "https://github.com/zip-rs/zip2.git",
+      "archive_url": "https://static.crates.io/crates/zip/zip-4.6.1.crate",
+      "archive_sha256": "caa8cd6af31c3b31c6631b8f483848b91589021b28fffe50adada48d4f4d2ed1",
+      "license_expression": "MIT",
+      "vcs": {
+        "git": {
+          "sha1": "56fa5f6e1f3e29d747e5875867e7a647aa612b8c"
+        },
+        "path_in_vcs": ""
+      },
+      "originals": [
+        {
+          "path": "originals/zip-4.6.1/LICENSE",
+          "archive_member": "zip-4.6.1/LICENSE",
+          "sha256": "04dc52136d82400b11df5f474949863a70a5d05d2278dec45b99c479494450a6",
+          "bytes": 1217
+        }
+      ]
+    }
+  ]
+}

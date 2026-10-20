@@ -1,5 +1,10 @@
 # 安装、历史校验与第三方资料
 
+## v1.0.7
+
+[更新日志、RC7 校验与验收边界](v1.0.7.md) · [第三方资料](../third-party/v1.0.7/THIRD-PARTY-SOURCES.md)
+
+
 最新正式版为 v1.0.6；OFFICIAL 文件名为 `Miry-Setup-v1.0.6.exe`。普通用户下载对应版本的 `Miry-Setup-vX.Y.Z.exe`，退出 Miry 后安装。升级前备份配置并保留用户数据，不要手动清除 AppData。采用 Windows x64 当前用户安装，安装程序包含 mpv；缺少 WebView2 时官方引导程序可能需要联网。更新由用户手动下载安装，应用不提供后台自动更新。
 
 安装程序未数字签名，Windows SmartScreen 可能提示警告。请从本仓库的 Releases 获取文件，并核对下表中的 SHA256。用户账号与设置保存在独立 AppData 中，与安装目录分离。

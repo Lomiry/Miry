@@ -408,6 +408,8 @@ async function preparePlaybackInner(
     subtitlePosition: settings.subtitlePosition,
     subtitleScale: settings.subtitleScale,
     videoFit: normalizeVideoFit(settings.videoFit),
+    secondarySubtitlePosition: settings.secondarySubtitlePosition,
+    secondarySubtitleScale: settings.secondarySubtitleScale,
     volume: settings.volume,
     fullscreen: settings.fullscreen,
     hardwareDecode: settings.hardwareDecode,
@@ -560,6 +562,8 @@ export interface PlayerSnapshot {
   fullscreen?: boolean;
   secondarySubtitle?: number;
   subtitleScale?: number;
+  secondarySubtitlePosition?: number;
+  secondarySubtitleScale?: number;
   embedded?: boolean;
   bufferSeconds?: number;
   buffering?: boolean;

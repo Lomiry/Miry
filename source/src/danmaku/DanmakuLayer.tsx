@@ -11,9 +11,13 @@ export default function DanmakuLayer({
   settings: DanmakuSettings;
   clock: DanmakuClock | null;
 }) {
-  const signature = JSON.stringify(incoming);
+  // Alpha is paint state: changing it must not rebuild lanes or reset motion.
+  const { opacity, ...layout } = incoming;
+  const alpha = useRef(opacity);
+  alpha.current = opacity;
+  const signature = JSON.stringify(layout);
   const settings = useMemo(
-    () => JSON.parse(signature) as DanmakuSettings,
+    () => ({ ...JSON.parse(signature), opacity: 1 }) as DanmakuSettings,
     [signature],
   );
   const canvas = useRef<HTMLCanvasElement>(null),
@@ -31,6 +35,7 @@ export default function DanmakuLayer({
     let width = 0,
       height = 0,
       lastTime = NaN,
+      lastAlpha = NaN,
       lastPaused: boolean | undefined;
     const entries = filterDanmaku(doc.entries, settings);
     const resize = () => {
@@ -64,13 +69,20 @@ export default function DanmakuLayer({
         const pausedChanged = current.paused !== lastPaused;
         lastPaused = current.paused;
         session.current = current.session;
-        if (time !== lastTime || changed || pausedChanged || !current.active) {
+        if (
+          time !== lastTime ||
+          alpha.current !== lastAlpha ||
+          changed ||
+          pausedChanged ||
+          !current.active
+        ) {
           context.clearRect(0, 0, width, height);
           const rows =
             current.active && current.loaded
               ? engine.current.step(time, changed)
               : [];
-          context.globalAlpha = settings.opacity;
+          context.globalAlpha = alpha.current;
+          lastAlpha = alpha.current;
           context.lineWidth = 2.5;
           context.strokeStyle = "#000";
           context.textBaseline = "top";

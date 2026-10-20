@@ -36,7 +36,13 @@ export type PlayerAction =
   | { kind: "mpv-key"; code: string }
   | { kind: "route-probe"; index: number; media: boolean }
   | { kind: "route-dismiss" | "route-suppress" }
-  | { kind: "control"; action: string; value?: number; persist?: boolean }
+  | {
+      kind: "control";
+      action: string;
+      value?: number;
+      persist?: boolean;
+      playSessionId?: string;
+    }
   | { kind: "return" | "next" | "previous" | "restart" | "diagnostics" }
   | { kind: "source"; id: string }
   | { kind: "route" | "queue-select" | "queue-remove"; index: number }

@@ -96,3 +96,32 @@ dandan_release.rs
 !/docs/history/workspace-20261009/releases/
 !/docs/history/workspace-20261009/releases/**/
 !/docs/history/workspace-20261009/releases/**/*.md
+
+# R1.5.1 contains sanitized review text/source deltas only, never build artifacts.
+!qa/
+qa/*
+!qa/release/
+qa/release/*
+!qa/release/R1.5.1/
+!qa/release/R1.5.1/*.md
+!qa/release/R1.5.1/*.py
+!qa/release/R1.5.1/.gitignore
+!qa/release/R1.5.1/.gitattributes
+!qa/release/R1.5.1/BUILD-MODE-VERIFICATION.json
+!qa/release/R1.5.1/UPDATED-SOURCE-CANDIDATE-MANIFEST.json
+!qa/release/R1.5.1/SOURCE-CANDIDATE-DELTA.zip
+!qa/release/R1.5.1/evidence/
+!qa/release/R1.5.1/evidence/*.json
+!qa/release/R1.5.1/evidence/*.log
+
+# R1.6 sanitized implementation, source-only exports and verification receipts.
+!qa/release/R1.6/
+!qa/release/R1.6/**
+qa/release/R1.6/__pycache__/
+qa/release/R1.6/*.pyc
+!/tools/mpv/RECIPIENT-README.md
+!/tools/mpv/LICENSE-MIRY
+!/tools/mpv/LICENSE-SCOPE.json
+!/tools/mpv/THIRD-PARTY-EXCEPTIONS.md
+!/tools/mpv/compliance/
+!/tools/mpv/compliance/**

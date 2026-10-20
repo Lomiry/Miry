@@ -1,0 +1,10 @@
+2056be0064da0daf58026e40390346f106ef12570f40b3ed6a3cc302da6e6392  INDEX.json
+7974f2404e15189e8352cfdc2a3c47b01c39e2b38d42436ac12a501c1f95b679  NOTICE.txt
+42c8695fbc468866d9756be99af0ba4e37d733f8daa3c8827c8d80b8bec1b2f9  originals/minisign-verify-0.3.0/LICENSE
+c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4  originals/rustls-platform-verifier-0.7.1/LICENSE-APACHE
+1c7cf76689c837a68ed8d704994e52a0f2940c087958f860d17f3186afbdcc0c  originals/rustls-platform-verifier-0.7.1/LICENSE-MIT
+0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9  originals/tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0
+89ff9689dcf9dd53968785d05a26f7898bb169dbfcada8d032b3e68cf0d55607  originals/tauri-plugin-updater-2.14.0/LICENSE_MIT
+eb8a6c84630461b352badcab1dbe5d0168c56d377358b2b8c86b51003272d5ef  originals/tauri-plugin-updater-2.14.0/LICENSE.spdx
+04dc52136d82400b11df5f474949863a70a5d05d2278dec45b99c479494450a6  originals/zip-4.6.1/LICENSE
+413ad925f16760a6c5999228ac5bc11d1e530d52578f28ab73eda46068d2ece2  SOURCES.json

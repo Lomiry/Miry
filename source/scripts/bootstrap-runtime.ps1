@@ -6,7 +6,6 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/runtime-manifest-1.0.3.json') -Encoding UTF8 -Raw | ConvertFrom-Json
-$supplementalManifest = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/runtime-supplemental-manifest-1.0.6.json') -Encoding UTF8 -Raw | ConvertFrom-Json
 $runtimeRoot = Join-Path $repoRoot 'tools/mpv'
 
 function Get-RuntimePath([string]$Root, [string]$Relative) {
@@ -19,61 +18,22 @@ function Get-RuntimePath([string]$Root, [string]$Relative) {
     return $path
 }
 
-function Get-RuntimeEntries([switch]$IncludeSupplemental) {
-    $entries = @{}
-    foreach ($entry in $manifest.files) { $entries[$entry.path] = $entry }
-    if ($IncludeSupplemental) {
-        foreach ($entry in $supplementalManifest.files) {
-            if ($entries.ContainsKey($entry.path) -ne $entry.overridesLegacy) { throw 'Invalid supplemental override.' }
-            $entries[$entry.path] = $entry
-        }
-    }
-    return $entries.Values
-}
-
-function Assert-Runtime([string]$Root, [switch]$IncludeSupplemental, [switch]$SupplementalOnly) {
-    $entries = @(Get-RuntimeEntries -IncludeSupplemental:$IncludeSupplemental)
-    $allowed = @{}
-    foreach ($entry in $entries) { $allowed[(Get-RuntimePath $Root $entry.path)] = $true }
-    $required = $entries
-    if ($SupplementalOnly) { $required = $supplementalManifest.files }
-    foreach ($entry in $required) {
+function Assert-Runtime([string]$Root) {
+    foreach ($entry in $manifest.files) {
         $path = Get-RuntimePath $Root $entry.path
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing runtime file: $($entry.path)" }
         if ((Get-Item -LiteralPath $path).Length -ne $entry.bytes -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $entry.sha256) {
             throw "Runtime hash mismatch: $($entry.path)"
         }
     }
-    foreach ($file in Get-ChildItem -LiteralPath $Root -File -Recurse) {
-        if (-not $allowed.ContainsKey($file.FullName)) {
-            throw 'Runtime contains unexpected files; preserve and review them before restoring.'
-        }
+    if (@(Get-ChildItem -LiteralPath $Root -File -Recurse).Count -ne $manifest.fileCount) {
+        throw 'Runtime contains unexpected files; preserve and review them before restoring.'
     }
-}
-
-function Copy-RuntimeFiles([string]$Source, [string]$Destination, [string]$Backup) {
-    # Validate retained resources and reject unknown files before changing the destination.
-    Assert-Runtime $Destination -IncludeSupplemental -SupplementalOnly
-    $overrides = @{}
-    foreach ($entry in $supplementalManifest.files) { if ($entry.overridesLegacy) { $overrides[$entry.path] = $true } }
-    foreach ($entry in $manifest.files) {
-        if ($overrides.ContainsKey($entry.path)) { continue }
-        $path = Get-RuntimePath $Destination $entry.path
-        if (Test-Path -LiteralPath $path -PathType Leaf) {
-            if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -eq $entry.sha256) { continue }
-            $saved = Get-RuntimePath $Backup $entry.path
-            New-Item -ItemType Directory -Path (Split-Path -Parent $saved) -Force | Out-Null
-            Copy-Item -LiteralPath $path -Destination $saved
-        }
-        New-Item -ItemType Directory -Path (Split-Path -Parent $path) -Force | Out-Null
-        Copy-Item -LiteralPath (Get-RuntimePath $Source $entry.path) -Destination $path -Force
-    }
-    Assert-Runtime $Destination -IncludeSupplemental
 }
 
 if ($VerifyOnly) {
-    Assert-Runtime $runtimeRoot -IncludeSupplemental
-    Write-Output "Runtime and retained R1.6 resources verified; mpv commit $($manifest.mpvCommit)."
+    Assert-Runtime $runtimeRoot
+    Write-Output "Runtime verified: $($manifest.fileCount) files; mpv commit $($manifest.mpvCommit)."
     exit 0
 }
 
@@ -106,6 +66,19 @@ Assert-Runtime $extracted
 # Preserve different existing bytes (including Git checkout line endings) before replacement.
 # No files are deleted, no installer is run, and no user configuration is accessed.
 $backupRoot = Join-Path $cacheRoot ('preserved-' + [Guid]::NewGuid().ToString('N'))
-Copy-RuntimeFiles $extracted $runtimeRoot $backupRoot
-Write-Output "Runtime restored and retained R1.6 resources verified; mpv commit $($manifest.mpvCommit)."
+foreach ($entry in $manifest.files) {
+    $destination = Get-RuntimePath $runtimeRoot $entry.path
+    if ((Test-Path -LiteralPath $destination -PathType Leaf) -and (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant() -ne $entry.sha256) {
+        $backup = Get-RuntimePath $backupRoot $entry.path
+        New-Item -ItemType Directory -Path (Split-Path -Parent $backup) -Force | Out-Null
+        Copy-Item -LiteralPath $destination -Destination $backup
+    }
+}
+foreach ($entry in $manifest.files) {
+    $destination = Get-RuntimePath $runtimeRoot $entry.path
+    New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+    Copy-Item -LiteralPath (Get-RuntimePath $extracted $entry.path) -Destination $destination -Force
+}
+Assert-Runtime $runtimeRoot
+Write-Output "Runtime restored: $($manifest.fileCount) files; mpv commit $($manifest.mpvCommit)."
 Write-Output "Installer SHA256: $($manifest.installer.sha256)"

@@ -56,6 +56,7 @@ import { isEditableTarget, isComposingKey } from "../player/shortcuts";
 import Tooltip from "./Tooltip";
 import PlayerSlider from "./PlayerSlider";
 import SubtitleSlider from "./SubtitleSlider";
+import SecondarySubtitlePosition from "./SecondarySubtitlePosition";
 import { playbackResolution } from "../player/resolution";
 import Toast, { type ToastTone } from "./Toast";
 import { identifyQuality } from "../player/quality";
@@ -117,6 +118,27 @@ export default function PlayerChrome({
   const [editing, setEditing] = useState(false),
     [pending, setPending] = useState(false),
     [localError, setLocalError] = useState("");
+  const [subtitlePositionEdit, setSubtitlePositionEdit] = useState<{
+    value: number;
+    revision: number;
+    session?: string;
+  } | null>(null);
+  const settledSubtitlePosition = useRef<typeof subtitlePositionEdit>(null);
+  useEffect(() => {
+    const settled = settledSubtitlePosition.current;
+    if (
+      settled &&
+      (settled.revision !== model.revision ||
+        settled.session !== state.playSessionId ||
+        settled.value === state.secondarySubtitlePosition)
+    )
+      settledSubtitlePosition.current = null;
+  });
+  const positioning =
+    !!subtitlePositionEdit &&
+    state.active &&
+    subtitlePositionEdit.revision === model.revision &&
+    subtitlePositionEdit.session === state.playSessionId;
   const [hover, setHover] = useState<{ time: number; left: number } | null>(
     null,
   );
@@ -258,11 +280,12 @@ export default function PlayerChrome({
       model.error ||
       busy ||
       editing ||
+      positioning ||
       popover.menu ||
       model.routeHint
     ),
     model.revision,
-    !!popover.menu || editing,
+    !!popover.menu || editing || positioning,
     owned ? "player-ui" : "main",
   );
   const run = async (action: PlayerAction, close = false) => {
@@ -298,6 +321,7 @@ export default function PlayerChrome({
       )
         return;
       if (model.shortcutsBlocked) return;
+      if (positioning) return;
       if (e.key === "Escape" && popover.menu) {
         e.preventDefault();
         dismissActiveOverlay();
@@ -364,6 +388,7 @@ export default function PlayerChrome({
     model.shortcuts,
     model.inputConfig,
     model.shortcutsBlocked,
+    positioning,
     popover.menu,
     popover.close,
   ]);
@@ -575,6 +600,44 @@ export default function PlayerChrome({
           dispatch({ kind: "control", action: "subtitleScale", value, persist })
         }
       />
+      <SubtitleSlider
+        key={`secondary-scale-${model.revision}`}
+        label="次字幕大小"
+        min={0.5}
+        max={2}
+        step={0.01}
+        value={state.secondarySubtitleScale ?? 1}
+        disabled={!state.loaded || model.busy}
+        send={(value, persist) =>
+          dispatch({
+            kind: "control",
+            action: "secondarySubtitleScale",
+            value,
+            persist,
+            playSessionId: state.playSessionId,
+          })
+        }
+      />
+      <button
+        disabled={busy || !state.loaded || !state.embedded}
+        onClick={() => {
+          setSubtitlePositionEdit({
+            // IPC acknowledgements can arrive before the next native snapshot.
+            value:
+              settledSubtitlePosition.current?.value ??
+              state.secondarySubtitlePosition ??
+              0,
+            revision: model.revision,
+            session: state.playSessionId,
+          });
+          popover.reset();
+        }}
+      >
+        调整次字幕位置
+      </button>
+      <p className="player-menu-note">
+        次字幕独立调整大小和垂直位置；默认位于顶部。需开启次字幕查看实际效果，位图字幕保留原生位置。
+      </p>
       {(
         [
           ["字幕延迟", "subtitleDelay", state.subtitleDelay || 0, -30, 30, 0.5],
@@ -719,7 +782,13 @@ export default function PlayerChrome({
           <DanmakuSettings
             value={{ ...model.danmaku.settings, offset: model.danmaku.offset }}
             onChange={(patch) =>
-              void run({ kind: "danmaku", command: "settings", patch })
+              patch.opacity !== undefined
+                ? void dispatch({
+                    kind: "danmaku",
+                    command: "settings",
+                    patch,
+                  }).catch(() => setLocalError("透明度调整未完成，请重试。"))
+                : void run({ kind: "danmaku", command: "settings", patch })
             }
           />
         </fieldset>
@@ -1036,6 +1105,29 @@ export default function PlayerChrome({
         popover.open("more");
       }}
     >
+      {positioning && subtitlePositionEdit && (
+        <SecondarySubtitlePosition
+          key={`${subtitlePositionEdit.revision}-${subtitlePositionEdit.session}`}
+          value={subtitlePositionEdit.value}
+          send={(value, persist) =>
+            dispatch({
+              kind: "control",
+              action: "secondarySubtitlePosition",
+              value,
+              persist,
+              playSessionId: subtitlePositionEdit.session,
+            })
+          }
+          onClose={(value) => {
+            settledSubtitlePosition.current = {
+              ...subtitlePositionEdit,
+              value,
+            };
+            setSubtitlePositionEdit(null);
+            open("settings");
+          }}
+        />
+      )}
       {notice && (
         <Toast
           message={notice.message}
@@ -1046,7 +1138,7 @@ export default function PlayerChrome({
       <div
         className="player-heading"
         aria-hidden={chrome.phase === "hidden"}
-        inert={chrome.phase === "hidden"}
+        inert={chrome.phase === "hidden" || positioning}
         onTransitionEnd={chrome.onTransitionEnd}
       >
         {model.capabilities.return &&
@@ -1068,7 +1160,7 @@ export default function PlayerChrome({
           className="player-console"
           ref={chrome.console}
           aria-hidden={chrome.phase === "hidden"}
-          inert={chrome.phase === "hidden"}
+          inert={chrome.phase === "hidden" || positioning}
           onTransitionEnd={chrome.onTransitionEnd}
         >
           <div

@@ -1,0 +1,31 @@
+{
+  "source_base_commit": "9a27566772e81608eec7eb42fbf849a7d4df7db7",
+  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "target": "x86_64-pc-windows-msvc",
+  "cargo_tree_scope": "normal,build; no extra features",
+  "windows_tree_sha256": "b0c145f2438fdbde31c99e6d21b00cd51678c5aaac392de97a2773cdb46233e7",
+  "chain": [
+    "tauri-plugin-updater@2.14.0",
+    "osakit@0.3.1",
+    "objc2-osa-kit@0.3.2"
+  ],
+  "updater_osakit_target_conditions": [
+    "cfg(target_os = \"macos\")"
+  ],
+  "selected_for_windows": false,
+  "rc6_installer_listing_matches": [],
+  "rc6_source_archive_entries": [
+    "tools/mpv/compliance/sources/option-ext-0.2.0.crate",
+    "tools/mpv/compliance/sources/publicsuffix-2.3.0.crate",
+    "tools/mpv/compliance/sources/webpki-roots-1.0.9.crate"
+  ],
+  "packaging_resource_mapping": {
+    "../tools/mpv/": "tools/mpv/"
+  },
+  "rc7_notice_policy": "Actual RC7 package inspected: supplemental resources match four Windows components and seven original legal files; no objc2-osa-kit/osakit/Apple SDK source archive or binary/SDK path in package. Windows dependency tree exclusion retained.",
+  "upstream_caveat": "Preserve exact lock metadata Zlib OR Apache-2.0 OR MIT and upstream LICENSE.md Apple SDK caveat; no inferred missing copyright/permission text and no republishing of that archive in this candidate.",
+  "rc7_build_source_commit": "956124c665478091dc9ed7e4429cefe09a25c2f4",
+  "rc7_installer_sha256": "0e05936d613f00bbc73f44aafe5454a0f35e7e8a5ef484b5a28476bd226bfaa2",
+  "rc7_installer_listing_matches": [],
+  "rc7_actual_package_scope_verified": true
+}

@@ -1,6 +1,8 @@
-# Miry 1.0.6 recipient materials
+# Miry 1.0.7 RC recipient materials
 
 These files are installed beside Miry under `tools/mpv/`. Read the [full NOTICE](licenses/rust-v106/NOTICE.txt), [component index](licenses/rust-v106/INDEX.json), [original-file manifest](licenses/rust-v106/RESOURCE-MANIFEST.json), [source/data delivery record](compliance/DELIVERY.json) and [Miry license scope](LICENSE-SCOPE.json) offline. The Miry [MIT text](LICENSE-MIRY) is subject to its ownership scope; [third-party exceptions](THIRD-PARTY-EXCEPTIONS.md) are preserved.
+
+For the v1.0.7 Windows dependency additions, also read the [supplemental NOTICE](licenses/rust-v107/NOTICE.txt), [original-file index](licenses/rust-v107/INDEX.json), [upstream source records](licenses/rust-v107/SOURCES.json) and [checksums](licenses/rust-v107/SHA256.txt). These include the complete minisign-verify LICENSE, including Frank Denis and the original rust-crypto third-party copyright/permission text. This supplement preserves upstream alternatives and exceptions; it does not relicense all Miry code or replace the historical notice.
 
 The R1.3 header and `licenses/rust-v106/README.txt` describe the historical internal staging state. R1.6 has now integrated those exact resources in this private Windows candidate under owner authorization. That integration does not close the remaining grant, source/data or release-acceptance gates. This candidate remains NOT RELEASED and requires independent review.
 

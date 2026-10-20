@@ -44,6 +44,10 @@ pub struct Launch {
     subtitle_scale: f64,
     #[serde(default, deserialize_with = "crate::video_fit::deserialize_preference")]
     video_fit: VideoFit,
+    #[serde(default)]
+    secondary_subtitle_position: f64,
+    #[serde(default = "default_subtitle_scale")]
+    secondary_subtitle_scale: f64,
     subtitles: Vec<Subtitle>,
     play_method: String,
     #[serde(default)]
@@ -115,6 +119,8 @@ pub struct Snapshot {
     fullscreen: bool,
     secondary_subtitle: Option<i64>,
     subtitle_scale: f64,
+    secondary_subtitle_position: f64,
+    secondary_subtitle_scale: f64,
     embedded: bool,
     buffer_seconds: f64,
     buffering: bool,
@@ -208,6 +214,9 @@ pub struct Player(
 pub fn begin_shutdown(player: &Player) -> bool {
     !player.3.swap(true, Ordering::SeqCst)
 }
+pub(crate) fn cancel_shutdown(player: &Player) {
+    player.3.store(false, Ordering::SeqCst);
+}
 pub enum UiEvent {
     Key(String),
     ToggleFullscreen,
@@ -275,6 +284,10 @@ fn validate(launch: &Launch) -> Result<(), String> {
         || !(0.0..=100.0).contains(&launch.subtitle_position)
         || !launch.subtitle_scale.is_finite()
         || !(0.6..=1.8).contains(&launch.subtitle_scale)
+        || !launch.secondary_subtitle_position.is_finite()
+        || !(0.0..=100.0).contains(&launch.secondary_subtitle_position)
+        || !launch.secondary_subtitle_scale.is_finite()
+        || !(0.5..=2.0).contains(&launch.secondary_subtitle_scale)
         || launch
             .volume
             .is_some_and(|n| !n.is_finite() || !(0.0..=100.0).contains(&n))
@@ -382,6 +395,7 @@ pub async fn player_control(
     window: tauri::WebviewWindow,
     action: String,
     value: Option<f64>,
+    expected_session_id: Option<String>,
 ) -> Result<(), String> {
     let snapshot = player
         .0
@@ -413,13 +427,17 @@ pub async fn player_control(
             _ => {}
         }
     }
-    let tx = player
-        .0
-        .lock()
-        .await
-        .as_ref()
-        .map(|h| h.tx.clone())
-        .ok_or("播放器尚未启动")?;
+    let tx = {
+        let guard = player.0.lock().await;
+        let handle = guard.as_ref().ok_or("播放器尚未启动")?;
+        if expected_session_id
+            .as_ref()
+            .is_some_and(|id| *id != handle.snapshot.borrow().play_session_id)
+        {
+            return Err("播放会话已改变".into());
+        }
+        handle.tx.clone()
+    };
     let n = value.unwrap_or(0.0);
     if !n.is_finite() {
         return Err("控制参数无效".into());
@@ -447,6 +465,9 @@ pub async fn player_control(
         "speed" if (0.5..=3.0).contains(&n) => json!(["set_property", "speed", n]),
         "subtitleDelay" if (-30.0..=30.0).contains(&n) => json!(["set_property", "sub-delay", n]),
         "subtitlePosition" if (0.0..=100.0).contains(&n) => json!(["set_property", "sub-pos", n]),
+        "secondarySubtitlePosition" | "secondarySubtitleScale" => {
+            secondary_subtitle_command(&action, n)?
+        }
         "audioDelay" if (-10.0..=10.0).contains(&n) => json!(["set_property", "audio-delay", n]),
         "loopA" if n >= 0.0 => json!(["set_property", "ab-loop-a", n]),
         "loopB" if snapshot.loop_a.is_some_and(|a| n > a) => {
@@ -546,6 +567,18 @@ async fn apply_video_fit(tx: &mpsc::Sender<Rpc>, mode: VideoFit) -> Result<(), S
     result
 }
 
+fn secondary_subtitle_command(action: &str, value: f64) -> Result<Value, String> {
+    let property = match action {
+        "secondarySubtitlePosition" if value.is_finite() && (0.0..=100.0).contains(&value) => {
+            "secondary-sub-pos"
+        }
+        "secondarySubtitleScale" if value.is_finite() && (0.5..=2.0).contains(&value) => {
+            "secondary-sub-scale"
+        }
+        _ => return Err("次字幕参数无效".into()),
+    };
+    Ok(json!(["set_property", property, value]))
+}
 async fn select_primary_subtitle(tx: &mpsc::Sender<Rpc>, id: i64) -> Result<(), String> {
     let secondary = rpc(tx, json!(["get_property", "secondary-sid"])).await?;
     if id >= 0 && secondary.as_i64() == Some(id) {
@@ -871,6 +904,8 @@ async fn start(path: PathBuf, launch: Launch, headless: bool) -> Result<Handle, 
             "fullscreen",
             "secondary-sid",
             "sub-scale",
+            "secondary-sub-pos",
+            "secondary-sub-scale",
             "demuxer-cache-duration",
             "cache-speed",
             "paused-for-cache",
@@ -1108,6 +1143,8 @@ async fn run_ipc<R, W>(
                         "fullscreen" => if let Some(n)=message["data"].as_bool() {s.fullscreen=n},
                         "secondary-sid" => s.secondary_subtitle=message["data"].as_i64(),
                         "sub-scale" => if let Some(n)=message["data"].as_f64() {s.subtitle_scale=n},
+                        "secondary-sub-pos" => if let Some(n)=message["data"].as_f64() {s.secondary_subtitle_position=n},
+                        "secondary-sub-scale" => if let Some(n)=message["data"].as_f64() {s.secondary_subtitle_scale=n},
                         "demuxer-cache-duration" => if let Some(n)=message["data"].as_f64() {s.buffer_seconds=n},
                         "paused-for-cache" => if let Some(n)=message["data"].as_bool() {s.buffering=n},
                         "audio-delay" => if let Some(n)=message["data"].as_f64() {s.audio_delay=n},
@@ -1152,6 +1189,8 @@ async fn run_ipc<R, W>(
                         for subtitle in &launch.subtitles { serial+=1; let flag=if launch.subtitle_index==Some(subtitle.index) {"select"} else {"auto"}; let _=write_command(&mut writer,json!(["sub-add",subtitle.url,flag,subtitle.title,subtitle.language]),serial).await; }
                         serial+=1; let _=write_command(&mut writer,json!(["set_property","sub-pos",launch.subtitle_position]),serial).await;
                         serial+=1; let _=write_command(&mut writer,json!(["set_property","sub-scale",launch.subtitle_scale]),serial).await;
+                        serial+=1; let _=write_command(&mut writer,json!(["set_property","secondary-sub-pos",launch.secondary_subtitle_position]),serial).await;
+                        serial+=1; let _=write_command(&mut writer,json!(["set_property","secondary-sub-scale",launch.secondary_subtitle_scale]),serial).await;
                         if launch.subtitle_index==Some(-1){serial+=1;let _=write_command(&mut writer,json!(["set_property","sid","no"]),serial).await;}
                         snapshots.send_modify(|s|s.loaded=true);
                     }
@@ -1801,6 +1840,133 @@ mod tests {
     fn launch() -> Launch {
         serde_json::from_value(json!({"server":"http://127.0.0.1:18096/emby","userId":"user","token":"token","deviceId":"device","itemId":"movie","title":"Test","sourceId":"source","playSessionId":"session","url":"http://127.0.0.1:18096/emby/Videos/movie/stream","startSeconds":0,"subtitles":[],"playMethod":"DirectPlay"})).unwrap()
     }
+    #[test]
+    fn secondary_subtitle_preferences_validate_independently() {
+        let mut a = launch();
+        assert_eq!(a.secondary_subtitle_position, 0.0);
+        assert_eq!(a.secondary_subtitle_scale, 1.0);
+        for (position, scale) in [(0.0, 0.5), (37.0, 1.25), (100.0, 2.0)] {
+            a.secondary_subtitle_position = position;
+            a.secondary_subtitle_scale = scale;
+            assert!(validate(&a).is_ok());
+            assert_eq!(
+                secondary_subtitle_command("secondarySubtitlePosition", position).unwrap(),
+                json!(["set_property", "secondary-sub-pos", position])
+            );
+            assert_eq!(
+                secondary_subtitle_command("secondarySubtitleScale", scale).unwrap(),
+                json!(["set_property", "secondary-sub-scale", scale])
+            );
+            assert_eq!(a.subtitle_position, 100.0);
+            assert_eq!(a.subtitle_scale, 1.0);
+        }
+        for invalid in [-1.0, 101.0, f64::NAN, f64::INFINITY] {
+            assert!(secondary_subtitle_command("secondarySubtitlePosition", invalid).is_err());
+            a.secondary_subtitle_position = invalid;
+            assert!(validate(&a).is_err());
+        }
+        a.secondary_subtitle_position = 0.0;
+        for invalid in [0.49, 2.01, f64::NAN, f64::INFINITY] {
+            assert!(secondary_subtitle_command("secondarySubtitleScale", invalid).is_err());
+            a.secondary_subtitle_scale = invalid;
+            assert!(validate(&a).is_err());
+        }
+    }
+    #[cfg(windows)]
+    #[tokio::test]
+    #[ignore = "requires bundled mpv and MIRY_TEST_VIDEO; native secondary controls and restart"]
+    async fn real_mpv_secondary_subtitle_controls_and_restart() {
+        let (server, _, task) = mock_server().await;
+        for _ in 0..2 {
+            let mut a = launch();
+            a.server = server.clone();
+            a.url = format!("{server}/Videos/movie/stream");
+            a.subtitle_position = 77.0;
+            a.subtitle_scale = 1.37;
+            a.secondary_subtitle_position = 25.0;
+            a.secondary_subtitle_scale = 0.5;
+            a.subtitles = vec![
+                Subtitle {
+                    url: format!("{server}/subs.srt?track=primary"),
+                    index: 3,
+                    title: "Primary".into(),
+                    language: "eng".into(),
+                },
+                Subtitle {
+                    url: format!("{server}/subs.srt?track=secondary"),
+                    index: 4,
+                    title: "Secondary".into(),
+                    language: "eng".into(),
+                },
+            ];
+            validate(&a).unwrap();
+            let mut h = start(mpv_path().unwrap(), a, true).await.unwrap();
+            let state = wait_state(&mut h, |s| {
+                s.loaded
+                    && s.tracks.iter().filter(|t| t["type"] == "sub").count() >= 2
+                    && s.secondary_subtitle_scale == 0.5
+                    && s.secondary_subtitle_position == 25.0
+            })
+            .await;
+            let subs: Vec<Value> = state
+                .tracks
+                .iter()
+                .filter(|t| t["type"] == "sub")
+                .map(|t| t["id"].clone())
+                .collect();
+            rpc(&h.tx, json!(["set_property", "sid", subs[0]]))
+                .await
+                .unwrap();
+            rpc(&h.tx, json!(["set_property", "secondary-sid", subs[1]]))
+                .await
+                .unwrap();
+            rpc(&h.tx, json!(["set_property", "pause", true]))
+                .await
+                .unwrap();
+            for (position, scale) in [(0.0, 0.5), (50.0, 1.25), (100.0, 2.0), (25.0, 1.0)] {
+                rpc(
+                    &h.tx,
+                    secondary_subtitle_command("secondarySubtitlePosition", position).unwrap(),
+                )
+                .await
+                .unwrap();
+                rpc(
+                    &h.tx,
+                    secondary_subtitle_command("secondarySubtitleScale", scale).unwrap(),
+                )
+                .await
+                .unwrap();
+                let s = wait_state(&mut h, |s| {
+                    s.secondary_subtitle_position == position && s.secondary_subtitle_scale == scale
+                })
+                .await;
+                assert_eq!(s.subtitle_position, 77.0);
+                assert_eq!(s.subtitle_scale, 1.37);
+                assert_eq!(
+                    rpc(&h.tx, json!(["get_property", "sid"])).await.unwrap(),
+                    subs[0]
+                );
+                assert_eq!(
+                    rpc(&h.tx, json!(["get_property", "secondary-sid"]))
+                        .await
+                        .unwrap(),
+                    subs[1]
+                );
+            }
+            rpc(&h.tx, json!(["seek", 8, "absolute+exact"]))
+                .await
+                .unwrap();
+            rpc(&h.tx, json!(["set_property", "speed", 1.5]))
+                .await
+                .unwrap();
+            let s = wait_state(&mut h, |s| s.paused && s.speed == 1.5 && s.position >= 7.5).await;
+            assert_eq!(s.secondary_subtitle_position, 25.0);
+            assert_eq!(s.secondary_subtitle_scale, 1.0);
+            stop_handle(&mut h).await.unwrap();
+            assert!(*h.process_done.borrow());
+        }
+        task.abort();
+    }
     #[tokio::test]
     #[ignore = "requires bundled mpv and MIRY_TEST_VIDEO; quality and automatic audio fallback"]
     async fn real_mpv_quality_policies_keep_the_session_and_recover_missing_device() {
@@ -1833,6 +1999,14 @@ mod tests {
         assert!(begin_shutdown(&player));
         assert!(!begin_shutdown(&player));
         assert!(player.3.load(Ordering::SeqCst));
+    }
+    #[test]
+    fn cancelled_update_preparation_releases_shutdown_gate() {
+        let player = Player::default();
+        assert!(begin_shutdown(&player));
+        cancel_shutdown(&player);
+        assert!(!player.3.load(Ordering::SeqCst));
+        assert!(begin_shutdown(&player));
     }
     async fn report_server(
         status: u16,

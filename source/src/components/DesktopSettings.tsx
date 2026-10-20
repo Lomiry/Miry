@@ -7,8 +7,9 @@ import { SwitchField } from "./SettingField";
 import { APP_VERSION } from "../version";
 import { diagnostics } from "../player/desktop";
 import { privateError } from "../privacy";
-import { RELEASE_PAGE_URL, type ReleaseInfo } from "../release";
+import { checkRelease, RELEASE_PAGE_URL, type ReleaseInfo } from "../release";
 import AppIcon from "./AppIcon";
+import { offerUpdate } from "../stores/inAppUpdate";
 export default function DesktopSettings({
   settings,
   onChange,
@@ -28,7 +29,7 @@ export default function DesktopSettings({
     setStatus("");
     setRelease(undefined);
     try {
-      const r = await invoke<ReleaseInfo>("check_release");
+      const r = await checkRelease();
       setRelease(r);
       setStatus(r.newer ? `发现新版本 v${r.version}` : "当前已是最新版本");
     } catch (e) {
@@ -68,8 +69,7 @@ export default function DesktopSettings({
         www.dandanplay.com。发布版已内置接入，作品覆盖以服务实际结果为准。
       </p>
       <p className="setting-note">
-        Emby + mpv Windows
-        客户端。更新仅检查版本、说明和发布页面，安装由你决定。
+        Emby + mpv Windows 客户端。更新在应用内下载并验证签名，安装由你决定。
       </p>
       <SwitchField
         title="Windows 系统媒体控制"
@@ -106,13 +106,16 @@ export default function DesktopSettings({
         {release?.newer && (
           <button
             className="secondary"
-            onClick={() =>
-              void invoke("open_release", { url: release.url }).catch((e) =>
-                setStatus(privateError(e)),
-              )
-            }
+            onClick={() => {
+              offerUpdate({
+                version: release.version,
+                url: release.url,
+                notes: release.notes.trim().slice(0, 600),
+              });
+              setStatus("更新已就绪，请关闭设置继续；播放期间将延后提醒。");
+            }}
           >
-            查看发布页面
+            立即更新
           </button>
         )}
       </div>

@@ -1,9 +1,7 @@
-# Miry v1.0.6 应用源码
+# Miry v1.0.7 对应应用源码快照
 
-Miry 是 Windows 第三方 Emby 桌面客户端，采用 React、TypeScript、Vite、Tauri 2、Rust 与独立原生 mpv 播放。
+沿用 v1.0.6 已公开的应用源码范围，更新至 RC7 构建提交 `956124c665478091dc9ed7e4429cefe09a25c2f4`。生产代码、锁文件、安装资源、补充许可及必要构建脚本按提交原始字节导出，无私有 Git 历史、凭据或构建缓存。内部 QA 数据与 updater 测试资料排除；不承诺公开快照的完整内部测试套件可运行。
 
-本目录包含完整应用源码、锁文件、构建脚本、图标及随包许可材料。运行时二进制由已固定版本和哈希的恢复脚本取得；大体积第三方对应源码使用既有公开分卷。源码基线、构建恢复修复与冻结安装包的映射见 RELEASE-PROVENANCE.json；未导出私有 Git 历史。
+[构建说明](BUILDING.md) · [来源映射](RELEASE-PROVENANCE.json) · [逐文件摘要](SNAPSHOT-MANIFEST.json) · [许可范围](LICENSE-SCOPE.json) · [权属待证](RIGHTS-STATUS.md) · [第三方例外](THIRD-PARTY-EXCEPTIONS.md) · [补充 NOTICE](tools/mpv/licenses/rust-v107/NOTICE.txt) · [第三方资料](../docs/third-party/v1.0.7/THIRD-PARTY-SOURCES.md)
 
-[构建说明](BUILDING.md) · [MIT 原文](LICENSE) · [精确许可范围](LICENSE-SCOPE.json) · [第三方例外](THIRD-PARTY-EXCEPTIONS.md) · [待证事项](RIGHTS-STATUS.md) · [NOTICE](tools/mpv/licenses/rust-v106/NOTICE.txt) · [第三方交付入口](tools/mpv/RECIPIENT-README.md)
-
-MIT 仅覆盖有权许可的自有材料，291 项继承路径仍待证；不能将本应用整体标注为已完成 MIT 清权。PUBLIC 无凭据构建，OFFICIAL 使用合法受控外部输入。
+MIT 仅适用于有权许可的 Miry 自有材料，原逐文件例外及待证状态继续适用，不将完整应用宣称为 MIT 清权完成。

@@ -24,6 +24,8 @@ export interface Settings {
   subtitleLanguage: string;
   subtitlePosition: number;
   subtitleScale: number;
+  secondarySubtitlePosition: number;
+  secondarySubtitleScale: number;
   volume: number;
   fullscreen: boolean;
   hardwareDecode: boolean;
@@ -43,6 +45,8 @@ export const defaults: Settings = {
   subtitleLanguage: "auto",
   subtitlePosition: 100,
   subtitleScale: 1,
+  secondarySubtitlePosition: 0,
+  secondarySubtitleScale: 1,
   volume: 75,
   fullscreen: false,
   hardwareDecode: true,
@@ -121,6 +125,19 @@ export function readSettings(): Settings {
         Number.isFinite(raw.subtitleScale)
           ? Math.max(0.6, Math.min(1.8, raw.subtitleScale))
           : defaults.subtitleScale,
+      secondarySubtitlePosition:
+        typeof raw.secondarySubtitlePosition === "number" &&
+        Number.isFinite(raw.secondarySubtitlePosition)
+          ? Math.max(
+              0,
+              Math.min(100, Math.round(raw.secondarySubtitlePosition)),
+            )
+          : defaults.secondarySubtitlePosition,
+      secondarySubtitleScale:
+        typeof raw.secondarySubtitleScale === "number" &&
+        Number.isFinite(raw.secondarySubtitleScale)
+          ? Math.max(0.5, Math.min(2, raw.secondarySubtitleScale))
+          : defaults.secondarySubtitleScale,
       volume:
         typeof raw.volume === "number" && Number.isFinite(raw.volume)
           ? Math.max(0, Math.min(100, raw.volume))

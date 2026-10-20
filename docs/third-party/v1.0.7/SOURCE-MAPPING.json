@@ -1,0 +1,23 @@
+{
+  "version": "1.0.7",
+  "candidate": "RC7",
+  "build_source_commit": "956124c665478091dc9ed7e4429cefe09a25c2f4",
+  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "artifacts": [
+    {
+      "name": "Miry_1.0.7_x64-setup.exe",
+      "bytes": 69062119,
+      "sha256": "0e05936d613f00bbc73f44aafe5454a0f35e7e8a5ef484b5a28476bd226bfaa2"
+    },
+    {
+      "name": "Miry_1.0.7_x64-setup.exe.sig",
+      "bytes": 432,
+      "sha256": "14b6454569be646ffe74f942973b3ad36be973ea4b3920c0ed619657d8cd43b0"
+    }
+  ],
+  "public_snapshot": "../../../source/RELEASE-PROVENANCE.json",
+  "file_manifest": "../../../source/SNAPSHOT-MANIFEST.json",
+  "scope": "Established public source snapshot scope; internal QA data and private history excluded; production code unmodified",
+  "rights": "../../../source/RIGHTS-STATUS.md",
+  "license_scope": "../../../source/LICENSE-SCOPE.json"
+}

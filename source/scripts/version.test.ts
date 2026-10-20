@@ -5,7 +5,7 @@ import { RELEASE_API_URL, RELEASE_PAGE_URL } from "../src/release";
 const read = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 it("ships one version across package, locks, Rust and Tauri", () => {
-  expect(APP_VERSION).toBe("1.0.6");
+  expect(APP_VERSION).toBe("1.0.7");
   const lock = JSON.parse(read("../package-lock.json"));
   expect(lock.version).toBe(APP_VERSION);
   expect(lock.packages[""].version).toBe(APP_VERSION);
@@ -13,7 +13,7 @@ it("ships one version across package, locks, Rust and Tauri", () => {
     APP_VERSION,
   );
   for (const path of ["../src-tauri/Cargo.toml", "../src-tauri/Cargo.lock"])
-    expect(read(path)).toMatch(/name = "miry-emby"\s+version = "1\.0\.6"/);
+    expect(read(path)).toMatch(/name = "miry-emby"\s+version = "1\.0\.7"/);
 });
 it("uses the verified public project for release checking and links", () => {
   expect(RELEASE_API_URL).toBe(

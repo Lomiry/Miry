@@ -2,6 +2,16 @@
 import { afterEach, expect, it } from "vitest";
 import { defaults, readSettings, saveSettings } from "./settings";
 afterEach(() => localStorage.clear());
+it("ignores the legacy update opt-out and preserves other preferences", () => {
+  const legacy = JSON.stringify({ volume: 42, autoCheckUpdates: false });
+  localStorage.setItem("miry-settings", legacy);
+  expect(readSettings().volume).toBe(42);
+  expect(readSettings()).not.toHaveProperty("autoCheckUpdates");
+  expect(defaults).not.toHaveProperty("autoCheckUpdates");
+  expect(localStorage.getItem("miry-settings")).toBe(legacy);
+  saveSettings(readSettings());
+  expect(readSettings().volume).toBe(42);
+});
 it.each([undefined, null, "unknown", "FILL", 1, {}, []])(
   "falls back to fit for legacy/invalid video fit %j without changing speed schema2",
   (videoFit) => {

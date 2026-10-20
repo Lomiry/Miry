@@ -8,7 +8,13 @@ pub async fn check_release(
     if window.label() != "main" {
         return Err("更新由主窗口管理".into());
     }
-    crate::release::check_latest().await
+    let release = crate::release::check_latest().await?;
+    *window
+        .state::<crate::updater::Service>()
+        .release
+        .lock()
+        .unwrap() = Some(release.clone());
+    Ok(release)
 }
 #[tauri::command]
 pub fn open_release(window: tauri::WebviewWindow, url: String) -> Result<(), String> {

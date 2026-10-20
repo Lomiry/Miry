@@ -1,0 +1,67 @@
+{
+  "version": "1.0.7",
+  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "scope": "Supplement for Windows normal/build dependency delta only",
+  "sources": "SOURCES.json",
+  "previous_notice": "../rust-v106/NOTICE.txt",
+  "notice_sha256": "7974f2404e15189e8352cfdc2a3c47b01c39e2b38d42436ac12a501c1f95b679",
+  "offset_unit": "bytes; original bytes only, separators excluded",
+  "originals": [
+    {
+      "component": "minisign-verify@0.3.0",
+      "original": "originals/minisign-verify-0.3.0/LICENSE",
+      "sha256": "42c8695fbc468866d9756be99af0ba4e37d733f8daa3c8827c8d80b8bec1b2f9",
+      "bytes": 2312,
+      "start": 466,
+      "end": 2778
+    },
+    {
+      "component": "rustls-platform-verifier@0.7.1",
+      "original": "originals/rustls-platform-verifier-0.7.1/LICENSE-APACHE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357,
+      "start": 3067,
+      "end": 14424
+    },
+    {
+      "component": "rustls-platform-verifier@0.7.1",
+      "original": "originals/rustls-platform-verifier-0.7.1/LICENSE-MIT",
+      "sha256": "1c7cf76689c837a68ed8d704994e52a0f2940c087958f860d17f3186afbdcc0c",
+      "bytes": 1066,
+      "start": 14707,
+      "end": 15773
+    },
+    {
+      "component": "tauri-plugin-updater@2.14.0",
+      "original": "originals/tauri-plugin-updater-2.14.0/LICENSE.spdx",
+      "sha256": "eb8a6c84630461b352badcab1dbe5d0168c56d377358b2b8c86b51003272d5ef",
+      "bytes": 888,
+      "start": 16049,
+      "end": 16937
+    },
+    {
+      "component": "tauri-plugin-updater@2.14.0",
+      "original": "originals/tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0",
+      "sha256": "0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9",
+      "bytes": 10173,
+      "start": 17225,
+      "end": 27398
+    },
+    {
+      "component": "tauri-plugin-updater@2.14.0",
+      "original": "originals/tauri-plugin-updater-2.14.0/LICENSE_MIT",
+      "sha256": "89ff9689dcf9dd53968785d05a26f7898bb169dbfcada8d032b3e68cf0d55607",
+      "bytes": 1089,
+      "start": 27672,
+      "end": 28761
+    },
+    {
+      "component": "zip@4.6.1",
+      "original": "originals/zip-4.6.1/LICENSE",
+      "sha256": "04dc52136d82400b11df5f474949863a70a5d05d2278dec45b99c479494450a6",
+      "bytes": 1217,
+      "start": 28973,
+      "end": 30190
+    }
+  ]
+}

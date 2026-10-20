@@ -16,6 +16,10 @@ afterEach(() => {
   sessionStorage.clear();
 });
 it("stops native playback when the server revokes the account", async () => {
+  localStorage.setItem(
+    "miry-settings",
+    JSON.stringify({ autoCheckUpdates: false, volume: 42 }),
+  );
   sessionStorage.setItem(
     "miry-account",
     JSON.stringify({
@@ -27,6 +31,7 @@ it("stops native playback when the server revokes the account", async () => {
     }),
   );
   render(<App />);
+  await waitFor(() => expect(invoke).toHaveBeenCalledWith("check_release"));
   expect(
     await screen.findByRole("heading", { name: "连接你的媒体库" }),
   ).toBeTruthy();

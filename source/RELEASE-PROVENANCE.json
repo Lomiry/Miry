@@ -1,31 +1,32 @@
 {
-  "version": "v1.0.6",
-  "source_baseline": "abfa6577564ddd38d826d987b0f96098c4b2a28b",
-  "validated_source_candidate_sha256": "c10937394606a9019c22853c867af26a08df310be58f61012f1db1d4cd34d1cc",
-  "installer": {
-    "name": "Miry-Setup-v1.0.6.exe",
-    "bytes": 68620227,
-    "sha256": "9061a7ce6a8c7304b57b27b8ba517b5ed890da7ed9ee9ac42380095d41e15c77",
-    "rebuilt": false
-  },
-  "source_candidate_build_fix": [
+  "version": "1.0.7",
+  "candidate": "RC7",
+  "build_source_commit": "956124c665478091dc9ed7e4429cefe09a25c2f4",
+  "artifacts": [
     {
-      "path": "scripts/bootstrap-runtime.ps1",
-      "previous_sha256": "2407dce1c2eca6ab09cb64a82a1cf584234f6d63f2be7f32aab65a5756a9e488",
-      "bytes": 5768,
-      "sha256": "81ea3137975c8fc8bf723a4b39a87139d27b7da5a9da50829722789303186bae",
-      "rights_status": "OWNERSHIP_EVIDENCE_PENDING"
+      "name": "Miry_1.0.7_x64-setup.exe",
+      "bytes": 69062119,
+      "sha256": "0e05936d613f00bbc73f44aafe5454a0f35e7e8a5ef484b5a28476bd226bfaa2"
     },
     {
-      "path": "docs/runtime-supplemental-manifest-1.0.6.json",
-      "bytes": 643351,
-      "sha256": "2a556f39c9effb86b20a8a9878b34cf3549692b425c0b2d94bb3b79dc379a75a",
-      "role": "Generated exact path/size/hash validation metadata derived from base source manifest; component rights are unchanged."
+      "name": "Miry_1.0.7_x64-setup.exe.sig",
+      "bytes": 432,
+      "sha256": "14b6454569be646ffe74f942973b3ad36be973ea4b3920c0ed619657d8cd43b0"
     }
   ],
-  "application_functionality_changed_for_release": false,
-  "dependencies_changed_for_release": false,
+  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "snapshot_manifest": "SNAPSHOT-MANIFEST.json",
   "private_git_history_included": false,
+  "credentials_included": false,
+  "qa_data_included": false,
+  "excluded_test_only_paths": [
+    "src-tauri/src/updater_tests.rs",
+    "src-tauri/testdata/updater/payload",
+    "src-tauri/testdata/updater/payload.sig",
+    "src-tauri/testdata/updater/qa.pub"
+  ],
+  "official_signature_and_version_binding": "PASS; 1.0.8 negative control rejected",
+  "bundled_licenses_verified": "PASS; 11 files, 4 Windows packages, 7 original license files",
   "application_wide_MIT_clearance": false,
   "rights_status": "RIGHTS-STATUS.md",
   "runtime_source_volumes": [
@@ -51,5 +52,20 @@
       "status": "PASS"
     }
   ],
-  "installer_reproducible_build": "NOT VERIFIED"
+  "rebuilt_for_publication": false,
+  "real_install_upgrade_uninstall_update_handoff_restart": "NOT TESTED",
+  "public_only_build_adaptation": [
+    {
+      "path": "scripts/bootstrap-runtime-public-v107.ps1",
+      "sha256": "394b62e44e26bee8a32b874d88a1fe5c583cbc6d74adc5b99c45df952b021985",
+      "bytes": 5772,
+      "used_for_RC7_build": false
+    },
+    {
+      "path": "docs/runtime-supplemental-manifest-1.0.7.json",
+      "sha256": "391c831e965ada4c37462bd27d85cae087288c65088b64c9612be8d59356cc8a",
+      "bytes": 645806,
+      "used_for_RC7_build": false
+    }
+  ]
 }

@@ -59,7 +59,7 @@ export function normalizeDanmaku(
     onlineEnabled: v.onlineEnabled !== false,
     autoMatch: v.autoMatch !== false,
     fontSize: finite(v.fontSize, 16, 60, d.fontSize),
-    opacity: finite(v.opacity, 0.1, 1, d.opacity),
+    opacity: finite(v.opacity, 0, 1, d.opacity),
     speed:
       typeof v.speed === "number" &&
       Number.isFinite(v.speed) &&

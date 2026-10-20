@@ -1,6 +1,6 @@
 [package]
 name = "miry-emby"
-version = "1.0.6"
+version = "1.0.7"
 description = "Miry Emby desktop client"
 edition = "2021"
 
@@ -16,6 +16,9 @@ serde_json = "1"
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-http = "2"
+tauri-plugin-updater = "=2.14.0"
+reqwest = { version = "=0.13.5", default-features = false }
+rustls = { version = "=0.23.45", default-features = false, features = ["ring", "std", "tls12"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

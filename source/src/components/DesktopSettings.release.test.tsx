@@ -15,16 +15,26 @@ afterEach(() => {
 });
 const about = () =>
   render(<DesktopSettings settings={defaults} onChange={vi.fn()} api={null} />);
+it("removes the automatic update switch without changing other preferences", () => {
+  const change = vi.fn();
+  render(<DesktopSettings settings={defaults} onChange={change} api={null} />);
+  expect(screen.queryByRole("checkbox", { name: "自动检查更新" })).toBeNull();
+  expect(
+    screen.getByRole("checkbox", { name: "Windows 系统媒体控制" }),
+  ).toBeTruthy();
+  expect(change).not.toHaveBeenCalled();
+  expect(invoke).not.toHaveBeenCalled();
+});
 it("shows stable branding and actions without an editable release URL or startup request", () => {
   const view = about();
-  expect(screen.getByRole("heading", { name: "Miry v1.0.6" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Miry v1.0.7" })).toBeTruthy();
   expect(screen.queryByLabelText("发布信息地址")).toBeNull();
   expect(view.container.querySelector('input[type="url"]')).toBeNull();
   expect(screen.getByRole("button", { name: "检查新版本" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "导出匿名诊断" })).toBeTruthy();
   expect(invoke).not.toHaveBeenCalled();
 });
-it("checks the built-in source on demand and opens a newer release without installing", async () => {
+it("checks the built-in source and offers the shared in-app update without opening a browser", async () => {
   vi.mocked(invoke).mockResolvedValue({
     version: "1.1.0",
     newer: true,
@@ -40,10 +50,10 @@ it("checks the built-in source on demand and opens a newer release without insta
   expect(invoke).toHaveBeenCalledExactlyOnceWith("check_release");
   await userEvent
     .setup()
-    .click(screen.getByRole("button", { name: "查看发布页面" }));
-  expect(invoke).toHaveBeenLastCalledWith("open_release", {
-    url: "https://github.com/Lomiry/Miry/releases/tag/v1.1.0",
-  });
+    .click(screen.getByRole("button", { name: "立即更新" }));
+  expect(invoke).toHaveBeenCalledExactlyOnceWith("check_release");
+  const { updateSnapshot } = await import("../stores/inAppUpdate");
+  expect(updateSnapshot().release?.version).toBe("1.1.0");
 });
 it.each(["1.0.1", "0.9.9"])(
   "treats release %s as current without offering an older installer",
@@ -54,7 +64,7 @@ it.each(["1.0.1", "0.9.9"])(
       .setup()
       .click(screen.getByRole("button", { name: "检查新版本" }));
     expect(screen.getByRole("status").textContent).toBe("当前已是最新版本");
-    expect(screen.queryByRole("button", { name: "查看发布页面" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "立即更新" })).toBeNull();
   },
 );
 it("keeps failures nonblocking and clears a stale newer release", async () => {
@@ -66,7 +76,7 @@ it("keeps failures nonblocking and clears a stale newer release", async () => {
   await userEvent.setup().click(button);
   await userEvent.setup().click(button);
   expect(screen.getByRole("status").textContent).toContain("暂时无法检查更新");
-  expect(screen.queryByRole("button", { name: "查看发布页面" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "立即更新" })).toBeNull();
   expect(invoke).toHaveBeenCalledTimes(2);
   expect(button.hasAttribute("disabled")).toBe(false);
 });

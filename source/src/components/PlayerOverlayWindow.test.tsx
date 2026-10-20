@@ -84,3 +84,47 @@ it("unmounts all player visuals and settles pending actions on disposal", async 
   );
   expect(screen.queryByRole("button")).toBeNull();
 });
+it("routes native forwarded keys to the position editor without sending focus to transport", async () => {
+  const handlers = new Map<string, (e: unknown) => void>();
+  vi.mocked(listen).mockImplementation(async (name, fn) => {
+    handlers.set(name, fn as never);
+    return () => {};
+  });
+  render(<PlayerOverlayWindow />);
+  await act(async () => {});
+  act(() => handlers.get("player-ui-state")!({ payload: {} }));
+  const editor = document.createElement("div");
+  editor.className = "secondary-subtitle-position";
+  const handle = document.createElement("button");
+  handle.setAttribute("role", "slider");
+  editor.append(handle);
+  document.body.append(editor);
+  const key = vi.fn();
+  handle.addEventListener("keydown", key);
+  try {
+    act(() =>
+      handlers.get("player-ui-key")!({
+        payload: { key: "Escape", code: "Escape" },
+      }),
+    );
+    expect(key).toHaveBeenCalledOnce();
+    act(() => handle.focus());
+    act(() =>
+      handlers.get("player-ui-key")!({ payload: { key: "Tab", code: "Tab" } }),
+    );
+    expect(key).toHaveBeenCalledTimes(2);
+    const confirm = document.createElement("button");
+    const click = vi.fn();
+    confirm.addEventListener("click", click);
+    editor.append(confirm);
+    act(() => confirm.focus());
+    for (const [key, code] of [
+      ["Enter", "Enter"],
+      [" ", "Space"],
+    ])
+      act(() => handlers.get("player-ui-key")!({ payload: { key, code } }));
+    expect(click).toHaveBeenCalledTimes(2);
+  } finally {
+    editor.remove();
+  }
+});

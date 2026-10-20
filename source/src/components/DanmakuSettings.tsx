@@ -41,9 +41,9 @@ export default function DanmakuSettings({
         title="弹幕透明度"
         valueLabel={Math.round(value.opacity * 100) + "%"}
         value={value.opacity}
-        min={0.1}
+        min={0}
         max={1}
-        step={0.05}
+        step={0.01}
         onChange={(opacity) => onChange({ opacity })}
       />
       <SettingRow title="弹幕滚动速度">

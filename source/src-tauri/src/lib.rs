@@ -16,6 +16,7 @@ mod routes;
 mod shortcuts;
 mod surface;
 mod system_media;
+mod updater;
 mod video_fit;
 mod window_state;
 use tauri::{Emitter, Manager};
@@ -31,6 +32,8 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::Service::default())
         .manage(player::Player::default())
         .manage(danmaku::Files::default())
         .manage(online_danmaku::Service::default())
@@ -118,6 +121,10 @@ pub fn run() {
             recovery::recovery_read,
             recovery::recovery_clear,
             desktop::check_release,
+            updater::download_update,
+            updater::prepare_update_install,
+            updater::install_update,
+            updater::cancel_update_install,
             desktop::open_release,
             desktop::export_diagnostics,
             system_media::system_media_update,

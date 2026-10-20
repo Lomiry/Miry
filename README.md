@@ -15,7 +15,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square" alt="Windows x64" />
-  <img src="https://img.shields.io/badge/Version-1.0.6-287C63?style=flat-square" alt="Miry v1.0.6" />
+  <img src="https://img.shields.io/badge/Version-1.0.7-287C63?style=flat-square" alt="Miry v1.0.7" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
 </p>
 
@@ -40,9 +40,9 @@
 
 ## 下载与安装
 
-[**下载 Miry v1.0.6（Windows x64）**](https://github.com/Lomiry/Miry/releases/download/v1.0.6/Miry-Setup-v1.0.6.exe)
+[**下载 Miry v1.0.7（Windows x64）**](https://github.com/Lomiry/Miry/releases/download/v1.0.7/Miry_1.0.7_x64-setup.exe)
 
-安装包：`Miry-Setup-v1.0.6.exe`。退出 Miry 后运行安装程序，按提示完成安装。安装包包含 mpv；缺少 WebView2 时，官方引导程序可能需要联网。
+安装包：`Miry_1.0.7_x64-setup.exe`。退出 Miry 后运行安装程序，按提示完成安装。安装包包含 mpv；缺少 WebView2 时，官方引导程序可能需要联网。
 
 [全部版本](https://github.com/Lomiry/Miry/releases) · [安装、升级与校验说明](docs/releases/README.md)
 

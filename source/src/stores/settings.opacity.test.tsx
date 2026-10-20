@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { useState } from "react";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import SettingsPanel from "../components/SettingsPanel";
 import DanmakuSettings from "../components/DanmakuSettings";
@@ -31,7 +37,7 @@ function seed(opacity: number) {
   return localStorage.getItem(key);
 }
 
-it.each([0.25, 0.3, 0.37, 0.85])(
+it.each([0, 0.25, 0.3, 0.37, 0.5, 0.85, 1])(
   "round-trips persisted opacity %s without using its complement",
   (opacity) => {
     seed(opacity);
@@ -108,7 +114,7 @@ it("preserves the existing value and raw bytes across repeated startup reads", a
   expect(writes).not.toHaveBeenCalled();
 });
 
-it.each([0.25, 0.37, 0.85])(
+it.each([0, 0.25, 0.37, 0.5, 0.85, 1])(
   "maps opacity %s to its UI percent without inversion",
   (opacity) => {
     render(
@@ -154,7 +160,7 @@ it("mounts, closes and reopens the settings page without writing defaults", () =
   expect(writes).not.toHaveBeenCalled();
 });
 
-it.each([0.25, 0.37, 0.85])(
+it.each([0, 0.25, 0.37, 0.5, 0.85, 1])(
   "renders opacity %s as Canvas alpha, without percent inversion",
   (opacity) => {
     let tick: FrameRequestCallback = () => {};
@@ -220,3 +226,17 @@ it.each([0.25, 0.37, 0.85])(
     expect(context.fillText).toHaveBeenCalled();
   },
 );
+
+it("exposes 1 percent steps and updates the label and storage during drag", () => {
+  render(<SettingsPage />);
+  const slider = screen.getByRole("slider", { name: "弹幕透明度" });
+  expect(slider.getAttribute("min")).toBe("0");
+  expect(slider.getAttribute("max")).toBe("1");
+  expect(slider.getAttribute("step")).toBe("0.01");
+  fireEvent.pointerDown(slider);
+  for (const opacity of [0, 0.25, 0.5, 1, 0.37]) {
+    fireEvent.change(slider, { target: { value: String(opacity) } });
+    expect(screen.getByText(`${Math.round(opacity * 100)}%`)).toBeTruthy();
+    expect(readSettings().danmaku?.opacity).toBe(opacity);
+  }
+});

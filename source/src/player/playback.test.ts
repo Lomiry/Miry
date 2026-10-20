@@ -248,6 +248,10 @@ it("honors the selected version and preferred audio without silently switching v
       subtitleLanguage: "off",
       volume: 40,
       hardwareDecode: false,
+      subtitlePosition: 77,
+      subtitleScale: 1.37,
+      secondarySubtitlePosition: 25,
+      secondarySubtitleScale: 0.5,
     },
   );
   expect(launch).toMatchObject({
@@ -256,6 +260,10 @@ it("honors the selected version and preferred audio without silently switching v
     subtitleIndex: -1,
     volume: 40,
     hardwareDecode: false,
+    subtitlePosition: 77,
+    subtitleScale: 1.37,
+    secondarySubtitlePosition: 25,
+    secondarySubtitleScale: 0.5,
   });
   expect(JSON.parse(fetch.mock.calls[0][1].body).MediaSourceId).toBe("4k");
   expect(() =>

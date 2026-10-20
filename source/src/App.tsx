@@ -69,6 +69,7 @@ import MediaCard from "./components/MediaCard";
 import ContinueWatchingCard from "./components/ContinueWatchingCard";
 import MediaListRow from "./components/MediaListRow";
 import Toast from "./components/Toast";
+import AutomaticUpdateNotice from "./components/AutomaticUpdateNotice";
 import { type ToastTone } from "./components/Toast";
 import PageHeader, { ViewToggle } from "./components/PageHeader";
 import { EmptyState, ErrorState } from "./components/ContentState";
@@ -1715,22 +1716,43 @@ export default function App() {
     setRoute({ kind: "home" });
     setBusy(false);
   }
+  const updateNotice = (
+    <AutomaticUpdateNotice
+      onPrepareInstall={exitPlayback}
+      blocked={
+        playerActive ||
+        !!playedItem ||
+        theater ||
+        playerFullscreen ||
+        stoppingPlayer ||
+        queueState.busy ||
+        !!toast ||
+        showSettings ||
+        showRoutes ||
+        addingServer ||
+        !!recovery
+      }
+    />
+  );
   if (!account && !demo)
     return (
-      <Login
-        initialError={error}
-        onLogin={(a, remember) => {
-          saveAccount(a, remember);
-          setAccount(a);
-          setConnections(readConnections());
-          setWatched(readHistory(a));
-          setError("");
-        }}
-        onDemo={() => {
-          setDemo(true);
-          setError("");
-        }}
-      />
+      <>
+        <Login
+          initialError={error}
+          onLogin={(a, remember) => {
+            saveAccount(a, remember);
+            setAccount(a);
+            setConnections(readConnections());
+            setWatched(readHistory(a));
+            setError("");
+          }}
+          onDemo={() => {
+            setDemo(true);
+            setError("");
+          }}
+        />
+        {updateNotice}
+      </>
     );
   const grid = (list: Item[], landscape = false) => (
     <div
@@ -2771,6 +2793,7 @@ export default function App() {
           onSwitch={switchLine}
         />
       )}
+      {updateNotice}
       {toast && (
         <Toast
           key={toast}

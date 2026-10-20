@@ -8,7 +8,7 @@ import {
   screen,
 } from "@testing-library/react";
 import PlayerChrome, { contextPlacement } from "./PlayerChrome";
-import type { PlayerUiModel } from "../player/uiModel";
+import type { PlayerAction, PlayerUiModel } from "../player/uiModel";
 import { playerMotion } from "../player/motion";
 import { defaultShortcuts } from "../player/shortcuts";
 import { danmakuDefaults } from "../danmaku/types";
@@ -532,6 +532,156 @@ it("adjusts subtitle position and restores the default", async () => {
     action: "subtitlePosition",
     value: 100,
   });
+});
+it("previews and confirms secondary position independently, preserving the editor through fullscreen", async () => {
+  model.state.playSessionId = "secondary-session";
+  model.state.secondarySubtitlePosition = 25;
+  model.state.secondarySubtitleScale = 1;
+  const dispatch = vi.fn().mockResolvedValue(undefined);
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+  fireEvent.click(screen.getByRole("button", { name: "字幕大小、位置与延迟" }));
+  const scale = screen.getByRole("slider", { name: "次字幕大小" });
+  expect(scale.getAttribute("min")).toBe("0.5");
+  expect(scale.getAttribute("max")).toBe("2");
+  fireEvent.change(scale, { target: { value: "2" } });
+  fireEvent.pointerUp(scale);
+  await tick(50);
+  expect(dispatch).toHaveBeenLastCalledWith({
+    kind: "control",
+    action: "secondarySubtitleScale",
+    value: 2,
+    persist: true,
+    playSessionId: "secondary-session",
+  });
+  fireEvent.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  fireEvent.keyDown(screen.getByRole("slider", { name: "次字幕垂直位置" }), {
+    key: "ArrowDown",
+  });
+  await tick(50);
+  model = {
+    ...model,
+    state: { ...model.state, fullscreen: true, secondarySubtitlePosition: 26 },
+  };
+  view.rerender(<PlayerChrome model={model} dispatch={dispatch} />);
+  expect(screen.getByRole("dialog", { name: "调整次字幕位置" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "确认位置" }));
+  await tick(50);
+  expect(dispatch).toHaveBeenLastCalledWith({
+    kind: "control",
+    action: "secondarySubtitlePosition",
+    value: 26,
+    persist: true,
+    playSessionId: "secondary-session",
+  });
+  expect(
+    dispatch.mock.calls.every(([action]) =>
+      ["secondarySubtitlePosition", "secondarySubtitleScale"].includes(
+        action.action,
+      ),
+    ),
+  ).toBe(true);
+});
+it("reopens with the settled position before a delayed native snapshot arrives", async () => {
+  model.state.secondarySubtitlePosition = 100;
+  const dispatch = vi.fn().mockResolvedValue(undefined);
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+  fireEvent.click(screen.getByRole("button", { name: "字幕大小、位置与延迟" }));
+  fireEvent.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  fireEvent.click(screen.getByRole("button", { name: "恢复默认" }));
+  fireEvent.click(screen.getByRole("button", { name: "确认位置" }));
+  await tick(50);
+  fireEvent.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  expect(
+    screen
+      .getByRole("slider", { name: "次字幕垂直位置" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("0");
+  fireEvent.keyDown(screen.getByRole("slider", { name: "次字幕垂直位置" }), {
+    key: "End",
+  });
+  fireEvent.click(screen.getByRole("button", { name: "取消" }));
+  await tick(50);
+  expect(dispatch).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      action: "secondarySubtitlePosition",
+      value: 0,
+      persist: false,
+    }),
+  );
+  // Once native state catches up, subsequent external changes remain authoritative.
+  model = { ...model, state: { ...model.state, secondarySubtitlePosition: 0 } };
+  view.rerender(<PlayerChrome model={model} dispatch={dispatch} />);
+  model = {
+    ...model,
+    state: { ...model.state, secondarySubtitlePosition: 37 },
+  };
+  view.rerender(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  expect(
+    screen
+      .getByRole("slider", { name: "次字幕垂直位置" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("37");
+});
+it("drops queued secondary previews when the playback session changes", async () => {
+  model.state.playSessionId = "old-session";
+  const dispatch = vi.fn().mockResolvedValue(undefined);
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+  fireEvent.click(screen.getByRole("button", { name: "字幕大小、位置与延迟" }));
+  fireEvent.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  fireEvent.keyDown(screen.getByRole("slider", { name: "次字幕垂直位置" }), {
+    key: "End",
+  });
+  model = {
+    ...model,
+    revision: 2,
+    state: { ...model.state, playSessionId: "new-session" },
+  };
+  view.rerender(<PlayerChrome model={model} dispatch={dispatch} />);
+  await tick(100);
+  expect(screen.queryByRole("dialog", { name: "调整次字幕位置" })).toBeNull();
+  expect(dispatch).not.toHaveBeenCalled();
+});
+it("keeps the opacity slider interactive while earlier changes await the owned bridge", async () => {
+  model.danmaku = {
+    name: "",
+    count: 0,
+    skipped: 0,
+    status: "",
+    settings: danmakuDefaults,
+    offset: 0,
+    bound: false,
+  };
+  let finish!: () => void;
+  const dispatch = vi.fn(
+    (_action: PlayerAction) =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "更多播放操作" }));
+  await tick(40);
+  fireEvent.click(screen.getByRole("menuitem", { name: /弹幕/ }));
+  await tick(40);
+  const slider = screen.getByRole("slider", {
+    name: "弹幕透明度",
+  }) as HTMLInputElement;
+  for (const opacity of [0.25, 0.5, 1, 0]) {
+    fireEvent.change(slider, { target: { value: String(opacity) } });
+    expect(slider.disabled).toBe(false);
+  }
+  expect(dispatch.mock.calls.map(([action]) => action)).toEqual(
+    [0.25, 0.5, 1, 0].map((opacity) => ({
+      kind: "danmaku",
+      command: "settings",
+      patch: { opacity },
+    })),
+  );
+  await act(async () => finish());
 });
 it("does not let a delayed track selection close a different menu opened in the meantime", async () => {
   let finish!: () => void;

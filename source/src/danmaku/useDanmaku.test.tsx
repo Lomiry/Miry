@@ -63,6 +63,21 @@ beforeEach(() => {
   vi.mocked(onlineProvider.getComments).mockReset().mockResolvedValue(document);
 });
 afterEach(cleanup);
+it("changes opacity during playback without searching, reloading comments or reinitializing mpv", async () => {
+  const view = renderHook(() => useDanmaku(api, item, true, "opacity-session"));
+  await waitFor(() => expect(view.result.current.document).toBe(document));
+  for (const opacity of [0, 0.25, 0.5, 1, 0.37]) {
+    await act(() => view.result.current.action("settings", { opacity }));
+    expect(view.result.current.metadata.settings.opacity).toBe(opacity);
+    expect(view.result.current.document).toBe(document);
+  }
+  expect(onlineProvider.match).toHaveBeenCalledTimes(1);
+  expect(onlineProvider.getComments).toHaveBeenCalledTimes(1);
+  expect(onlineProvider.search).not.toHaveBeenCalled();
+  expect(vi.mocked(invoke).mock.calls.map(([name]) => name)).not.toContain(
+    "player_start",
+  );
+});
 it.each([
   [{ kind: "network" }, "无法连接"],
   [{ kind: "timeout" }, "无法连接"],

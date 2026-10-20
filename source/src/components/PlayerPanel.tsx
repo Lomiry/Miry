@@ -378,12 +378,26 @@ export default function PlayerPanel({
       clearTimeout(timer);
     };
   }, [revision]);
-  async function control(action: string, value?: number, persist = true) {
+  async function control(
+    action: string,
+    value?: number,
+    persist = true,
+    playSessionId?: string,
+  ) {
     if (
-      (action === "subtitlePosition" || action === "subtitleScale") &&
+      [
+        "subtitlePosition",
+        "subtitleScale",
+        "secondarySubtitlePosition",
+        "secondarySubtitleScale",
+      ].includes(action) &&
       value !== undefined
     ) {
-      await invoke("player_control", { action, value });
+      await invoke("player_control", {
+        action,
+        value,
+        ...(playSessionId ? { expectedSessionId: playSessionId } : {}),
+      });
       if (persist) saveSettings({ ...readSettings(), [action]: value });
       return;
     }
@@ -586,7 +600,12 @@ export default function PlayerPanel({
         await invoke("player_key", { code: action.code });
         break;
       case "control":
-        await control(action.action, action.value, action.persist);
+        await control(
+          action.action,
+          action.value,
+          action.persist,
+          action.playSessionId,
+        );
         break;
       case "return":
         await returnToBrowse();

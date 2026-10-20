@@ -16,6 +16,7 @@ import { preparePlayback, type PlayerSnapshot } from "../player/playback";
 import PlayerPanel, { PlayButton } from "./PlayerPanel";
 import { EmbyClient } from "../api/client";
 import { clearNetworkDiagnostics } from "../api/diagnostics";
+import { readSettings, saveSettings } from "../stores/settings";
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
   isTauri: () => true,
@@ -141,6 +142,53 @@ it.each(["unmount", "new revision"])(
     expect(localStorage.getItem("miry-settings")).toBeNull();
   },
 );
+it("persists only confirmed secondary controls and keeps the primary preferences", async () => {
+  snapshot.embedded = true;
+  snapshot.playSessionId = "secondary-session";
+  saveSettings({
+    ...readSettings(),
+    subtitlePosition: 77,
+    subtitleScale: 1.37,
+    secondarySubtitlePosition: 25,
+  });
+  snapshot.secondarySubtitlePosition = 25;
+  const user = userEvent.setup();
+  render(<PlayerPanel theater dock revision={1} onStopped={vi.fn()} />);
+  await user.click(await screen.findByRole("button", { name: "字幕" }));
+  await user.click(
+    screen.getByRole("button", { name: "字幕大小、位置与延迟" }),
+  );
+  fireEvent.change(screen.getByLabelText("次字幕大小"), {
+    target: { value: "2" },
+  });
+  fireEvent.pointerUp(screen.getByLabelText("次字幕大小"));
+  await waitFor(() => expect(readSettings().secondarySubtitleScale).toBe(2));
+  await user.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  fireEvent.keyDown(screen.getByRole("slider", { name: "次字幕垂直位置" }), {
+    key: "End",
+  });
+  await waitFor(() =>
+    expect(invoke).toHaveBeenCalledWith("player_control", {
+      action: "secondarySubtitlePosition",
+      value: 100,
+      expectedSessionId: "secondary-session",
+    }),
+  );
+  expect(readSettings().secondarySubtitlePosition).toBe(25);
+  await user.click(screen.getByRole("button", { name: "取消" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "调整次字幕位置" })).toBeNull(),
+  );
+  expect(readSettings().secondarySubtitlePosition).toBe(25);
+  await user.click(screen.getByRole("button", { name: "调整次字幕位置" }));
+  await user.click(screen.getByRole("button", { name: "恢复默认" }));
+  await user.click(screen.getByRole("button", { name: "确认位置" }));
+  await waitFor(() => expect(readSettings().secondarySubtitlePosition).toBe(0));
+  expect(readSettings()).toMatchObject({
+    subtitlePosition: 77,
+    subtitleScale: 1.37,
+  });
+});
 it("offers direct track selection and moves menu focus without seeking the video", async () => {
   snapshot.embedded = true;
   snapshot.paused = true;

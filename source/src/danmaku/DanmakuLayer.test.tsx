@@ -86,6 +86,24 @@ it("renders from the latest native anchor, freezes on pause, seeks and releases 
   vi.spyOn(Date, "now").mockReturnValue(2000);
   act(() => tick(32));
   expect(context.fillText).toHaveBeenCalledTimes(paints);
+  const transformCalls = context.setTransform.mock.calls.length;
+  const frozenX = context.fillText.mock.calls.at(-1)?.[1];
+  for (const opacity of [0, 0.25, 0.5, 1]) {
+    view.rerender(
+      <DanmakuLayer
+        document={doc}
+        settings={{ ...DEFAULT_DANMAKU, opacity }}
+        clock={{ ...clock, position: 1.2, paused: true }}
+      />,
+    );
+    act(() => tick(40));
+    expect((context as unknown as { globalAlpha: number }).globalAlpha).toBe(
+      opacity,
+    );
+    expect(context.fillText.mock.calls.at(-1)?.[1]).toBe(frozenX);
+    expect(context.setTransform).toHaveBeenCalledTimes(transformCalls);
+    expect(disconnect).not.toHaveBeenCalled();
+  }
   view.rerender(
     <DanmakuLayer
       document={doc}

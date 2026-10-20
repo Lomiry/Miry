@@ -118,7 +118,15 @@ export default function PlayerOverlayWindow() {
               return;
             // Forwarded keys have a different focus owner; stale button focus
             // must not swallow Space or synthesize a click.
-            const target = document.body;
+            const positionEditor = document.querySelector(
+              ".secondary-subtitle-position",
+            );
+            const target = positionEditor
+              ? positionEditor.contains(document.activeElement)
+                ? document.activeElement!
+                : positionEditor.querySelector('[role="slider"]') ||
+                  positionEditor
+              : document.body;
             target.dispatchEvent(
               new KeyboardEvent("keydown", {
                 ...payload,
@@ -126,7 +134,15 @@ export default function PlayerOverlayWindow() {
                 cancelable: true,
               }),
             );
-            if (payload.key === "Tab")
+            // Synthetic native keys do not perform a button's default click.
+            if (
+              positionEditor &&
+              (payload.key === "Enter" || payload.key === " ") &&
+              target instanceof HTMLButtonElement &&
+              target.getAttribute("role") !== "slider"
+            )
+              target.click();
+            if (payload.key === "Tab" && !positionEditor)
               keyboardFrame.current = requestAnimationFrame(() => {
                 const buttons = Array.from(
                   document.querySelectorAll<HTMLButtonElement>(
