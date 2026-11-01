@@ -30,13 +30,22 @@ export const Artwork = memo(function Artwork({
   const source = urls[current.index];
   useEffect(() => {
     const loaded = !!image.current?.complete && !!image.current.naturalWidth;
-    setState((s) => ({
-      signature,
-      index: s.signature === signature ? s.index : 0,
-      loaded,
-      portrait:
-        loaded && image.current!.naturalHeight > image.current!.naturalWidth,
-    }));
+    const portrait =
+      loaded && image.current!.naturalHeight > image.current!.naturalWidth;
+    setState((s) => {
+      if (
+        s.signature === signature &&
+        s.loaded === loaded &&
+        s.portrait === portrait
+      )
+        return s;
+      return {
+        signature,
+        index: s.signature === signature ? s.index : 0,
+        loaded,
+        portrait,
+      };
+    });
   }, [signature, source]);
   return source ? (
     <>

@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useMemo, useRef, useState, useEffect } from "react";
 import { Search, History, X, ArrowUpRight } from "lucide-react";
 import { isComposingKey } from "../player/shortcuts";
@@ -9,6 +11,7 @@ import {
   saveSearchHistory,
   searchSuggestions,
   searchTerm,
+  historyTermAllowed,
 } from "../stores/searchHistory";
 
 export default function SearchBar({
@@ -18,6 +21,7 @@ export default function SearchBar({
   value,
   onChange,
   onClear,
+  sensitiveValues = [],
 }: {
   scope: string;
   onSearch: (query: string) => void;
@@ -25,7 +29,10 @@ export default function SearchBar({
   value?: string;
   onChange?: (query: string) => void;
   onClear?: () => void;
+  sensitiveValues?: string[];
 }) {
+  useI18n();
+
   const [localQuery, setLocalQuery] = useState("");
   const query = value ?? localQuery;
   const setQuery = (next: string) => {
@@ -33,7 +40,11 @@ export default function SearchBar({
     onChange?.(next);
   };
   const [open, setOpen] = useState(false);
-  const [history, setHistory] = useState(() => readSearchHistory(scope));
+  const [history, setHistory] = useState(() =>
+    readSearchHistory(scope).filter((term) =>
+      historyTermAllowed(term, sensitiveValues),
+    ),
+  );
   const form = useRef<HTMLFormElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const composing = useRef(false);
@@ -52,6 +63,16 @@ export default function SearchBar({
     [history, query],
   );
   const expanded = open && !disabled && suggestions.length > 0;
+  const sensitiveKey = JSON.stringify(sensitiveValues);
+  useEffect(() => {
+    const stored = readSearchHistory(scope);
+    const safe = stored.filter((term) =>
+      historyTermAllowed(term, sensitiveValues),
+    );
+    // Rewrite once per account/credential change to remove legacy unsafe entries
+    // from storage as well as from the visible suggestions.
+    setHistory(saveSearchHistory(scope, safe));
+  }, [scope, sensitiveKey]);
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
       if (
@@ -70,7 +91,7 @@ export default function SearchBar({
     const term = searchTerm(value);
     if (!term || disabled) return;
     setQuery(term);
-    setHistory(recordSearch(scope, term));
+    setHistory(recordSearch(scope, term, sensitiveValues));
     setOpen(false);
     onSearch(term);
   }
@@ -132,15 +153,15 @@ export default function SearchBar({
       <button
         type="submit"
         className="search-submit"
-        aria-label="提交媒体搜索"
+        aria-label={t("library.submit_media_search")}
         disabled={disabled || !searchTerm(query)}
       >
         <Search size={17} />
       </button>
       <input
         ref={input}
-        aria-label="搜索媒体"
-        placeholder="搜索电影、剧集…"
+        aria-label={t("library.search_media")}
+        placeholder={t("library.search_movies_and_tv_shows")}
         autoComplete="off"
         maxLength={80}
         value={query}
@@ -164,7 +185,7 @@ export default function SearchBar({
         <button
           type="button"
           className="search-clear"
-          aria-label="清空搜索关键词"
+          aria-label={t("library.clear_search_terms")}
           onClick={() => {
             setQuery("");
             onClear?.();
@@ -182,10 +203,10 @@ export default function SearchBar({
           id="search-history"
           className="search-history"
           role="region"
-          aria-label="最近搜索"
+          aria-label={t("library.recent_searches")}
         >
           <div className="search-history-heading">
-            <span>最近搜索</span>
+            <span>{t("library.recent_searches")}</span>
             <button
               type="button"
               onClick={() => {
@@ -194,7 +215,8 @@ export default function SearchBar({
                 input.current?.focus();
               }}
             >
-              清空历史
+              {" "}
+              {t("library.clear_history")}{" "}
             </button>
           </div>
           {suggestions.map((term) => (
@@ -202,7 +224,7 @@ export default function SearchBar({
               <button
                 type="button"
                 data-search-term
-                aria-label={`搜索 ${term}`}
+                aria-label={t("library.search_for", { p0: term })}
                 onClick={() => submit(term)}
               >
                 <History size={15} />
@@ -212,7 +234,9 @@ export default function SearchBar({
               <button
                 type="button"
                 className="search-history-remove"
-                aria-label={`删除搜索记录 ${term}`}
+                aria-label={t("library.remove_search_history_for", {
+                  p0: term,
+                })}
                 onClick={() => remove(term)}
               >
                 <X size={14} />

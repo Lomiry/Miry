@@ -1,3 +1,30 @@
+# First-party editable text: LF independent of the user's Git checkout settings.
+/.gitattributes text eol=lf
+/.gitignore text eol=lf
+/*.md text eol=lf
+/*.json text eol=lf
+/*.ts text eol=lf
+/*.html text eol=lf
+/*.svg text eol=lf
+/src/** text=auto eol=lf
+/scripts/** text=auto eol=lf
+/src-tauri/*.rs text eol=lf
+/src-tauri/*.toml text eol=lf
+/src-tauri/*.lock text eol=lf
+/src-tauri/*.json text eol=lf
+/src-tauri/src/** text=auto eol=lf
+/src-tauri/examples/*.rs text eol=lf
+/src-tauri/capabilities/*.json text eol=lf
+/src-tauri/installer/*.nsh text eol=lf
+/docs/*.md text eol=lf
+# Keep Windows command launchers in CRLF; PowerShell source can use LF.
+/*.cmd text eol=crlf
+/*.bat text eol=crlf
+/scripts/**/*.cmd text eol=crlf
+/scripts/**/*.bat text eol=crlf
+# Signed test inputs are byte-sensitive, not editable source.
+/src-tauri/testdata/** -text
+
 # Keep sealed recipient records byte-identical on checkouts with autocrlf enabled.
 /LICENSE-SCOPE.json -text
 /tools/mpv/LICENSE-SCOPE.json -text

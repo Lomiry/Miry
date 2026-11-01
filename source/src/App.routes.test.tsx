@@ -6,6 +6,7 @@ import {
   screen,
   waitFor,
   within,
+  act,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
@@ -22,6 +23,7 @@ import {
   normalizeMetrics,
   saveRouteTest,
   setRouteMode,
+  readRouteQuality,
 } from "./player/smartRoutes";
 vi.mock("@tauri-apps/api/core", () => ({
   isTauri: () => true,
@@ -57,6 +59,106 @@ const movie = {
   ],
 };
 let snapshot: PlayerSnapshot;
+
+it("acknowledges only persisted final samples and preserves the final position across remount", async () => {
+  saveAccount(account, false);
+  const view = render(<App />);
+  await userEvent
+    .setup()
+    .click(
+      await screen.findByRole("button", { name: "快速播放 线路测试影片" }),
+    );
+  await waitFor(() => expect(snapshot.active).toBe(true));
+  const final = {
+    ...snapshot,
+    itemId: movie.Id,
+    active: false,
+    position: 123,
+    syncComplete: true,
+    persistenceId: "close-1",
+  };
+  const send = (payload: typeof final) =>
+    act(() =>
+      nativeEvents.get("player-final-snapshot")!({ payload: payload as never }),
+    );
+  send(final);
+  await waitFor(() =>
+    expect(invoke).toHaveBeenCalledWith("player_final_saved", {
+      persistenceId: "close-1",
+      persisted: true,
+    }),
+  );
+  expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).toBe(
+    1230000000,
+  );
+  const savedAt = readHistory(account)[0].at;
+  send(final);
+  expect(readHistory(account)[0].at).toBe(savedAt);
+  send({
+    ...final,
+    playSessionId: "old-session",
+    position: 1,
+    persistenceId: "stale",
+  });
+  expect(invoke).toHaveBeenCalledWith("player_final_saved", {
+    persistenceId: "stale",
+    persisted: false,
+  });
+  view.unmount();
+  render(<App />);
+  expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).toBe(
+    1230000000,
+  );
+});
+
+it("returns a failed final-save receipt on quota failure and permits a later successful sample", async () => {
+  saveAccount(account, false);
+  render(<App />);
+  await userEvent
+    .setup()
+    .click(
+      await screen.findByRole("button", { name: "快速播放 线路测试影片" }),
+    );
+  await waitFor(() => expect(snapshot.active).toBe(true));
+  const final = {
+    ...snapshot,
+    itemId: movie.Id,
+    active: false,
+    position: 234,
+    syncComplete: true,
+    persistenceId: "quota",
+  };
+  const write = vi
+    .spyOn(Storage.prototype, "setItem")
+    .mockImplementation(() => {
+      throw new DOMException("Quota", "QuotaExceededError");
+    });
+  const diagnostic = vi.spyOn(console, "error").mockImplementation(() => {});
+  act(() =>
+    nativeEvents.get("player-final-snapshot")!({ payload: final as never }),
+  );
+  expect(invoke).toHaveBeenCalledWith("player_final_saved", {
+    persistenceId: "quota",
+    persisted: false,
+  });
+  expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).not.toBe(
+    2340000000,
+  );
+  write.mockRestore();
+  act(() =>
+    nativeEvents.get("player-final-snapshot")!({
+      payload: { ...final, persistenceId: "retry" } as never,
+    }),
+  );
+  expect(invoke).toHaveBeenCalledWith("player_final_saved", {
+    persistenceId: "retry",
+    persisted: true,
+  });
+  expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).toBe(
+    2340000000,
+  );
+  diagnostic.mockRestore();
+});
 beforeEach(() => {
   vi.clearAllMocks();
   nativeEvents.clear();
@@ -118,8 +220,75 @@ beforeEach(() => {
     return new Response(JSON.stringify(result));
   });
 });
-afterEach(cleanup);
-it("opens the existing route dialog from network settings and reopens without duplicate state", async () => {
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+it("falls back on an idle connection failure only in auto mode", async () => {
+  saveAccount(account, false);
+  saveRoute(account, {
+    name: "Backup",
+    url: "https://fallback.test/emby",
+    serverId: account.serverId,
+    userId: account.userId,
+    priority: 1,
+  });
+  setRouteMode(account, "auto");
+  const original = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (address, options) => {
+    if (String(address).startsWith(account.server))
+      throw Error("connection refused");
+    return original(address, options);
+  });
+  render(<App />);
+  await waitFor(() =>
+    expect(readAccount()?.server).toBe("https://fallback.test/emby"),
+  );
+  expect(readAccount()?.homeServer).toBe(account.server);
+  expect(readAccount()?.token).toBe(account.token);
+  expect(invoke).not.toHaveBeenCalledWith("player_start", expect.anything());
+  expect(
+    vi
+      .mocked(fetch)
+      .mock.calls.filter(([url]) =>
+        String(url).endsWith("/System/Info/Public"),
+      ),
+  ).toHaveLength(1);
+});
+it("leaves a failed manual connection locked instead of silently using a backup", async () => {
+  saveAccount(account, false);
+  saveRoute(account, {
+    name: "Backup",
+    url: "https://fallback.test/emby",
+    serverId: account.serverId,
+    userId: account.userId,
+  });
+  vi.mocked(fetch).mockRejectedValue(Error("connection refused"));
+  render(<App />);
+  await screen.findByRole("alert");
+  expect(readAccount()?.server).toBe(account.server);
+  expect(
+    vi
+      .mocked(fetch)
+      .mock.calls.every(([url]) => String(url).startsWith(account.server)),
+  ).toBe(true);
+});
+it("updates a display remark without rebuilding metadata connections", async () => {
+  saveAccount(account, false);
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByRole("button", { name: "快速播放 线路测试影片" });
+  await user.click(screen.getByRole("button", { name: "编辑服务器与线路" }));
+  const before = vi.mocked(fetch).mock.calls.length;
+  await user.click(
+    screen.getByText("服务器名称与图标", { selector: "summary" }),
+  );
+  await user.type(screen.getByLabelText("服务器备注"), "Library note");
+  await user.click(screen.getByRole("button", { name: "保存修改" }));
+  expect(readAccount()?.remark).toBe("Library note");
+  expect(vi.mocked(fetch).mock.calls).toHaveLength(before);
+});
+it("opens route management from the sidebar and reopens without duplicate state", async () => {
   saveAccount(account, false);
   saveRoute(account, {
     name: "备用线路",
@@ -131,19 +300,22 @@ it("opens the existing route dialog from network settings and reopens without du
   render(<App />);
   for (let attempt = 0; attempt < 2; attempt++) {
     await user.click(await screen.findByRole("button", { name: "设置" }));
-    await user.click(screen.getByRole("tab", { name: "播放" }));
-    expect(
-      screen.queryByRole("button", { name: /管理连接地址|多线路管理/ }),
-    ).toBeNull();
-    await user.click(screen.getByRole("tab", { name: "网络 / 线路" }));
-    await user.click(screen.getByRole("button", { name: "多线路管理" }));
-    const dialog = await screen.findByRole("dialog", { name: "连接线路" });
+    expect(screen.queryByRole("tab", { name: "网络 / 线路" })).toBeNull();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await user.click(screen.getByRole("button", { name: "编辑服务器与线路" }));
+    const dialog = await screen.findByRole("dialog", { name: "服务器与线路" });
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
-    expect(within(dialog).getByText(account.server)).toBeTruthy();
+    expect(within(dialog).getAllByText(account.server).length).toBeGreaterThan(
+      0,
+    );
     expect(within(dialog).getAllByRole("article")).toHaveLength(2);
     expect(
       within(dialog).getByText("默认线路 · 当前").closest("article"),
     ).toHaveProperty("ariaCurrent", "true");
+    expect(
+      within(dialog).getByText("连接诊断", { selector: "summary" }),
+    ).toBeTruthy();
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   }
@@ -263,6 +435,295 @@ it("adopts a recommended route only when idle and does not cancel itself when st
   await waitFor(() => expect(readAccount()?.server).toBe(backup.url));
   expect(invoke).not.toHaveBeenCalledWith("player_start", expect.anything());
 });
+it.each(["verification", "native", "stop"] as const)(
+  "preserves a newer manual pin across the automatic %s await",
+  async (window) => {
+    saveAccount(account, false);
+    const backup = {
+      name: "Backup",
+      url: "https://freeze-backup.test/emby",
+      serverId: account.serverId,
+      userId: account.userId,
+    };
+    saveRoute(account, backup);
+    saveRouteTest(
+      account,
+      backup,
+      normalizeMetrics({
+        identityValid: true,
+        apiTtfbMs: 20,
+        failureRate: 0,
+        samples: 3,
+      }),
+    );
+    setRouteMode(account, "auto");
+    let verified = false,
+      blocked = false,
+      release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const originalFetch = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (address, options) => {
+      const result = await originalFetch(address, options);
+      if (String(address) === backup.url + "/Users/u") {
+        if (window === "verification") {
+          blocked = true;
+          await gate;
+        }
+        verified = true;
+      }
+      return result;
+    });
+    const originalInvoke = vi.mocked(invoke).getMockImplementation()!;
+    vi.mocked(invoke).mockImplementation(async (command, args) => {
+      if (
+        verified &&
+        !blocked &&
+        ((window === "native" && command === "player_status") ||
+          (window === "stop" && command === "player_stop"))
+      ) {
+        blocked = true;
+        await gate;
+      }
+      return originalInvoke(command, args);
+    });
+    render(<App />);
+    await waitFor(() => expect(blocked).toBe(true));
+    act(() => setRouteMode(account, "manual", account.server));
+    await act(async () => release());
+    expect(readAccount()?.server).toBe(account.server);
+    expect(readRouteQuality(account)).toMatchObject({
+      mode: "manual",
+      pinned: account.server,
+    });
+  },
+);
+it("requires fresh verification after manual/auto intent changes during a pending switch", async () => {
+  saveAccount(account, false);
+  const backup = {
+    name: "Backup",
+    url: "https://intent.test/emby",
+    serverId: account.serverId,
+    userId: account.userId,
+  };
+  saveRoute(account, backup);
+  saveRouteTest(
+    account,
+    backup,
+    normalizeMetrics({
+      identityValid: true,
+      apiTtfbMs: 20,
+      failureRate: 0,
+      samples: 3,
+    }),
+  );
+  setRouteMode(account, "auto");
+  let verified = false,
+    blocked = false,
+    release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const originalFetch = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (address, options) => {
+    const response = await originalFetch(address, options);
+    if (String(address) === backup.url + "/Users/u") verified = true;
+    return response;
+  });
+  const originalInvoke = vi.mocked(invoke).getMockImplementation()!;
+  vi.mocked(invoke).mockImplementation(async (command, args) => {
+    if (verified && !blocked && command === "player_status") {
+      blocked = true;
+      await gate;
+    }
+    return originalInvoke(command, args);
+  });
+  render(<App />);
+  await waitFor(() => expect(blocked).toBe(true));
+  act(() => {
+    setRouteMode(account, "manual", account.server);
+    setRouteMode(account, "auto");
+  });
+  await act(async () => release());
+  await waitFor(() => expect(readAccount()?.server).toBe(backup.url));
+  expect(
+    vi
+      .mocked(fetch)
+      .mock.calls.filter(([url]) =>
+        String(url).endsWith("/System/Info/Public"),
+      ),
+  ).toHaveLength(2);
+});
+it("discards an old automatic switch after unmount and another account is saved", async () => {
+  saveAccount(account, false);
+  const backup = {
+    name: "Backup",
+    url: "https://unmount.test/emby",
+    serverId: account.serverId,
+    userId: account.userId,
+  };
+  saveRoute(account, backup);
+  saveRouteTest(
+    account,
+    backup,
+    normalizeMetrics({
+      identityValid: true,
+      apiTtfbMs: 20,
+      failureRate: 0,
+      samples: 3,
+    }),
+  );
+  setRouteMode(account, "auto");
+  let verified = false,
+    blocked = false,
+    release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const originalFetch = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (address, options) => {
+    const result = await originalFetch(address, options);
+    if (String(address) === backup.url + "/Users/u") verified = true;
+    return result;
+  });
+  const originalInvoke = vi.mocked(invoke).getMockImplementation()!;
+  vi.mocked(invoke).mockImplementation(async (command, args) => {
+    if (verified && !blocked && command === "player_status") {
+      blocked = true;
+      await gate;
+    }
+    return originalInvoke(command, args);
+  });
+  const view = render(<App />);
+  await waitFor(() => expect(blocked).toBe(true));
+  view.unmount();
+  const other = {
+    ...account,
+    server: "https://other.test/emby",
+    serverId: "other",
+    userId: "u2",
+  };
+  saveAccount(other, false);
+  await act(async () => release());
+  expect(readAccount()).toMatchObject(other);
+  expect(
+    vi
+      .mocked(invoke)
+      .mock.calls.filter(([command]) => command === "player_stop"),
+  ).toHaveLength(0);
+});
+it("keeps the selected server when an old fallback identity request finishes late", async () => {
+  const owner = { ...account, userId: "owner-late" };
+  const other = {
+    ...account,
+    server: "https://other.test/emby",
+    serverId: "other",
+    userId: "u2",
+  };
+  saveAccount(other, false);
+  saveAccount(owner, false);
+  const backup = {
+    name: "Backup",
+    url: "https://pending-owner.test/emby",
+    serverId: account.serverId,
+    userId: owner.userId,
+  };
+  saveRoute(owner, backup);
+  setRouteMode(owner, "auto");
+  let blocked = false,
+    release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const originalFetch = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (address, options) => {
+    if (String(address).startsWith(account.server))
+      throw Error("synthetic connection refused");
+    if (String(address) === backup.url + "/Users/owner-late") {
+      blocked = true;
+      await gate;
+      return new Response(JSON.stringify({ Id: owner.userId }));
+    }
+    return originalFetch(address, options);
+  });
+  const user = userEvent.setup();
+  render(<App />);
+  await waitFor(() => expect(blocked).toBe(true));
+  await pickSelect(user, screen.getByLabelText("当前服务器"), {
+    name: "other.test",
+  });
+  await waitFor(() => expect(readAccount()?.server).toBe(other.server));
+  await act(async () => release());
+  expect(readAccount()).toMatchObject(other);
+});
+it("serializes a manual choice of B after cancelling an automatic choice of A", async () => {
+  saveAccount(account, false);
+  const auto = {
+    name: "Automatic A",
+    url: "https://auto-a.test/emby",
+    serverId: account.serverId,
+    userId: account.userId,
+  };
+  const manual = {
+    ...auto,
+    name: "Manual B",
+    url: "https://manual-b.test/emby",
+  };
+  saveRoute(account, auto);
+  saveRoute(account, manual);
+  saveRouteTest(
+    account,
+    auto,
+    normalizeMetrics({
+      identityValid: true,
+      apiTtfbMs: 20,
+      failureRate: 0,
+      samples: 3,
+    }),
+  );
+  setRouteMode(account, "auto");
+  let verified = false,
+    blocked = false,
+    release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const originalFetch = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (address, options) => {
+    const response = await originalFetch(address, options);
+    if (String(address) === auto.url + "/Users/u") verified = true;
+    return response;
+  });
+  const originalInvoke = vi.mocked(invoke).getMockImplementation()!;
+  vi.mocked(invoke).mockImplementation(async (command, args) => {
+    if (verified && !blocked && command === "player_status") {
+      blocked = true;
+      await gate;
+    }
+    return originalInvoke(command, args);
+  });
+  const user = userEvent.setup();
+  render(<App />);
+  await waitFor(() => expect(blocked).toBe(true));
+  await user.click(screen.getByRole("button", { name: "编辑服务器与线路" }));
+  await user.click(
+    within(screen.getByText("Manual B").closest("article")!).getByRole(
+      "button",
+      { name: "使用" },
+    ),
+  );
+  expect(readRouteQuality(account)).toMatchObject({
+    mode: "manual",
+    pinned: manual.url,
+  });
+  await act(async () => release());
+  await waitFor(() => expect(readAccount()?.server).toBe(manual.url));
+  expect(readRouteQuality(account)).toMatchObject({
+    mode: "manual",
+    pinned: manual.url,
+  });
+});
 it("keeps a favorite change when returning to a cached browsing page", async () => {
   saveAccount(account, false);
   const update = vi
@@ -291,11 +752,23 @@ it("returns to the originating detail only after stop, preserves progress and re
   saveAccount(account, false);
   const user = userEvent.setup();
   render(<App />);
+  const navigation = await screen.findByRole("navigation", {
+    name: "主要导航",
+  });
+  expect(
+    within(navigation).queryByRole("button", { name: "播放页面" }),
+  ).toBeNull();
   await user.click(
     await screen.findByRole("button", { name: /^查看详情 线路测试影片/ }),
   );
   await user.click(await screen.findByRole("button", { name: "播放" }));
   await screen.findByLabelText("播放器控制");
+  expect(
+    within(navigation).queryByRole("button", { name: "播放页面" }),
+  ).toBeNull();
+  expect(invoke).toHaveBeenCalledWith("player_start", {
+    launch: expect.objectContaining({ volume: 100 }),
+  });
   snapshot = { ...snapshot, position: 1072, duration: 1800 };
   let finish!: () => void;
   const original = vi.mocked(invoke).getMockImplementation()!;
@@ -348,6 +821,13 @@ it("does not expose server B until server A has stopped and its final position i
     await screen.findByRole("button", { name: "快速播放 线路测试影片" }),
   );
   snapshot = { ...snapshot, position: 120 };
+  const oldFinal = {
+    ...snapshot,
+    itemId: movie.Id,
+    active: false,
+    syncComplete: true,
+    persistenceId: "old-server",
+  };
   const original = vi.mocked(invoke).getMockImplementation()!;
   let finish!: () => void;
   vi.mocked(invoke).mockImplementation(async (command, args) => {
@@ -365,6 +845,23 @@ it("does not expose server B until server A has stopped and its final position i
   finish();
   await waitFor(() => expect(readAccount()?.server).toBe(second.server));
   expect(snapshot.active).toBe(false);
+  expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).toBe(
+    1200000000,
+  );
+  vi.mocked(invoke).mockImplementation(original);
+  await user.click(
+    await screen.findByRole("button", { name: "快速播放 线路测试影片" }),
+  );
+  await waitFor(() => expect(snapshot.playSessionId).toBe("second.test-s1"));
+  const newHistory = JSON.stringify(readHistory(second));
+  act(() =>
+    nativeEvents.get("player-final-snapshot")!({ payload: oldFinal as never }),
+  );
+  expect(invoke).toHaveBeenCalledWith("player_final_saved", {
+    persistenceId: "old-server",
+    persisted: false,
+  });
+  expect(JSON.stringify(readHistory(second))).toBe(newHistory);
   expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).toBe(
     1200000000,
   );
@@ -389,7 +886,9 @@ it("waits for the final sample before logout removes the account", async () => {
     }
     return original(command, args);
   });
-  await user.click(screen.getByRole("button", { name: "退出登录" }));
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "当前服务器" }));
+  await user.click(screen.getByRole("menuitem", { name: "退出登录" }));
   expect(readAccount()?.server).toBe(account.server);
   expect(
     vi

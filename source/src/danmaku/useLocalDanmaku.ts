@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { t, getLanguage } from "../i18n/core";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { EmbyClient } from "../api/client";
 import type { Item } from "../types/emby";
@@ -67,7 +68,7 @@ export default function useLocalDanmaku(
     if (signal.aborted || !mounted.current || currentKey.current !== expected)
       return;
     if (!parsed.entries.length)
-      throw Error("文件中没有可显示的滚动、顶部或底部弹幕。");
+      throw Error(t("danmaku.the_file_contains_no_supported_scrolling_top"));
     if (bind)
       await invoke("danmaku_bind", {
         ...identity,
@@ -81,7 +82,12 @@ export default function useLocalDanmaku(
     setBound(true);
     setOffset(bind ? settings.offset : file.offset);
     setStatus(
-      `弹幕已加载 · ${parsed.entries.length} 条${parsed.skipped ? " · 已略过 " + parsed.skipped + " 条不支持的数据" : ""}`,
+      t("danmaku.danmaku_loaded_comments", {
+        p0: parsed.entries.length,
+        p1: parsed.skipped
+          ? " · " + t("danmaku.skipped_count", { count: parsed.skipped })
+          : "",
+      }),
     );
     if (bind) setSelectionRevision((v) => v + 1);
   }
@@ -135,9 +141,11 @@ export default function useLocalDanmaku(
       const pending = new AbortController();
       controller.current = pending;
       setLoading(true);
-      setStatus("正在选择弹幕文件…");
+      setStatus(t("danmaku.choosing_a_danmaku_file"));
       try {
-        const file = await invoke<LocalFile | null>("danmaku_pick");
+        const file = await invoke<LocalFile | null>("danmaku_pick", {
+          language: getLanguage(),
+        });
         if (file && !pending.signal.aborted && currentKey.current === expected)
           await load(file, pending.signal, expected, true);
         else if (currentKey.current === expected) setStatus("");
@@ -155,7 +163,7 @@ export default function useLocalDanmaku(
       setDocument(null);
       setName("");
       setBound(false);
-      setStatus("已解除弹幕绑定。");
+      setStatus(t("danmaku.danmaku_file_unlinked"));
     } else {
       if (patch?.offset !== undefined) {
         const value = normalizeDanmaku({
@@ -176,12 +184,8 @@ export default function useLocalDanmaku(
       saveSettings({ ...readSettings(), danmaku: next });
     }
   }
-  return {
-    ready: readyKey === key,
-    selectionRevision,
-    document,
-    action,
-    metadata: {
+  const metadata = useMemo(
+    () => ({
       name,
       count: document?.entries.length || 0,
       skipped: document?.skipped || 0,
@@ -190,6 +194,14 @@ export default function useLocalDanmaku(
       offset,
       bound,
       loading,
-    },
+    }),
+    [name, document, status, settings, offset, bound, loading],
+  );
+  return {
+    ready: readyKey === key,
+    selectionRevision,
+    document,
+    action,
+    metadata,
   };
 }

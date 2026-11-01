@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import type { PlaybackSelection } from "./sourcePreference";
 import type { Item } from "../types/emby";
 import type { PlayerSnapshot } from "./playback";
 export function buildEpisodeQueue(current: Item, episodes: Item[]): Item[] {
@@ -48,8 +50,9 @@ export interface QueueAdapter {
     fromStart: boolean,
     signal: AbortSignal,
     sourceId?: string,
+    selection?: PlaybackSelection,
   ) => Promise<string>;
-  stop: () => Promise<void>;
+  stop: (preservePresentation?: boolean) => Promise<void>;
   episodes: (item: Item, signal: AbortSignal) => Promise<Item[]>;
   autoNext: () => boolean;
 }
@@ -87,9 +90,10 @@ export class PlaybackQueue {
     controller: AbortController,
     epoch: number,
     sourceId?: string,
+    selection?: PlaybackSelection,
   ) {
     return this.serialize(async () => {
-      await this.adapter.stop();
+      await this.adapter.stop(true);
       if (epoch !== this.epoch || controller.signal.aborted)
         throw new DOMException("Aborted", "AbortError");
       try {
@@ -98,13 +102,14 @@ export class PlaybackQueue {
           fromStart,
           controller.signal,
           sourceId,
+          ...(selection ? [selection] : []),
         );
         if (epoch !== this.epoch || controller.signal.aborted)
           throw new DOMException("Aborted", "AbortError");
         return session;
       } catch (e) {
         // A native launch can finish after cancellation; reclaim it before another launch.
-        await this.adapter.stop();
+        await this.adapter.stop(true);
         throw e;
       }
     });
@@ -114,6 +119,7 @@ export class PlaybackQueue {
     fromStart = false,
     sourceId?: string,
     signal?: AbortSignal,
+    selection?: PlaybackSelection,
   ) {
     const epoch = ++this.epoch;
     this.collection = false;
@@ -133,6 +139,7 @@ export class PlaybackQueue {
         controller,
         epoch,
         sourceId,
+        selection,
       );
       this.session = session;
       this.handled.clear();
@@ -148,7 +155,7 @@ export class PlaybackQueue {
           .catch(() => {
             if (epoch === this.epoch && !controller.signal.aborted)
               this.publish({
-                warning: "剧集队列暂时无法加载，当前视频仍可播放。",
+                warning: t("player.could_not_load_the_episode_queue_the"),
               });
           })
           .finally(() => {
@@ -164,7 +171,7 @@ export class PlaybackQueue {
         this.publish({
           error:
             (e as Error).name === "AbortError"
-              ? "已取消播放。"
+              ? t("player.playback_cancelled")
               : String(e instanceof Error ? e.message : e),
         });
       throw e;
@@ -217,8 +224,13 @@ export class PlaybackQueue {
           all.findIndex((a) => a.Id === item.Id) === i,
       )
       .slice(0, 200);
-    if (!list.length) throw new Error("片单中没有可播放的视频。");
+    if (!list.length)
+      throw new Error(t("player.no_playable_videos_in_this_list"));
+    // play() advances the existing owner once. A newer play/stop/cancel may
+    // arrive before this continuation resumes, and must keep its authority.
+    const epoch = this.epoch + 1;
     await this.play(list[0]);
+    if (epoch !== this.epoch) return;
     ++this.epoch;
     this.collection = true;
     this.controller?.abort();
@@ -267,7 +279,9 @@ export class PlaybackQueue {
         this.publish({ items: [...this.state.items, ...more] });
       } catch (e) {
         if (epoch === this.epoch)
-          this.publish({ error: "下一集暂时无法加载，请检查连接后重试。" });
+          this.publish({
+            error: t("player.could_not_load_the_next_episode_check"),
+          });
         return;
       } finally {
         if (epoch === this.epoch) {
@@ -279,7 +293,7 @@ export class PlaybackQueue {
     if (this.state.index + 1 < this.state.items.length)
       await this.select(this.state.index + 1, fromStart);
   }
-  async stop() {
+  async stop(preservePresentation = false) {
     const epoch = ++this.epoch;
     this.session = "";
     this.controller?.abort();
@@ -287,9 +301,11 @@ export class PlaybackQueue {
     this.queueFetch = null;
     this.publish({ busy: true, error: "", loading: false });
     try {
-      await this.serialize(() => this.adapter.stop());
+      await this.serialize(() =>
+        preservePresentation ? this.adapter.stop(true) : this.adapter.stop(),
+      );
     } catch (e) {
-      this.publish({ error: String(e) });
+      if (epoch === this.epoch) this.publish({ error: String(e) });
       throw e;
     } finally {
       if (epoch === this.epoch) this.publish({ busy: false });

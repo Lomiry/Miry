@@ -12,6 +12,28 @@ const connections = ["a", "b"].map((host) => ({
   },
 }));
 afterEach(() => vi.restoreAllMocks());
+it("queries the same account once across alternate endpoints", async () => {
+  const items = vi
+    .spyOn(EmbyClient.prototype, "items")
+    .mockResolvedValue({ Items: [], TotalRecordCount: 0 });
+  const original = connections[0];
+  const alternate = {
+    ...original,
+    account: {
+      ...original.account,
+      server: "https://alternate.test/emby",
+      homeServer: original.account.server,
+    },
+  };
+  const groups = await aggregateSearch(
+    [original, alternate],
+    "x",
+    0,
+    new AbortController().signal,
+  );
+  expect(groups).toHaveLength(1);
+  expect(items).toHaveBeenCalledTimes(1);
+});
 it("keeps server identity and pagination when media IDs collide", async () => {
   const items = vi.spyOn(EmbyClient.prototype, "items").mockResolvedValue({
     Items: [{ Id: "same-id", Name: "Movie", Type: "Movie" }],

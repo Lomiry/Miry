@@ -1,3 +1,6 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useState } from "react";
 import { ArrowUp, ArrowDown, Film, Tv, RotateCcw } from "lucide-react";
 import type { Item } from "../types/emby";
@@ -17,6 +20,8 @@ export default function LibraryManager({
   value: LibraryPreferences;
   onChange: (prefs: LibraryPreferences) => void;
 }) {
+  useI18n();
+
   const [error, setError] = useState("");
   const ordered = orderedLibraries(views, value);
   function change(next: LibraryPreferences) {
@@ -24,7 +29,7 @@ export default function LibraryManager({
       onChange(next);
       setError("");
     } catch {
-      setError("设置未保存，请检查本机存储空间后重试。");
+      setError(t("library.settings_were_not_saved_check_your_local"));
     }
   }
   function move(index: number, direction: number) {
@@ -38,19 +43,18 @@ export default function LibraryManager({
     <div className="library-manager">
       <div className="library-manager-heading">
         <div>
-          <h3>首页与侧栏</h3>
-          <p>选择常用媒体库，并调整显示顺序。</p>
+          <h3>{t("library.home_and_sidebar")}</h3>
+          <p>{t("library.choose_your_favorite_libraries_and_arrange_their")}</p>
         </div>
         <button
           className="library-reset"
-          aria-label="恢复媒体库默认设置"
+          aria-label={t("library.reset_library_preferences")}
           onClick={() => change(defaultLibraries())}
         >
-          <RotateCcw size={15} />
-          恢复默认
+          <RotateCcw size={15} /> {t("library.restore_defaults")}{" "}
         </button>
       </div>
-      <ul aria-label="媒体库显示设置">
+      <ul aria-label={t("library.library_display_preferences")}>
         {ordered.map((view, index) => (
           <li
             key={view.Id}
@@ -58,7 +62,7 @@ export default function LibraryManager({
           >
             <label>
               <Checkbox
-                aria-label={`显示媒体库 ${view.Name}`}
+                aria-label={t("library.show_library", { p0: view.Name })}
                 checked={!value.hidden.includes(view.Id)}
                 onChange={(event) =>
                   change({
@@ -79,16 +83,16 @@ export default function LibraryManager({
             <div>
               <button
                 disabled={index === 0}
-                aria-label={`上移媒体库 ${view.Name}`}
-                title="上移"
+                aria-label={t("library.move_library_up", { p0: view.Name })}
+                title={t("library.move_up")}
                 onClick={() => move(index, -1)}
               >
                 <ArrowUp size={16} />
               </button>
               <button
                 disabled={index === ordered.length - 1}
-                aria-label={`下移媒体库 ${view.Name}`}
-                title="下移"
+                aria-label={t("library.move_library_down", { p0: view.Name })}
+                title={t("library.move_down")}
                 onClick={() => move(index, 1)}
               >
                 <ArrowDown size={16} />
@@ -98,17 +102,20 @@ export default function LibraryManager({
         ))}
       </ul>
       {!views.length && (
-        <p className="setting-note">当前没有可显示的媒体库，请刷新后再试。</p>
+        <p className="setting-note">
+          {t("library.no_libraries_are_available_refresh_and_try")}
+        </p>
       )}
       {views.length > 0 &&
         views.every((view) => value.hidden.includes(view.Id)) && (
           <p className="setting-note">
-            媒体库入口已全部隐藏，可在这里重新开启。
+            {" "}
+            {t("library.all_library_shortcuts_are_hidden_you_can")}{" "}
           </p>
         )}
       {error && (
         <p className="error" role="alert">
-          {error}
+          {displayError(error)}
         </p>
       )}
     </div>

@@ -1,5 +1,7 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useState } from "react";
-import { privateText } from "../privacy";
 import { Check, Heart } from "lucide-react";
 import type { Item, UserData } from "../types/emby";
 import type { EmbyClient } from "../api/client";
@@ -12,6 +14,8 @@ export default function ItemActions({
   item: Item;
   onChange: (data: UserData) => void;
 }) {
+  useI18n();
+
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function update(kind: "played" | "favorite") {
@@ -45,7 +49,9 @@ export default function ItemActions({
         onClick={() => update("played")}
       >
         <Check size={16} />
-        {item.UserData?.Played ? "标为未看" : "标为已看"}
+        {item.UserData?.Played
+          ? t("library.mark_unwatched")
+          : t("library.mark_watched")}
       </button>
       <button
         disabled={busy}
@@ -53,11 +59,13 @@ export default function ItemActions({
         onClick={() => update("favorite")}
       >
         <Heart size={16} />
-        {item.UserData?.IsFavorite ? "取消收藏" : "收藏"}
+        {item.UserData?.IsFavorite
+          ? t("library.remove_favorite")
+          : t("library.favorites")}
       </button>
       {error && (
         <p role="alert" className="play-error">
-          {privateText(error)}
+          {displayError(error)}
         </p>
       )}
     </div>

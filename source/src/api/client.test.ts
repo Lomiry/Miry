@@ -11,13 +11,40 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
+it("rejects an expired request even when the transport resolves late after abort, without caching it", async () => {
+  vi.useFakeTimers();
+  let finish!: (response: Response) => void;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise<Response>((resolve) => (finish = resolve))),
+  );
+  const client = new EmbyClient(account);
+  const outcome = client.items({}).then(
+    () => "unexpected success",
+    (error) => error,
+  );
+  await vi.advanceTimersByTimeAsync(15000);
+  finish(
+    new Response(
+      JSON.stringify({
+        Items: [{ Id: "stale", Name: "Stale", Type: "Movie" }],
+        TotalRecordCount: 1,
+      }),
+    ),
+  );
+  expect(await outcome).toMatchObject({ category: "timeout" });
+  expect(client.cache.stats().entries).toBe(0);
+});
 describe("Server addresses", () => {
   it("preserves reverse proxy paths and does not duplicate the API prefix", () => {
     expect(normalizeServer(" https://media.example.com/proxy/emby/ ")).toBe(
       "https://media.example.com/proxy/emby",
     );
     expect(normalizeServer("http://localhost:8096")).toBe(
-      "http://localhost:8096/emby",
+      "http://localhost:8096",
+    );
+    expect(normalizeServer("https://media.example.test/library/")).toBe(
+      "https://media.example.test/library",
     );
   });
   it("rejects credentials and non-HTTP protocols", () => {

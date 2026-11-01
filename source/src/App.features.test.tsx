@@ -5,7 +5,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { saveAccount } from "./stores/account";
-import { recordHistory } from "./stores/history";
+import { recordHistory, readHistory } from "./stores/history";
 const first = {
   server: "https://a.test/emby",
   userId: "u",
@@ -25,6 +25,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 function mockServer() {
@@ -153,6 +154,120 @@ it("keeps local history scoped and lets the user clear it", async () => {
     await screen.findByRole("heading", { name: "还没有观看记录" }),
   ).toBeTruthy();
 });
+it("restores newly persisted records instead of a saved empty history page", async () => {
+  saveAccount(first, false);
+  const fetch = mockServer();
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(await screen.findByRole("button", { name: "观看记录" }));
+  await screen.findByRole("heading", { name: "还没有观看记录" });
+  await user.click(screen.getByRole("button", { name: "首页" }));
+  await screen.findByRole("button", { name: /^查看详情 a.test影片/ });
+  recordHistory(
+    first,
+    {
+      Id: "new",
+      Name: "新播放记录",
+      Type: "Movie",
+      ImageTags: { Primary: "p" },
+    },
+    17,
+  );
+  const calls = fetch.mock.calls.length;
+  await user.click(screen.getByRole("button", { name: "观看记录" }));
+  expect(
+    (await screen.findByRole("button", { name: "快速播放 新播放记录" }))
+      .textContent,
+  ).toBe("继续播放 · 00:17");
+  expect(screen.getByText("1 个内容")).toBeTruthy();
+  expect(readHistory(first)[0].item.UserData?.PlaybackPositionTicks).toBe(
+    170000000,
+  );
+  expect(fetch.mock.calls.length).toBe(calls);
+});
+it("restores history membership, order and old local progress while keeping scroll and refresh consistent", async () => {
+  const item = {
+    Id: "h",
+    Name: "本机记录",
+    Type: "Movie",
+    ImageTags: { Primary: "p" },
+  };
+  saveAccount(first, false);
+  recordHistory(first, item, 5);
+  mockServer();
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(await screen.findByRole("button", { name: "观看记录" }));
+  expect(
+    (await screen.findByRole("button", { name: "快速播放 本机记录" }))
+      .textContent,
+  ).toBe("继续播放 · 00:05");
+  document.querySelector("main")!.scrollTop = 123;
+  await user.click(screen.getByRole("button", { name: "首页" }));
+  await screen.findByRole("button", { name: /^查看详情 a.test影片/ });
+  recordHistory(first, item, 17);
+  recordHistory(first, { ...item, Id: "new", Name: "最新记录" }, 23);
+  const now = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(now + 61000);
+  await user.click(screen.getByRole("button", { name: "观看记录" }));
+  await screen.findByRole("button", { name: "快速播放 最新记录" });
+  expect(
+    screen.getByRole("button", { name: "快速播放 本机记录" }).textContent,
+  ).toBe("继续播放 · 00:17");
+  expect(
+    screen
+      .getAllByRole("button", { name: /^快速播放 / })
+      .map((b) => b.getAttribute("aria-label")),
+  ).toEqual(["快速播放 最新记录", "快速播放 本机记录"]);
+  await waitFor(() =>
+    expect(document.querySelector("main")!.scrollTop).toBe(123),
+  );
+  await user.click(screen.getByRole("button", { name: "刷新" }));
+  await screen.findByRole("button", { name: "快速播放 最新记录" });
+  expect(
+    screen.getByRole("button", { name: "快速播放 本机记录" }).textContent,
+  ).toBe("继续播放 · 00:17");
+  clock.mockRestore();
+});
+it.each([{ ...first, userId: "other-user", name: "Other user" }, second])(
+  "keeps restored history scoped when media IDs overlap: $server / $userId",
+  async (other) => {
+    const item = {
+      Id: "same",
+      Name: "当前账号记录",
+      Type: "Movie",
+      ImageTags: { Primary: "p" },
+    };
+    saveAccount(other, false);
+    saveAccount(first, false);
+    recordHistory(other, { ...item, Name: "其他账号记录" }, 99);
+    recordHistory(first, item, 5);
+    mockServer();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", { name: "观看记录" }));
+    await screen.findByRole("button", { name: "快速播放 当前账号记录" });
+    await user.click(screen.getByRole("button", { name: "首页" }));
+    await screen.findByRole("button", { name: /^查看详情 a.test影片/ });
+    recordHistory(first, item, 17);
+    await user.click(screen.getByRole("button", { name: "观看记录" }));
+    expect(
+      (await screen.findByRole("button", { name: "快速播放 当前账号记录" }))
+        .textContent,
+    ).toBe("继续播放 · 00:17");
+    expect(screen.queryByText("其他账号记录")).toBeNull();
+    await pickSelect(user, screen.getByLabelText("当前服务器"), "0");
+    await user.click(await screen.findByRole("button", { name: "观看记录" }));
+    expect(
+      (await screen.findByRole("button", { name: "快速播放 其他账号记录" }))
+        .textContent,
+    ).toBe("继续播放 · 01:39");
+    expect(screen.queryByText("当前账号记录")).toBeNull();
+    expect(readHistory(first)[0].item.UserData?.PlaybackPositionTicks).toBe(
+      170000000,
+    );
+  },
+);
 it("removes decorative copy and combines genre, year and score filters", async () => {
   const user = userEvent.setup();
   render(<App />);

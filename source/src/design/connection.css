@@ -1,0 +1,641 @@
+/* Connection presentation only; authentication and shared tokens stay unchanged. */
+.login-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 500px);
+  justify-content: center;
+  align-items: start;
+  align-content: safe center;
+  grid-auto-rows: max-content;
+  gap: clamp(32px, 6vw, 80px);
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-12) var(--space-8);
+  overflow: auto;
+  background: var(--bg);
+  scrollbar-gutter: stable;
+}
+.desktop-frame .login-layout {
+  height: 100%;
+  min-height: 0;
+}
+.login-intro {
+  min-width: 0;
+  padding-top: var(--space-6);
+}
+.login-brand {
+  font-size: 20px;
+  margin-bottom: var(--space-8);
+}
+.login-brand > img {
+  width: 28px;
+  height: 28px;
+}
+.desktop-frame .login-brand {
+  display: none;
+}
+.login-intro h1 {
+  color: var(--text);
+  font-size: calc(34px * var(--ui-scale));
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.login-intro p {
+  color: var(--muted);
+  margin-top: var(--space-4);
+  font-size: var(--font-body);
+  line-height: 1.7;
+}
+.login-language {
+  width: 160px;
+  max-width: 100%;
+  margin-top: var(--space-8);
+}
+.login-features {
+  display: grid;
+  gap: var(--space-6);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-8) 0 0;
+}
+.login-feature {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  animation: login-intro-appear 500ms ease-out both;
+}
+.login-feature > svg {
+  color: var(--accent);
+  margin-top: 3px;
+}
+.login-feature h2 {
+  font-size: var(--font-body);
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--text);
+}
+.login-feature p {
+  margin-top: var(--space-1);
+  font-size: var(--font-sm);
+  line-height: 1.65;
+}
+.login-intro > h1 {
+  animation: login-intro-appear 450ms ease-out both;
+}
+@keyframes login-intro-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@supports (animation-timeline: view()) {
+  .login-feature {
+    animation: login-intro-appear linear both;
+    animation-timeline: view(block);
+    animation-range: entry 0% entry 100%;
+  }
+}
+.login-panel {
+  display: block;
+  min-width: 0;
+  padding: 0;
+}
+.login-panel form {
+  width: 100%;
+  max-width: none;
+  padding: var(--space-8);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+}
+.login-panel h2 {
+  font-size: var(--font-section);
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: var(--space-2);
+}
+.login-import {
+  margin-bottom: var(--space-5);
+}
+.login-import .smart-import-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-height-lg);
+  padding: var(--space-3) var(--space-4);
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  text-align: left;
+  font-weight: 600;
+}
+.login-import .smart-import-trigger:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--surface-hover);
+}
+.import-chevron {
+  margin-left: auto;
+  transition: transform 160ms ease;
+}
+.smart-import-trigger[aria-expanded="true"] .import-chevron {
+  transform: rotate(180deg);
+}
+.login-panel label:not(.check) {
+  margin: 0 0 var(--space-4);
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.login-panel label > input:not([type="checkbox"]):not([type="radio"]) {
+  min-width: 0;
+  height: var(--control-height-lg);
+  margin-top: var(--space-2);
+  color: var(--text);
+  background: var(--bg);
+  font-size: var(--font-body);
+}
+.login-panel input:focus-visible,
+.login-panel textarea:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.login-credentials {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.login-panel .check {
+  align-items: flex-start;
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+}
+.login-panel .check > input {
+  flex: none;
+  margin-top: 5px;
+}
+.login-advanced {
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.login-advanced summary {
+  width: fit-content;
+  padding-block: var(--space-2);
+  cursor: pointer;
+}
+.login-panel .certificate-option {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  margin-top: var(--space-3);
+}
+.login-panel .certificate-option > small {
+  grid-column: 1 / -1;
+}
+.login-feedback {
+  min-height: var(--space-8);
+  overflow-wrap: anywhere;
+}
+.login-feedback .error {
+  margin: var(--space-3) 0 var(--space-4);
+  padding: var(--space-3);
+  font-size: var(--font-sm);
+}
+.login-panel .primary {
+  height: auto;
+  min-height: var(--control-height-lg);
+  justify-content: center;
+  line-height: 1.5;
+}
+.login-panel .primary > svg,
+.login-support svg {
+  flex: none;
+}
+.login-panel .privacy {
+  margin-top: var(--space-4);
+  color: var(--subtle);
+  font-size: var(--font-xs);
+  line-height: 1.65;
+}
+.login-support {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  color: var(--subtle);
+  font-size: var(--font-sm);
+}
+.login-support button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+}
+.login-support button:hover:not(:disabled) {
+  color: var(--accent);
+}
+.login-panel .smart-import {
+  margin: var(--space-3) 0;
+  padding: var(--space-4);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+.smart-import .setting-note {
+  margin: 0 0 var(--space-3);
+  line-height: 1.6;
+}
+.smart-import textarea {
+  display: block;
+  width: 100%;
+  min-height: 112px;
+  margin-top: var(--space-2);
+  resize: vertical;
+}
+.login-panel .import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.login-panel .import-actions button {
+  width: auto;
+  min-height: var(--control-height-md);
+}
+.import-preview {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+.import-candidates {
+  display: grid;
+  gap: var(--space-2);
+}
+.login-panel label.import-candidate {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.login-panel .import-candidate > input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  padding: 0;
+  margin: 3px 0 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+.import-candidate:has(:checked) {
+  border-color: var(--accent);
+}
+.import-candidate span {
+  min-width: 0;
+}
+.import-credentials-note {
+  margin: var(--space-3) 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.login-panel .import-apply {
+  width: 100%;
+  color: var(--accent);
+}
+.login-panel .saved-connections {
+  margin: 0 0 var(--space-5);
+}
+.server-login-card {
+  width: min(560px, calc(100vw - 32px));
+}
+.server-login .login-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-5);
+  height: auto;
+  padding: var(--space-8);
+  background: transparent;
+  overflow: visible;
+}
+.login-embedded .login-brand {
+  display: none;
+}
+.login-embedded .login-intro {
+  padding-right: var(--space-6);
+  padding-top: 0;
+}
+.login-embedded .login-intro h1 {
+  font-size: var(--font-section);
+}
+.login-embedded .login-intro p {
+  display: none;
+}
+.login-embedded .login-language {
+  margin-top: var(--space-3);
+}
+.login-embedded form {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+@media (max-width: 1000px) {
+  .login-layout {
+    grid-template-columns: minmax(0, 480px);
+    align-content: safe center;
+    gap: var(--space-6);
+    padding-block: var(--space-8);
+  }
+  .login-intro h1 {
+    font-size: var(--font-page);
+  }
+  .login-intro {
+    padding-top: 0;
+  }
+  .login-features {
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+  .login-language {
+    margin-top: var(--space-4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-intro > h1,
+  .login-feature {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .import-chevron {
+    transition: none;
+  }
+}
+@media (max-width: 520px) {
+  .login-layout,
+  .server-login .login-layout {
+    padding: var(--space-6) var(--space-4);
+  }
+  .login-panel form {
+    padding: var(--space-5);
+  }
+  .login-embedded form {
+    padding: 0;
+  }
+  .login-credentials {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+/* One compact server header; the rail keeps the menu reachable. */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  min-width: 0;
+  margin-bottom: var(--space-3);
+}
+.sidebar-header .sidebar-toggle {
+  width: var(--icon-target);
+  min-height: var(--control-height-md);
+  margin: 0;
+  align-self: auto;
+}
+.sidebar-header .server-switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+  max-height: none;
+  margin: 0;
+}
+.sidebar-header .server-switcher > button {
+  height: auto;
+  min-height: var(--control-height-md);
+  flex: none;
+  padding: var(--space-1);
+}
+.sidebar-header .server-switcher > .server-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  color: var(--text);
+  text-align: left;
+  font-size: var(--font-sm);
+}
+.server-menu-trigger > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.server-icon,
+.server-menu-trigger > svg {
+  flex: none;
+}
+.server-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--accent);
+  object-fit: contain;
+}
+.server-menu-info {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--space-1);
+  overflow-wrap: anywhere;
+}
+.server-menu-info small {
+  display: block;
+  font-size: var(--font-xs);
+  margin-top: var(--space-1);
+}
+.sidebar .nav {
+  min-height: var(--control-height-md);
+  gap: var(--space-2);
+}
+.sidebar[data-collapsed="true"] .sidebar-header {
+  flex-direction: column-reverse;
+  gap: var(--space-2);
+}
+.sidebar[data-collapsed="true"] .sidebar-header .server-switcher {
+  width: 100%;
+  visibility: visible;
+  opacity: 1;
+  overflow: visible;
+}
+.sidebar[data-collapsed="true"] .server-menu-trigger > span,
+.sidebar[data-collapsed="true"] .server-menu-trigger > svg:not(.server-icon),
+.sidebar[data-collapsed="true"] .server-add {
+  display: none;
+}
+.sidebar[data-collapsed="true"] .server-menu-trigger {
+  justify-content: center;
+}
+/* One scrolling body, with fixed header and action footer. */
+.route-panel {
+  width: min(var(--dialog-width), calc(100vw - var(--space-6)));
+  max-height: calc(100dvh - var(--caption-height, 0px) - var(--space-8));
+}
+.route-panel .settings-body {
+  padding: var(--dialog-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.route-intro {
+  font-size: var(--font-sm);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.route-panel .route-list {
+  gap: var(--space-2);
+}
+.route-panel .route-row {
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+.route-panel .route-row small {
+  margin-top: var(--space-1);
+}
+.route-panel .route-row-buttons {
+  gap: var(--space-2);
+}
+.route-panel .route-form {
+  margin: 0;
+  gap: var(--space-3);
+}
+.route-panel .route-form h3 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.route-form label {
+  color: var(--text);
+  font-size: var(--font-sm);
+}
+.route-panel .route-form input:not([type="checkbox"]) {
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-1);
+  min-height: var(--control-height-md);
+}
+.route-panel .route-form input[type="checkbox"],
+.certificate-option input {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 3px 0 0;
+  padding: 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+.route-panel .check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.certificate-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.certificate-option > span {
+  min-width: 0;
+}
+.certificate-option small {
+  display: block;
+  font-size: var(--font-xs);
+  margin-top: var(--space-2);
+}
+.certificate-option .certificate-warning {
+  color: var(--warning);
+}
+.route-advanced summary,
+.connection-diagnostics summary,
+.server-preferences summary {
+  padding-block: var(--space-2);
+  cursor: pointer;
+  color: var(--text);
+  font-size: var(--font-sm);
+}
+.route-advanced[open] summary,
+.server-preferences[open] summary {
+  margin-bottom: var(--space-2);
+}
+.connection-diagnostics,
+.server-preferences {
+  border-top: 1px solid var(--line);
+}
+.connection-diagnostics .connection-address {
+  overflow-wrap: anywhere;
+  font-size: var(--font-sm);
+}
+.route-panel .server-preferences fieldset {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.route-footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--dialog-gutter);
+  border-top: 1px solid var(--line);
+  flex: none;
+}
+.route-footer button {
+  width: auto;
+  min-height: var(--control-height-md);
+}
+.route-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.route-form-actions button {
+  width: auto;
+}
+@media (max-width: 560px) {
+  .route-panel {
+    --dialog-gutter: var(--space-4);
+  }
+  .route-row-buttons {
+    flex-wrap: wrap;
+  }
+  .route-footer button {
+    flex: 1 1 auto;
+  }
+}

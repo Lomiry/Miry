@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { isComposingKey } from "../player/shortcuts";
@@ -6,7 +8,7 @@ export default function Pagination({
   pages,
   hasMore,
   busy = false,
-  label = "内容翻页",
+  label = t("library.content_pagination"),
   contextKey,
   onChange,
 }: {
@@ -18,6 +20,8 @@ export default function Pagination({
   contextKey?: string;
   onChange: (page: number) => void;
 }) {
+  useI18n();
+
   const totalPages = pages === undefined ? undefined : Math.max(1, pages);
   const current = Math.min(page + 1, totalPages ?? Infinity);
   const [draft, setDraft] = useState(String(current));
@@ -62,11 +66,11 @@ export default function Pagination({
         disabled={busy || page === 0}
         onClick={() => goToPage(page - 1)}
       >
-        <ArrowLeft size={15} />
-        上一页
+        <ArrowLeft size={15} /> {t("library.previous")}{" "}
       </button>
       <span>
-        第 {page + 1} 页{totalPages !== undefined && ` / ${totalPages}`}
+        {t("library.page_number", { page: page + 1 })}
+        {totalPages !== undefined && ` / ${totalPages}`}
       </span>
       {totalPages !== undefined && (
         <form
@@ -78,7 +82,7 @@ export default function Pagination({
           }}
         >
           <input
-            aria-label="跳转到页码"
+            aria-label={t("library.go_to_page_number")}
             aria-describedby={hintId}
             aria-invalid={invalid || undefined}
             type="text"
@@ -107,11 +111,16 @@ export default function Pagination({
           />
           <span id={hintId} className="visually-hidden" aria-live="polite">
             {invalid
-              ? `请输入 1–${totalPages} 的整数页码`
-              : `页码范围 1–${totalPages}，按 Enter 或跳转按钮确认`}
+              ? t("library.enter_a_whole_page_number_from_1", {
+                  p0: totalPages,
+                })
+              : t("library.page_range_1_press_enter_or_select", {
+                  p0: totalPages,
+                })}
           </span>
           <button type="submit" disabled={busy}>
-            跳转
+            {" "}
+            {t("library.go")}{" "}
           </button>
         </form>
       )}
@@ -120,8 +129,8 @@ export default function Pagination({
         disabled={busy || !hasMore}
         onClick={() => goToPage(page + 1)}
       >
-        下一页
-        <ArrowRight size={15} />
+        {" "}
+        {t("library.next")} <ArrowRight size={15} />
       </button>
     </nav>
   );

@@ -8,6 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import HomeView from "./HomeView";
+import { EmbyClient } from "../api/client";
 afterEach(cleanup);
 const base = {
   api: null,
@@ -20,6 +21,41 @@ const base = {
   onCatalog: vi.fn(),
   onLibrary: vi.fn(),
 };
+it("does not hide another user's same-server recommendation behind current recent items", () => {
+  const account = {
+    server: "https://fixture.example.test",
+    serverId: "same-server",
+    userId: "one",
+    name: "Fixture",
+    token: "fictional",
+    deviceId: "fixture",
+  };
+  const other = { ...account, userId: "two" };
+  const item = { Id: "shared-id", Name: "Current recent", Type: "Movie" };
+  const entry = {
+    item: { ...item, Name: "Other account recommendation" },
+    connection: { account: other, remember: false },
+    api: new EmbyClient(other),
+    category: "电影",
+  };
+  const open = vi.fn();
+  render(
+    <HomeView
+      {...base}
+      api={new EmbyClient(account)}
+      items={[item]}
+      resume={[]}
+      recommendations={[entry]}
+      onRecommendation={open}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "查看详情 Other account recommendation",
+    }),
+  );
+  expect(open).toHaveBeenCalledWith(entry);
+});
 it("prioritizes resume content and keeps category shelves distinct", () => {
   const items = Array.from({ length: 18 }, (_, n) => ({
     Id: `m${n}`,

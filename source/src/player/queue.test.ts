@@ -51,6 +51,57 @@ it("plays an ordered collection without extending its last episode into unrelate
   expect(adapter.episodes).not.toHaveBeenCalled();
   expect(queue.state.index).toBe(1);
 });
+it.each(["replace", "stop", "cancel"] as const)(
+  "does not let a completed collection start overwrite newer %s intent",
+  async (intent) => {
+    const { adapter } = fixture();
+    const first = { Id: "collection-first", Name: "First", Type: "Movie" };
+    const last = { Id: "collection-last", Name: "Last", Type: "Movie" };
+    const replacement = {
+      Id: "new-intent",
+      Name: "Replacement",
+      Type: "Movie",
+    };
+    let finish!: (session: string) => void;
+    let began!: () => void;
+    const started = new Promise<void>((resolve) => (began = resolve));
+    vi.mocked(adapter.launch).mockImplementationOnce(() => {
+      began();
+      return new Promise<string>((resolve) => (finish = resolve));
+    });
+    let newer: Promise<unknown> = Promise.resolve();
+    let submitted = false;
+    const queue = new PlaybackQueue(adapter, (state) => {
+      if (submitted || state.busy || state.items[0]?.Id !== first.Id) return;
+      submitted = true;
+      // Deliver a newer UI intent after the first native launch commits, but
+      // before playCollection's awaited play() continuation may publish.
+      newer =
+        intent === "replace"
+          ? queue.play(replacement)
+          : intent === "stop"
+            ? queue.stop()
+            : Promise.resolve(queue.cancelAuto());
+      newer = newer.then(
+        () => "ok",
+        (error: Error) => error.name,
+      );
+    });
+    const pending = queue.playCollection([first, last]);
+    await started;
+    finish("session-first");
+    await pending;
+    expect(await newer).toBe("ok");
+    expect(queue.state.items.map((item) => item.Id)).toEqual(
+      intent === "replace"
+        ? [replacement.Id]
+        : intent === "cancel"
+          ? []
+          : [first.Id],
+    );
+    expect(queue.state.busy).toBe(false);
+  },
+);
 it("orders episodes across seasons and removes earlier or duplicate episodes", () => {
   expect(
     buildEpisodeQueue(a, [c, b, a, b, episode("old", 1, 1)]).map((i) => i.Id),
@@ -95,6 +146,25 @@ it("manual stop clears auto advancement even when an old eof snapshot arrives", 
   await queue.stop();
   await queue.snapshot(ended());
   expect(adapter.launch).toHaveBeenCalledTimes(1);
+});
+it("does not publish a failed old stop into a newer successful playback", async () => {
+  const { queue, adapter } = fixture();
+  await queue.play(a);
+  let reject!: (error: Error) => void;
+  let began!: () => void;
+  const started = new Promise<void>((resolve) => (began = resolve));
+  vi.mocked(adapter.stop).mockImplementationOnce(() => {
+    began();
+    return new Promise<void>((_, fail) => (reject = fail));
+  });
+  const stopped = queue.stop();
+  const failed = expect(stopped).rejects.toThrow("controlled old stop failure");
+  await started;
+  const replacement = queue.play(b);
+  reject(new Error("controlled old stop failure"));
+  await Promise.all([failed, replacement]);
+  expect(queue.state.items[0].Id).toBe("b");
+  expect(queue.state.error).toBe("");
 });
 it("reports queue failures without stopping the video already started", async () => {
   const { queue, adapter } = fixture();
@@ -211,4 +281,18 @@ it("serializes fast replacement and stops a failed launch before allowing retry"
   expect(queue.state.busy).toBe(false);
   await queue.play(b);
   expect(queue.state.items[0].Id).toBe("b");
+});
+it("distinguishes media handoffs from real stop for automatic, next, previous and replay", async () => {
+  const { queue, adapter } = fixture();
+  await queue.play(a);
+  await vi.waitFor(() => expect(queue.state.items.length).toBe(3));
+  await queue.snapshot(ended());
+  await queue.select(0);
+  await queue.next();
+  await queue.play(a);
+  expect(
+    vi.mocked(adapter.stop).mock.calls.every(([preserve]) => preserve === true),
+  ).toBe(true);
+  await queue.stop();
+  expect(adapter.stop).toHaveBeenLastCalledWith();
 });

@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import {
   useId,
   useLayoutEffect,
@@ -20,6 +22,8 @@ export default function MediaShelf({
   landscape?: boolean;
   onViewAll?: () => void;
 }) {
+  useI18n();
+
   const id = useId();
   const rail = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: true });
@@ -60,23 +64,28 @@ export default function MediaShelf({
           {onViewAll && (
             <button
               className="text-button"
-              aria-label={title === "最近加入" ? undefined : `查看全部${title}`}
+              aria-label={
+                title === t("library.recently_added")
+                  ? undefined
+                  : t("library.view_all", { p0: title })
+              }
               onClick={onViewAll}
             >
-              查看全部 <ChevronRight size={15} />
+              {" "}
+              {t("library.view_all_2")} <ChevronRight size={15} />
             </button>
           )}
           {!(edges.start && edges.end) && (
             <div className="shelf-arrows">
               <IconButton
-                label={`${title}向左滚动`}
+                label={t("library.scroll_left", { p0: title })}
                 disabled={edges.start}
                 onClick={() => move(-1)}
               >
                 <ChevronLeft size={18} />
               </IconButton>
               <IconButton
-                label={`${title}向右滚动`}
+                label={t("library.scroll_right", { p0: title })}
                 disabled={edges.end}
                 onClick={() => move(1)}
               >
@@ -90,7 +99,7 @@ export default function MediaShelf({
         ref={rail}
         className="media-rail"
         role="group"
-        aria-label={`${title}内容`}
+        aria-label={t("library.content", { p0: title })}
         tabIndex={0}
         onScroll={measure}
         onKeyDown={(e) => {

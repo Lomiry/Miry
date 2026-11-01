@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useRef, useState } from "react";
 import type { Item } from "../types/emby";
 import type { EmbyClient } from "../api/client";
@@ -41,6 +43,8 @@ export default function CollectionArtwork({
   item: Item;
   api: EmbyClient;
 }) {
+  useI18n();
+
   const root = useRef<HTMLDivElement>(null),
     [visible, setVisible] = useState(
       typeof IntersectionObserver === "undefined",
@@ -89,11 +93,14 @@ export default function CollectionArtwork({
   return (
     <div ref={root} className="collection-artwork">
       {children === null ? (
-        <div className="art-skeleton" aria-label="正在加载合集封面" />
+        <div
+          className="art-skeleton"
+          aria-label={t("library.loading_collection_artwork")}
+        />
       ) : children.length ? (
         <div
           className={"collection-mosaic mosaic-" + children.length}
-          aria-label={item.Name + " · 合集拼贴"}
+          aria-label={item.Name + t("library.collection_collage")}
         >
           {children.map((child) => (
             <div className="mosaic-cell" key={child.Id}>

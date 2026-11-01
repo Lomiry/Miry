@@ -1,6 +1,8 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { Play, SkipForward, X } from "lucide-react";
 import type { PlaybackQueue, QueueState } from "../player/queue";
-import { privateText } from "../privacy";
 export default function QueuePanel({
   queue,
   state,
@@ -12,11 +14,13 @@ export default function QueuePanel({
   autoNext: boolean;
   onAutoChange: (next: boolean) => void;
 }) {
+  useI18n();
+
   if (!state.items.length && !state.error) return null;
   return (
     <section className="queue-panel">
       <div className="section-heading">
-        <h2>播放队列</h2>
+        <h2>{t("player.play_queue")}</h2>
         <span>
           {state.index + 1} / {state.items.length}
         </span>
@@ -28,7 +32,7 @@ export default function QueuePanel({
             checked={autoNext}
             onChange={(e) => onAutoChange(e.target.checked)}
           />{" "}
-          自动下一集
+          {t("player.auto_play_next_episode")}{" "}
         </label>
         <button
           disabled={
@@ -38,8 +42,7 @@ export default function QueuePanel({
           }
           onClick={() => void queue.next(true)}
         >
-          <SkipForward size={16} />
-          下一集
+          <SkipForward size={16} /> {t("library.next_episode")}{" "}
         </button>
       </div>
       <ol>
@@ -66,11 +69,13 @@ export default function QueuePanel({
                       : ""}
                     {item.Name}
                   </span>
-                  {index === state.index && <small>当前</small>}
+                  {index === state.index && (
+                    <small>{t("player.current")}</small>
+                  )}
                 </button>
                 {index !== state.index && (
                   <button
-                    aria-label={`移除 ${item.Name}`}
+                    aria-label={t("player.remove", { p0: item.Name })}
                     disabled={state.busy}
                     onClick={() => queue.remove(index)}
                   >
@@ -81,11 +86,17 @@ export default function QueuePanel({
             );
           })}
       </ol>
-      {state.busy && <p className="setting-note">正在准备播放或同步进度…</p>}
-      {state.loading && <p className="setting-note">正在加载后续剧集…</p>}
+      {state.busy && (
+        <p className="setting-note">
+          {t("player.preparing_playback_or_syncing_progress")}
+        </p>
+      )}
+      {state.loading && (
+        <p className="setting-note">{t("player.loading_upcoming_episodes")}</p>
+      )}
       {(state.error || state.warning) && (
         <p className="play-error" role="alert">
-          {privateText(state.error || state.warning)}
+          {displayError(state.error || state.warning)}
         </p>
       )}
     </section>

@@ -15,7 +15,7 @@ export function readAppearance(): Appearance {
     /* Ignore invalid local preferences. */
   }
   return {
-    theme: raw.theme === "light" || raw.theme === "system" ? raw.theme : "dark",
+    theme: raw.theme === "light" || raw.theme === "dark" ? raw.theme : "system",
     uiSize:
       raw.uiSize === "larger" || raw.uiSize === "large"
         ? raw.uiSize

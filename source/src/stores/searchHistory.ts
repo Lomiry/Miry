@@ -1,5 +1,6 @@
 import type { Account } from "../types/emby";
 import { connectionId } from "./connectionRemarks";
+import { normalizeSearch } from "../api/search";
 
 const key = "miry-search-history";
 export const searchScope = (account: Account | null) =>
@@ -7,13 +8,29 @@ export const searchScope = (account: Account | null) =>
 export function searchTerm(value: string) {
   return value.trim().replace(/\s+/g, " ").slice(0, 80);
 }
+export function historyTermAllowed(value: string, sensitive: string[] = []) {
+  const term = searchTerm(value);
+  return (
+    /[\p{L}\p{N}]/u.test(term) &&
+    !/https?:\/\/|\b(?:bearer|authorization|cookie)\b|(?:token|api[_-]?key|password|passwd|username|用户名|密码|令牌)\s*[:=：]|[\w.+-]+@[\w.-]+\.[a-z]{2,}|^[a-f\d]{24,}$|^[\w+/=-]{32,}$/i.test(
+      term,
+    ) &&
+    !sensitive.some(
+      (secret) =>
+        secret &&
+        (term.toLowerCase() === secret.toLowerCase() ||
+          (secret.length >= 8 &&
+            value.toLowerCase().includes(secret.toLowerCase()))),
+    )
+  );
+}
 function entries(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
   return value
     .filter((term): term is string => {
-      if (typeof term !== "string" || !searchTerm(term)) return false;
-      const normalized = searchTerm(term).toLocaleLowerCase();
+      if (typeof term !== "string" || !historyTermAllowed(term)) return false;
+      const normalized = normalizeSearch(term);
       if (seen.has(normalized)) return false;
       seen.add(normalized);
       return true;
@@ -53,14 +70,24 @@ export function saveSearchHistory(scope: string, history: string[]) {
   }
   return next;
 }
-export function recordSearch(scope: string, term: string) {
+export function recordSearch(
+  scope: string,
+  term: string,
+  sensitive: string[] = [],
+) {
   const query = searchTerm(term);
-  if (!query) return readSearchHistory(scope);
+  if (!historyTermAllowed(term, sensitive))
+    return saveSearchHistory(
+      scope,
+      readSearchHistory(scope).filter((entry) =>
+        historyTermAllowed(entry, sensitive),
+      ),
+    );
   return saveSearchHistory(scope, [
     query,
-    ...readSearchHistory(scope).filter(
-      (entry) => entry.toLocaleLowerCase() !== query.toLocaleLowerCase(),
-    ),
+    ...readSearchHistory(scope)
+      .filter((entry) => historyTermAllowed(entry, sensitive))
+      .filter((entry) => normalizeSearch(entry) !== normalizeSearch(query)),
   ]);
 }
 export function searchSuggestions(history: string[], query: string) {

@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 import type { PlayerSnapshot } from "./playback";
 export class RouteHealth {
   private bufferingSince?: number;
@@ -29,7 +30,9 @@ export class RouteHealth {
     if (!s.loaded || !s.active || s.paused) {
       this.bufferingSince = undefined;
       this.slowSince = undefined;
-      return this.timeouts.length >= 3 ? "连续多次请求超时" : undefined;
+      return this.timeouts.length >= 3
+        ? t("player.repeated_request_timeouts")
+        : undefined;
     }
     if (s.buffering) {
       this.bufferingSince ??= now;
@@ -43,9 +46,11 @@ export class RouteHealth {
       this.slowSince ??= now;
     } else this.slowSince = undefined;
     if (this.bufferingSince !== undefined && now - this.bufferingSince >= 15000)
-      return "缓冲已持续超过 15 秒";
+      return t("player.buffering_for_over_15_seconds");
     if (this.slowSince !== undefined && now - this.slowSince >= 20000)
-      return "持续输入吞吐低于媒体码率，缓冲不足";
-    return this.timeouts.length >= 3 ? "连续多次请求超时" : undefined;
+      return t("player.input_throughput_stays_below_the_media_bitrate");
+    return this.timeouts.length >= 3
+      ? t("player.repeated_request_timeouts")
+      : undefined;
   }
 }

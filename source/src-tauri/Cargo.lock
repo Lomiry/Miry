@@ -2248,7 +2248,7 @@ dependencies = [
 
 [[package]]
 name = "miry-emby"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "base64 0.22.1",
  "regex",

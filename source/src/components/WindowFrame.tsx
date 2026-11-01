@@ -1,9 +1,14 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, Copy, X } from "lucide-react";
 
 export default function WindowFrame({ children }: { children: ReactNode }) {
+  useI18n();
+
   const native = isTauri();
   const window = useMemo(() => (native ? getCurrentWindow() : null), [native]);
   const [maximized, setMaximized] = useState(false);
@@ -88,7 +93,7 @@ export default function WindowFrame({ children }: { children: ReactNode }) {
       // CloseRequested still runs the native progress-save handler.
       if (action === "close") await window.close();
     } catch {
-      setError("窗口操作未完成，请重试。");
+      setError(t("settings.the_window_action_could_not_be_completed"));
     } finally {
       setBusy(false);
     }
@@ -100,26 +105,36 @@ export default function WindowFrame({ children }: { children: ReactNode }) {
     >
       <header
         className="window-caption"
-        aria-label="Miry 窗口栏"
+        aria-label={t("settings.miry_title_bar")}
         data-tauri-drag-region
       >
         <div className="window-brand" data-tauri-drag-region>
           <AppIcon decorative dragRegion />
-          <strong data-tauri-drag-region>miry</strong>
+          <strong data-tauri-drag-region>Miry</strong>
         </div>
         <div className="window-drag-space" data-tauri-drag-region />
-        <div className="window-actions" role="toolbar" aria-label="窗口控制">
+        <div
+          className="window-actions"
+          role="toolbar"
+          aria-label={t("settings.window_controls")}
+        >
           <button
-            title="最小化"
-            aria-label="最小化窗口"
+            title={t("settings.minimize")}
+            aria-label={t("settings.minimize_window")}
             disabled={busy}
             onClick={() => void control("minimize")}
           >
             <Minus size={16} />
           </button>
           <button
-            title={maximized ? "还原窗口" : "最大化"}
-            aria-label={maximized ? "还原窗口" : "最大化窗口"}
+            title={
+              maximized ? t("settings.restore_window") : t("settings.maximize")
+            }
+            aria-label={
+              maximized
+                ? t("settings.restore_window")
+                : t("settings.maximize_window")
+            }
             disabled={busy}
             onClick={() => void control("maximize")}
           >
@@ -127,8 +142,8 @@ export default function WindowFrame({ children }: { children: ReactNode }) {
           </button>
           <button
             className="window-close"
-            title="关闭"
-            aria-label="关闭窗口"
+            title={t("settings.close_window")}
+            aria-label={t("settings.close_window")}
             disabled={busy}
             onClick={() => void control("close")}
           >
@@ -139,7 +154,7 @@ export default function WindowFrame({ children }: { children: ReactNode }) {
       <div className="desktop-content">{children}</div>
       {error && (
         <p className="window-error" role="alert">
-          {error}
+          {displayError(error)}
         </p>
       )}
     </div>

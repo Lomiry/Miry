@@ -11,8 +11,10 @@ import type {
 } from "../danmaku/types";
 
 export type PlayerMenu =
+  | "layout"
   | "danmaku"
   | "subtitle"
+  | "subtitle-settings"
   | "audio"
   | "volume"
   | "more"
@@ -24,6 +26,12 @@ export type PlayerMenu =
   | "settings"
   | "queue";
 export type PlayerAction =
+  | { kind: "layout"; layout: import("./controlLayout").ControlLayout }
+  | {
+      kind: "mini";
+      command: "enter" | "leave" | "pin" | "drag";
+      playSessionId: string;
+    }
   | { kind: "video-fit"; mode: VideoFit; playSessionId: string }
   | {
       kind: "danmaku";
@@ -31,6 +39,7 @@ export type PlayerAction =
       patch?: Partial<DanmakuSettings>;
       query?: string;
       matchId?: string;
+      matchScope?: string;
     }
   | { kind: "preview"; time: number | null }
   | { kind: "mpv-key"; code: string }
@@ -49,6 +58,9 @@ export type PlayerAction =
   | { kind: "auto-next"; value: boolean };
 
 export interface PlayerUiModel {
+  controlLayout?: import("./controlLayout").ControlLayout;
+  mini?: boolean;
+  language?: import("../i18n/core").Language;
   state: PlayerSnapshot;
   revision: number;
   theater: boolean;
@@ -116,6 +128,12 @@ export function presentationModel(model: PlayerUiModel): PlayerUiModel {
     ...model,
     error: redactNetworkDetail(model.error),
     item: model.item ? item(model.item) : undefined,
+    danmaku: model.danmaku
+      ? {
+          ...model.danmaku,
+          settings: { ...model.danmaku.settings, sources: undefined },
+        }
+      : undefined,
     queue: model.queue
       ? { ...model.queue, items: model.queue.items.map(item) }
       : undefined,
@@ -131,6 +149,7 @@ export function presentationModel(model: PlayerUiModel): PlayerUiModel {
         lang: t.lang,
         codec: t.codec,
         selected: t.selected,
+        external: t.external,
       })),
     },
   };

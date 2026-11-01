@@ -262,8 +262,8 @@
   .art-skeleton {
     animation: none;
   }
-  .media-tile:hover .poster img,
-  .media-tile:focus-within .poster img {
+  .poster-open:hover img,
+  .poster-open:focus-visible img {
     transform: none;
   }
 }
@@ -374,14 +374,93 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ui-popover::-webkit-scrollbar,
-.settings-body::-webkit-scrollbar {
-  width: 6px;
+/* Scoped panel chrome; never restyle the library's primary scroll container. */
+:is(
+  .player-popover-scroll,
+  .online-danmaku-candidates,
+  .settings-body,
+  .ui-popover
+) {
+  --scrollbar-track: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
-.ui-popover::-webkit-scrollbar-thumb,
-.settings-body::-webkit-scrollbar-thumb {
-  background: var(--line-strong);
-  border-radius: var(--radius-sm);
+/* WebView2/Chromium: non-auto standard properties override the WebKit
+   pseudo-elements, including their width and arrow buttons. Use exactly one
+   renderer here; the thin/color rules above remain the non-WebKit fallback. */
+@supports selector(::-webkit-scrollbar) {
+  :is(
+    .player-popover-scroll,
+    .online-danmaku-candidates,
+    .settings-body,
+    .ui-popover
+  ) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  :is(
+    .player-popover-scroll,
+    .online-danmaku-candidates,
+    .settings-body,
+    .ui-popover
+  )::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: var(--scrollbar-track);
+  }
+  :is(
+    .player-popover-scroll,
+    .online-danmaku-candidates,
+    .settings-body,
+    .ui-popover
+  )::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    margin-block: var(--space-1);
+  }
+  :is(
+    .player-popover-scroll,
+    .online-danmaku-candidates,
+    .settings-body,
+    .ui-popover
+  )::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-sm);
+    min-height: 24px;
+  }
+  :is(
+      .player-popover-scroll,
+      .online-danmaku-candidates,
+      .settings-body,
+      .ui-popover
+    )::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+  :is(
+    .player-popover-scroll,
+    .online-danmaku-candidates,
+    .settings-body,
+    .ui-popover
+  )::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+  :is(
+    .player-popover-scroll,
+    .online-danmaku-candidates,
+    .settings-body,
+    .ui-popover
+  )::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+.player-danmaku-popover .online-danmaku-candidates {
+  max-height: none;
+  overflow: visible;
+  scrollbar-gutter: auto;
 }
 @keyframes menu-enter {
   from {
@@ -509,7 +588,7 @@
   color: var(--warning);
 }
 .setting-row.is-disabled {
-  opacity: 0.45;
+  color: var(--muted);
 }
 .setting-actions {
   display: flex;

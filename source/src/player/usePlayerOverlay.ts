@@ -1,3 +1,5 @@
+import { t, getLanguage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useRef, useState } from "react";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
@@ -14,11 +16,13 @@ export function usePlayerOverlay(
   model: PlayerUiModel | null,
   action: (value: PlayerAction) => Promise<void>,
   danmaku?: { document: DanmakuDocument | null; clock: DanmakuClock | null },
+  mainInput = true,
 ) {
+  const language = useI18n();
   const [ready, setReady] = useState(false);
   const [generation, setGeneration] = useState(0);
-  const current = useRef({ model, action, danmaku });
-  current.current = { model, action, danmaku };
+  const current = useRef({ model, action, danmaku, mainInput });
+  current.current = { model, action, danmaku, mainInput };
   useEffect(() => {
     if (!enabled) {
       setReady(false);
@@ -35,11 +39,10 @@ export function usePlayerOverlay(
       );
     const send = () => {
       if (current.current.model)
-        void emitTo(
-          "player-ui",
-          "player-ui-state",
-          presentationModel(current.current.model),
-        ).catch(() => {});
+        void emitTo("player-ui", "player-ui-state", {
+          ...presentationModel(current.current.model),
+          language: getLanguage(),
+        }).catch(() => {});
     };
     track(
       listen(
@@ -72,7 +75,7 @@ export function usePlayerOverlay(
           try {
             await current.current.action(payload.action);
           } catch {
-            error = "操作未完成，请重试。";
+            error = t("player.the_action_could_not_be_completed_try");
           }
           // Never acknowledge an old request in a newly created control window.
           if (!active) return;
@@ -112,6 +115,7 @@ export function usePlayerOverlay(
       )
       .catch(() => {});
     const keyboard = (event: KeyboardEvent) => {
+      if (!current.current.mainInput) return;
       if (blockedShortcut(event)) return;
       if (
         !validKey(keyCode(event)) &&
@@ -162,12 +166,11 @@ export function usePlayerOverlay(
   }, [enabled]);
   useEffect(() => {
     if (enabled && model)
-      void emitTo(
-        "player-ui",
-        "player-ui-state",
-        presentationModel(model),
-      ).catch(() => {});
-  }, [enabled, model]);
+      void emitTo("player-ui", "player-ui-state", {
+        ...presentationModel(model),
+        language,
+      }).catch(() => {});
+  }, [enabled, model, language]);
   useEffect(() => {
     if (enabled && ready && danmaku)
       void emitTo("player-ui", "player-danmaku-data", danmaku.document).catch(

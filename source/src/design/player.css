@@ -59,8 +59,11 @@
 .player-owned-ui {
   background: rgba(0, 0, 0, 0.02);
 }
-.player-owned-ui.chrome-hidden {
+.player-chrome[data-cursor-hidden="true"] {
   cursor: none;
+}
+.player-chrome[data-cursor-hidden="false"] {
+  cursor: default;
 }
 .player-chrome .player-heading {
   position: absolute;
@@ -147,6 +150,94 @@
   height: 24px;
   margin: 0 0 7px;
 }
+.danmaku-heatmap {
+  position: absolute;
+  inset: 1px 0 auto;
+  width: 100%;
+  height: 9px;
+  fill: var(--accent);
+  opacity: 0.42;
+  pointer-events: none;
+}
+.danmaku-source-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+}
+.danmaku-source-row input[type="number"] {
+  width: 100%;
+}
+.danmaku-source-row > label {
+  display: grid;
+  gap: var(--space-2);
+}
+.danmaku-source-row > small,
+.source-row-actions {
+  grid-column: 1 / -1;
+}
+.source-row-actions,
+.source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.source-group {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  min-width: 0;
+  color: var(--text);
+}
+.source-group legend {
+  padding-inline: var(--space-2);
+  font-weight: 600;
+}
+.danmaku-source-settings .source-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.source-toggle input[type="checkbox"] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.source-key-state {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--surface-raised);
+  color: var(--text);
+  border-radius: var(--radius-md);
+}
+.source-notes {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+.source-notes h4,
+.source-notes p {
+  margin: 0;
+}
+.source-http-warning {
+  border-inline-start: 3px solid var(--warning);
+  padding: var(--space-3);
+  background: var(--surface-raised);
+  color: var(--text);
+  line-height: 1.6;
+}
+.danmaku-source-editor {
+  display: grid;
+  gap: var(--space-3);
+  margin-block: var(--space-3);
+}
+.danmaku-source-editor label {
+  display: grid;
+  gap: var(--space-2);
+}
 .player-chrome input[type="range"] {
   appearance: none;
   -webkit-appearance: none;
@@ -164,7 +255,8 @@
   background: linear-gradient(
     to right,
     #fff 0 var(--player-progress, 0%),
-    #ffffff48 var(--player-progress, 0%) 100%
+    #ffffff70 var(--player-progress, 0%) var(--player-buffer, 0%),
+    #ffffff30 var(--player-buffer, 0%) 100%
   );
 }
 .player-chrome input[type="range"]::-webkit-slider-thumb {
@@ -270,6 +362,40 @@
   flex-wrap: nowrap;
   gap: 5px;
 }
+.player-chrome .player-buttons {
+  flex-wrap: wrap;
+}
+.player-chrome .transport-tools {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+.player-tool {
+  display: inline-flex;
+}
+.player-layout-settings > label {
+  display: grid;
+  gap: 8px;
+}
+.player-layout-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.player-layout-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.player-layout-row button {
+  width: auto;
+  flex: 0 0 36px;
+}
+.player-mini-ui .player-resolution,
+.player-mini-ui .player-network-rate {
+  display: none;
+}
 .player-chrome button {
   font: inherit;
 }
@@ -294,11 +420,6 @@
 .player-chrome .player-buttons button svg {
   width: 21px;
   height: 21px;
-}
-.player-chrome .player-buttons button:hover:not(:disabled),
-.player-chrome .player-heading button:hover:not(:disabled),
-.player-chrome .player-buttons button[aria-expanded="true"] {
-  background: #ffffff18;
 }
 .player-chrome .player-buttons .transport-play {
   width: 44px;
@@ -408,7 +529,7 @@
   flex: 0 1 auto;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  margin: 0 4px 4px;
   padding: 0 6px 6px;
   min-height: 0;
 }
@@ -437,7 +558,7 @@
     display: none;
   }
 }
-.player-popover button:not(header button) {
+.player-popover button:not(.ui-select-trigger):not(header button) {
   width: 100%;
   display: flex;
   align-items: center;
@@ -455,7 +576,7 @@
 .player-popover > header button:hover {
   background: #ffffff0d;
 }
-.player-popover button span:not(.choice-mark):not(.menu-entry-icon) {
+.player-popover button > span:not(.choice-mark):not(.menu-entry-icon) {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -479,8 +600,8 @@
   flex: none;
 }
 .player-choice[aria-checked="true"] {
-  background: #a4e8c50e !important;
-  color: #b8efd1 !important;
+  background: color-mix(in srgb, var(--accent) 22%, #121820);
+  color: var(--accent);
 }
 .player-menu-group {
   padding: 2px 0;
@@ -514,6 +635,12 @@
   gap: 12px;
   padding: 6px 10px 10px;
 }
+.player-chrome .player-volume-content button {
+  width: 32px;
+  min-height: 32px;
+  padding: 6px;
+  justify-content: center;
+}
 .player-network-rate {
   color: #b9e8cc;
   font-size: 11px;
@@ -522,6 +649,7 @@
   margin-left: 4px;
 }
 .player-subtitle-popover label,
+.player-subtitle-settings-popover label,
 .player-settings-popover label {
   display: grid;
   gap: 5px;
@@ -555,7 +683,8 @@
   flex-direction: column;
   gap: 14px;
 }
-.player-setting-fields label:not(.player-check) {
+.player-setting-fields label:not(.player-check),
+.player-setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -567,6 +696,16 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
+}
+.player-setting-row > .ui-select {
+  min-width: 0;
+  max-width: 65%;
+}
+.player-setting-row {
+  padding: 8px 10px;
+}
+.player-setting-row > span:first-child {
+  flex: 1;
 }
 .player-subtitle-slider > small {
   grid-column: 2;
@@ -689,6 +828,186 @@
   .player-chrome .player-heading,
   .player-chrome .player-console,
   .player-popover {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+/* Shared feedback for every preset, popover, heading and Mini action. State
+   colors follow confirmed playback/model values, never a click animation. */
+.player-chrome button {
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+.player-chrome button:hover:not(:disabled) {
+  background-color: #ffffff26;
+}
+.player-chrome button:active:not(:disabled) {
+  background-color: #ffffff45;
+  transform: translateY(1px);
+}
+.player-chrome .player-buttons .transport-play:active:not(:disabled) {
+  background-color: var(--accent);
+}
+.player-chrome button[data-active="true"],
+.player-chrome button[aria-pressed="true"],
+.player-chrome button[aria-checked="true"],
+.player-chrome button[aria-expanded="true"] {
+  color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 22%, #121820);
+}
+.player-chrome button:focus-visible,
+.player-chrome input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.player-chrome button:disabled {
+  cursor: default;
+}
+.player-action-pending {
+  position: absolute;
+  inset: auto 12px 94px auto;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #fff;
+  background: #121820e8;
+  pointer-events: none;
+}
+.player-mini-ui .player-console {
+  inset: auto auto 10px 10px;
+  width: max-content;
+  max-width: calc(100% - 20px);
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.player-mini-controls {
+  display: flex;
+  gap: 6px;
+}
+.player-mini-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 32px;
+  min-width: 32px;
+  min-height: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: #fff;
+  background: #101419a6;
+  backdrop-filter: blur(6px);
+}
+.player-mini-controls .transport-play {
+  width: 32px;
+  padding: 0;
+}
+.mini-speed-value {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.player-mini-ui .mini-exit {
+  transition:
+    opacity var(--player-chrome-in, 240ms) ease-out,
+    background-color 140ms ease;
+}
+.player-mini-ui.chrome-fading .mini-exit,
+.player-mini-ui.chrome-hidden .mini-exit {
+  opacity: 0;
+  transition-duration: var(--player-chrome-out, 280ms);
+}
+.player-mini-ui.chrome-hidden .mini-exit {
+  pointer-events: none;
+}
+.danmaku-match-confirm,
+.danmaku-match-loaded {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid #ffffff26;
+  border-radius: var(--radius-md);
+}
+.danmaku-match-confirm p,
+.danmaku-match-loaded p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.danmaku-match-confirm .player-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.online-danmaku-menu .danmaku-file-actions {
+  flex-wrap: wrap;
+}
+.player-popover .danmaku-match-confirm .danmaku-confirm-button {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+.player-popover
+  .danmaku-match-confirm
+  .danmaku-confirm-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+.player-mini-ui .mini-exit {
+  position: absolute;
+  inset: 8px 8px auto auto;
+  width: 32px;
+  height: 32px;
+  z-index: 8;
+  padding: 4px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  color: #fff;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.player-mini-ui .mini-exit svg {
+  filter: drop-shadow(0 1px 2px #000);
+}
+.player-chrome button[aria-busy="true"] {
+  cursor: progress;
+  outline: 1px solid var(--accent);
+  outline-offset: -2px;
+}
+.player-mini-ui .player-action-pending {
+  bottom: 72px;
+}
+.player-mini-ui .player-ui-error {
+  bottom: 48px;
+  left: 8px;
+  right: 8px;
+  max-height: calc(100% - 56px);
+  overflow: auto;
+  font-size: 12px;
+}
+.player-mini-ui .player-skip-overlay {
+  top: 52px;
+  bottom: auto;
+  right: 8px;
+}
+.player-mini-ui .player-skip-overlay button {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.player-timeline input:active::-webkit-slider-thumb {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-chrome button {
     transition: none;
     transform: none !important;
   }

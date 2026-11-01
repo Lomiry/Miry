@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import type { ComponentProps } from "react";
 import type MediaCard from "./MediaCard";
 import { Bookmark, Star } from "lucide-react";
@@ -7,14 +9,30 @@ import FavoriteButton from "./FavoriteButton";
 import MediaProgress, { mediaProgress } from "./MediaProgress";
 
 const types: Record<string, string> = {
-  Movie: "电影",
-  Series: "电视剧",
-  Season: "季",
-  Episode: "剧集",
-  Folder: "文件夹",
-  CollectionFolder: "媒体库",
-  BoxSet: "合集",
-  Playlist: "片单",
+  get Movie() {
+    return t("library.movies");
+  },
+  get Series() {
+    return t("library.tv_series");
+  },
+  get Season() {
+    return t("library.season");
+  },
+  get Episode() {
+    return t("library.tv_shows");
+  },
+  get Folder() {
+    return t("library.folder");
+  },
+  get CollectionFolder() {
+    return t("library.libraries");
+  },
+  get BoxSet() {
+    return t("library.collections");
+  },
+  get Playlist() {
+    return t("library.playlist");
+  },
 };
 export default function MediaListRow({
   item,
@@ -27,13 +45,15 @@ export default function MediaListRow({
   playable = true,
   children,
 }: ComponentProps<typeof MediaCard>) {
+  useI18n();
+
   const artwork = api ? api.images(item, false, 160) : [];
   const progress = mediaProgress(item);
   return (
     <article className="media-row" aria-label={item.Name}>
       <button
         className="media-row-detail"
-        aria-label={`查看详情 ${item.Name}`}
+        aria-label={t("library.view_details_for_2", { p0: item.Name })}
         onClick={() => onDetail(item)}
       >
         <Poster
@@ -53,13 +73,17 @@ export default function MediaListRow({
       <span className="media-row-type">{types[item.Type] || item.Type}</span>
       <span className="media-row-duration">
         {item.RunTimeTicks
-          ? `${Math.round(item.RunTimeTicks / 600000000)} 分钟`
+          ? t("library.min_2", {
+              p0: Math.round(item.RunTimeTicks / 600000000),
+            })
           : "—"}
       </span>
       <span
         className="media-row-rating"
         aria-label={
-          item.CommunityRating ? `评分 ${item.CommunityRating}` : "暂无评分"
+          item.CommunityRating
+            ? t("library.rating_2", { p0: item.CommunityRating })
+            : t("library.no_rating")
         }
       >
         <Star size={13} />
@@ -68,10 +92,10 @@ export default function MediaListRow({
       <span className="media-row-progress">
         <small>
           {item.UserData?.Played
-            ? "已看"
+            ? t("library.watched")
             : progress
-              ? `已看 ${Math.round(progress)}%`
-              : "未看"}
+              ? t("library.watched_2", { p0: Math.round(progress) })
+              : t("library.unwatched")}
         </small>
         <MediaProgress item={item} />
       </span>
@@ -95,8 +119,12 @@ export default function MediaListRow({
           onLater &&
           ["Movie", "Episode", "Series", "Season"].includes(item.Type) && (
             <button
-              aria-label={`${saved ? "移出待看" : "加入待看"} ${item.Name}`}
-              title={saved ? "移出待看" : "加入待看"}
+              aria-label={`${saved ? t("library.remove_from_watch_later") : t("library.add_to_watch_later")} ${item.Name}`}
+              title={
+                saved
+                  ? t("library.remove_from_watch_later")
+                  : t("library.add_to_watch_later")
+              }
               aria-pressed={saved}
               onClick={() => onLater(item)}
             >

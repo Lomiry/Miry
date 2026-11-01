@@ -1,5 +1,9 @@
 import { normalizeVideoFit, type VideoFit } from "../player/videoFit";
 import {
+  normalizeControlLayout,
+  type ControlLayout,
+} from "../player/controlLayout";
+import {
   normalizeQuality,
   qualityDefaults,
   type QualitySettings,
@@ -15,6 +19,8 @@ import {
   type DanmakuSettings,
 } from "../danmaku/types";
 export interface Settings {
+  sourcePreference?: "resolution" | "bitrate";
+  controlLayout?: ControlLayout;
   videoFit: VideoFit;
   danmaku?: DanmakuSettings;
   compatibility?: "auto" | "prefer-direct" | "direct-only";
@@ -34,8 +40,21 @@ export interface Settings {
   outroSeconds: number;
   quality?: QualitySettings;
   shortcuts?: Shortcuts;
+  closeToTray: boolean;
+  minimizeToTray: boolean;
+}
+export type SettingsUpdate = Settings | ((current: Settings) => Settings);
+
+// Resolve against persisted state outside React's updater (which may run twice).
+// localStorage read/modify/write is synchronous on the owning main window.
+export function applySettingsUpdate(update: SettingsUpdate): Settings {
+  const next = typeof update === "function" ? update(readSettings()) : update;
+  saveSettings(next);
+  return next;
 }
 export const defaults: Settings = {
+  sourcePreference: "resolution",
+  controlLayout: normalizeControlLayout(undefined),
   videoFit: "fit",
   danmaku: danmakuDefaults,
   compatibility: "prefer-direct",
@@ -47,7 +66,7 @@ export const defaults: Settings = {
   subtitleScale: 1,
   secondarySubtitlePosition: 0,
   secondarySubtitleScale: 1,
-  volume: 75,
+  volume: 100,
   fullscreen: false,
   hardwareDecode: true,
   embedded: true,
@@ -55,6 +74,8 @@ export const defaults: Settings = {
   outroSeconds: 60,
   quality: qualityDefaults,
   shortcuts: defaultShortcuts,
+  closeToTray: false,
+  minimizeToTray: false,
 };
 export function readSettings(): Settings {
   try {
@@ -95,6 +116,9 @@ export function readSettings(): Settings {
       }
     }
     return {
+      sourcePreference:
+        raw.sourcePreference === "bitrate" ? "bitrate" : "resolution",
+      controlLayout: normalizeControlLayout(raw.controlLayout),
       videoFit: normalizeVideoFit(raw.videoFit),
       danmaku: normalizeDanmaku(raw.danmaku),
       compatibility: ["auto", "prefer-direct", "direct-only"].includes(
@@ -151,6 +175,8 @@ export function readSettings(): Settings {
       outroSeconds: Number.isFinite(raw.outroSeconds)
         ? Math.max(0, Math.min(600, raw.outroSeconds))
         : 60,
+      closeToTray: raw.closeToTray === true,
+      minimizeToTray: raw.minimizeToTray === true,
     };
   } catch {
     return { ...defaults };
@@ -159,7 +185,11 @@ export function readSettings(): Settings {
 export function saveSettings(settings: Settings) {
   const stored = {
     ...settings,
+    controlLayout: normalizeControlLayout(settings.controlLayout),
     videoFit: normalizeVideoFit(settings.videoFit),
+    danmaku: settings.danmaku ? normalizeDanmaku(settings.danmaku) : undefined,
+    closeToTray: settings.closeToTray === true,
+    minimizeToTray: settings.minimizeToTray === true,
   } as unknown as Record<string, unknown>;
   delete stored.refreshRateMatch;
   delete stored.releaseEndpoint;

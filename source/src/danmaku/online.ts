@@ -9,7 +9,7 @@ export interface DanmakuMediaContext {
   tmdb?: number;
 }
 export interface DanmakuMatch {
-  provider: "dandanplay";
+  provider: "dandanplay" | "logvar";
   id: string;
   animeId: string;
   title: string;
@@ -264,8 +264,12 @@ export class BoundedCache<T> {
   }
 }
 const mappingKey = "miry-online-danmaku-mappings-v1";
-export function mappingIdentity(scope: string, item: Item) {
-  return JSON.stringify([scope, item.Id, "dandanplay"]);
+export function mappingIdentity(
+  scope: string,
+  item: Item,
+  source = "dandanplay",
+) {
+  return JSON.stringify([scope, item.Id, source]);
 }
 export function fingerprint(c: DanmakuMediaContext) {
   return JSON.stringify(c);
@@ -289,8 +293,9 @@ export function association(
 ): Mapping | undefined {
   const v = mappings()[key];
   return v?.fingerprint === fingerprint(c) &&
-    v.match?.provider === "dandanplay" &&
-    /^\d{1,19}$/.test(v.match.id) &&
+    ((v.match?.provider === "dandanplay" && /^\d{1,19}$/.test(v.match.id)) ||
+      (v.match?.provider === "logvar" &&
+        /^[a-zA-Z0-9_-]{1,64}:\d{1,19}$/.test(v.match.id))) &&
     typeof v.match.title === "string" &&
     typeof v.match.episodeTitle === "string"
     ? v

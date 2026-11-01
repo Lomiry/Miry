@@ -132,6 +132,21 @@ it("persists preferences without account credentials", () => {
   expect(readSettings().subtitleScale).toBe(1.37);
   expect(localStorage.getItem("miry-settings")).not.toContain("token");
 });
+it("persists tray behavior and safely falls back for invalid values", () => {
+  saveSettings({ ...defaults, closeToTray: true, minimizeToTray: true });
+  expect(readSettings()).toMatchObject({
+    closeToTray: true,
+    minimizeToTray: true,
+  });
+  localStorage.setItem(
+    "miry-settings",
+    JSON.stringify({ ...defaults, closeToTray: "tray", minimizeToTray: 1 }),
+  );
+  expect(readSettings()).toMatchObject({
+    closeToTray: false,
+    minimizeToTray: false,
+  });
+});
 it("recovers from malformed or out of range preferences", () => {
   localStorage.setItem("miry-settings", "bad json");
   expect(readSettings()).toEqual(defaults);

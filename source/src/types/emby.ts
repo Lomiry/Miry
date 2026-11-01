@@ -5,8 +5,12 @@ export interface Account {
   token: string;
   deviceId: string;
   remark?: string;
+  /** Server display name from the existing server-info request, not the login name. */
+  serverName?: string;
   homeServer?: string;
   serverId?: string;
+  /** Applies only to this connection address; never a global TLS policy. */
+  ignoreCertificateErrors?: boolean;
 }
 export interface UserData {
   Played?: boolean;

@@ -3,7 +3,6 @@ import { afterEach, expect, it, vi } from "vitest";
 import {
   homeRecommendations,
   balanceRecommendations,
-  type Recommendation,
 } from "./homeRecommendations";
 import { EmbyClient } from "./client";
 import { recommendationMeta } from "../components/HomeView";
@@ -19,6 +18,42 @@ const connection = (id: string) => ({
   remember: false,
 });
 afterEach(() => vi.restoreAllMocks());
+it("keeps separate logged-in users on the same server in requests and recommendation identity", async () => {
+  const first = connection("shared");
+  const second = {
+    ...first,
+    account: { ...first.account, userId: "other-user" },
+  };
+  const called: string[] = [];
+  vi.spyOn(EmbyClient.prototype, "items").mockImplementation(async function (
+    this: EmbyClient,
+    query,
+  ) {
+    called.push(this.account.userId);
+    return {
+      Items: [
+        {
+          Id: "same-item",
+          Name: this.account.userId,
+          Type: String(query.IncludeItemTypes),
+        },
+      ],
+      TotalRecordCount: 1,
+    };
+  });
+  const result = await homeRecommendations(
+    [first, second],
+    [],
+    new AbortController().signal,
+  );
+  expect(called.sort()).toEqual(["other-user", "other-user", "u", "u"]);
+  expect(
+    result
+      .filter((entry) => entry.category === "电影")
+      .map((entry) => entry.connection.account.userId)
+      .sort(),
+  ).toEqual(["other-user", "u"]);
+});
 it("balances sources deterministically and removes duplicate server/item pairs", () => {
   const groups = ["a", "b"].map((id) =>
     Array.from({ length: 12 }, (_, i) => ({

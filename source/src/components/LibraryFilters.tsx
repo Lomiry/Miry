@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import Select from "./Select";
 export interface BrowseFilters {
   genre: string;
@@ -28,46 +30,51 @@ export default function LibraryFilters({
   resetActive?: boolean;
   showResolution?: boolean;
 }) {
+  useI18n();
+
   const set = (k: keyof BrowseFilters, v: string) =>
     onChange({ ...value, [k]: v });
   return (
     <>
       <label>
-        类型
+        {" "}
+        {t("library.type")}{" "}
         <Select
-          aria-label="媒体类型"
+          aria-label={t("library.media_type")}
           value={value.type}
           onChange={(e) => set("type", e.target.value)}
         >
-          <option value="">全部</option>
-          <option value="Movie">电影</option>
-          <option value="Series">剧集</option>
+          <option value="">{t("library.all")}</option>
+          <option value="Movie">{t("library.movies")}</option>
+          <option value="Series">{t("library.tv_shows")}</option>
         </Select>
       </label>
       {showResolution && (
         <label>
-          清晰度
+          {" "}
+          {t("library.resolution")}{" "}
           <Select
-            aria-label="清晰度"
+            aria-label={t("library.resolution")}
             value={value.resolution || ""}
             onChange={(e) => set("resolution", e.target.value)}
           >
-            <option value="">全部</option>
+            <option value="">{t("library.all")}</option>
             <option value="4K">4K / UHD</option>
             <option value="1080p">1080p</option>
             <option value="720p">720p</option>
-            <option value="SD">SD / 其他</option>
+            <option value="SD">{t("library.sd_other")}</option>
           </Select>
         </label>
       )}
       <label>
-        题材
+        {" "}
+        {t("library.genre")}{" "}
         <Select
-          aria-label="题材"
+          aria-label={t("library.genre")}
           value={value.genre}
           onChange={(e) => set("genre", e.target.value)}
         >
-          <option value="">全部</option>
+          <option value="">{t("library.all")}</option>
           {[...new Set([...genres, value.genre].filter(Boolean))].map((g) => (
             <option key={g} value={g}>
               {g}
@@ -76,28 +83,30 @@ export default function LibraryFilters({
         </Select>
       </label>
       <label>
-        年份
+        {" "}
+        {t("library.year")}{" "}
         <input
-          aria-label="上映年份"
+          aria-label={t("library.release_year")}
           type="number"
           min="1888"
           max="2100"
-          placeholder="全部"
+          placeholder={t("library.all")}
           value={value.year}
           onChange={(e) => set("year", e.target.value)}
         />
       </label>
       <label>
-        评分
+        {" "}
+        {t("library.rating")}{" "}
         <Select
-          aria-label="最低评分"
+          aria-label={t("library.minimum_rating")}
           value={value.rating}
           onChange={(e) => set("rating", e.target.value)}
         >
-          <option value="">全部</option>
+          <option value="">{t("library.all")}</option>
           {[6, 7, 8, 9].map((n) => (
             <option key={n} value={n}>
-              {n} 分以上
+              {n} {t("library.and_above")}{" "}
             </option>
           ))}
         </Select>
@@ -107,7 +116,8 @@ export default function LibraryFilters({
           className="filter-reset"
           onClick={() => (onReset ? onReset() : onChange(emptyFilters))}
         >
-          重置筛选
+          {" "}
+          {t("library.reset_filters")}{" "}
         </button>
       )}
     </>

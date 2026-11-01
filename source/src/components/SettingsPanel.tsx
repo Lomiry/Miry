@@ -1,24 +1,26 @@
+import { t, localizeMessage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import useDialogFocus from "./useDialogFocus";
 import Select from "./Select";
 import DanmakuSettings from "./DanmakuSettings";
+import DanmakuSourceSettings from "./DanmakuSourceSettings";
 import { normalizeDanmaku } from "../danmaku/types";
-import { useEffect, useRef, useState } from "react";
+import { normalizeSources } from "../danmaku/sources";
+import type { SettingsUpdate } from "../stores/settings";
+import { useRef, useState } from "react";
 import {
   X,
-  RefreshCw,
   Play,
   Monitor,
   Volume2,
   Subtitles,
   Library,
-  Network,
   Keyboard,
   SlidersHorizontal,
   Info,
 } from "lucide-react";
 import type { Settings } from "../stores/settings";
 import type { EmbyClient } from "../api/client";
-import { privateError } from "../privacy";
 import LibraryManager from "./LibraryManager";
 import {
   SettingRow,
@@ -33,22 +35,15 @@ import {
 } from "../stores/libraryPreferences";
 import type { Item } from "../types/emby";
 import { APP_VERSION } from "../version";
-import { invoke, isTauri } from "@tauri-apps/api/core";
 import QualitySettings from "./QualitySettings";
 import ShortcutSettings from "./ShortcutSettings";
 import AppearanceSettings from "./AppearanceSettings";
 import DesktopSettings from "./DesktopSettings";
 import type { PlayerSnapshot } from "../player/playback";
-import {
-  readNetworkDiagnostics,
-  recordNetwork,
-  type NetworkCategory,
-} from "../api/diagnostics";
 export type SettingsSection =
   | "appearance"
   | "playback"
   | "libraries"
-  | "connection"
   | "video"
   | "audio"
   | "advanced"
@@ -56,16 +51,60 @@ export type SettingsSection =
   | "subtitles"
   | "about";
 const sections: { id: SettingsSection; name: string }[] = [
-  { id: "appearance", name: "外观" },
-  { id: "playback", name: "播放" },
-  { id: "video", name: "视频" },
-  { id: "audio", name: "音频" },
-  { id: "subtitles", name: "字幕 / 弹幕" },
-  { id: "libraries", name: "媒体库" },
-  { id: "connection", name: "网络 / 线路" },
-  { id: "shortcuts", name: "快捷键" },
-  { id: "advanced", name: "高级" },
-  { id: "about", name: "关于" },
+  {
+    id: "appearance",
+    get name() {
+      return t("settings.appearance");
+    },
+  },
+  {
+    id: "playback",
+    get name() {
+      return t("library.play");
+    },
+  },
+  {
+    id: "video",
+    get name() {
+      return t("library.video");
+    },
+  },
+  {
+    id: "audio",
+    get name() {
+      return t("settings.audio");
+    },
+  },
+  {
+    id: "subtitles",
+    get name() {
+      return t("settings.subtitles_danmaku");
+    },
+  },
+  {
+    id: "libraries",
+    get name() {
+      return t("library.libraries");
+    },
+  },
+  {
+    id: "shortcuts",
+    get name() {
+      return t("settings.shortcuts");
+    },
+  },
+  {
+    id: "advanced",
+    get name() {
+      return t("player.advanced");
+    },
+  },
+  {
+    id: "about",
+    get name() {
+      return t("settings.about");
+    },
+  },
 ];
 const sectionIcons = {
   appearance: Monitor,
@@ -74,20 +113,9 @@ const sectionIcons = {
   audio: Volume2,
   subtitles: Subtitles,
   libraries: Library,
-  connection: Network,
   shortcuts: Keyboard,
   advanced: SlidersHorizontal,
   about: Info,
-};
-const networkLabels: Record<string, string> = {
-  permission: "客户端权限拒绝",
-  dns: "域名解析失败",
-  tcp: "无法建立连接",
-  tls: "TLS 或证书校验失败",
-  timeout: "请求超时",
-  http: "服务器返回错误",
-  format: "Emby 数据格式异常",
-  network: "网络请求失败",
 };
 export default function SettingsPanel({
   settings,
@@ -99,10 +127,9 @@ export default function SettingsPanel({
   libraries = defaultLibraries(),
   onLibrariesChange = () => {},
   snapshot,
-  onEndpoints,
 }: {
   settings: Settings;
-  onChange: (s: Settings) => void;
+  onChange: (update: SettingsUpdate) => void;
   onClose: () => void;
   api: EmbyClient | null;
   initialSection?: SettingsSection;
@@ -110,96 +137,20 @@ export default function SettingsPanel({
   libraries?: LibraryPreferences;
   onLibrariesChange?: (prefs: LibraryPreferences) => void;
   snapshot?: PlayerSnapshot;
-  onEndpoints?: () => void;
 }) {
+  useI18n();
+
   const [section, setSection] = useState(initialSection);
-  const [busy, setBusy] = useState(false),
-    [result, setResult] = useState("");
-  const pending = useRef<AbortController | null>(null),
-    panel = useRef<HTMLElement | null>(null);
+  const [result, setResult] = useState("");
+  const panel = useRef<HTMLElement | null>(null);
   const onClose = useDialogFocus(panel, finishClose);
-  useEffect(() => () => pending.current?.abort(), []);
-  async function check() {
-    if (!api) return;
-    const controller = new AbortController();
-    pending.current = controller;
-    setBusy(true);
-    setResult("");
-    const began = performance.now();
-    try {
-      const info = await api.serverInfo(controller.signal);
-      if (!controller.signal.aborted)
-        setResult(
-          `连接正常${/^\d+(?:\.\d+){1,3}$/.test(info.Version) ? ` · Emby ${info.Version}` : ""} · ${Math.round(performance.now() - began)} ms`,
-        );
-    } catch (e) {
-      if (!controller.signal.aborted) setResult(privateError(e));
-    } finally {
-      if (!controller.signal.aborted) setBusy(false);
-      pending.current = null;
-    }
-  }
-  async function diagnose() {
-    if (!api || !isTauri()) return;
-    setBusy(true);
-    setResult("");
-    try {
-      const report = await invoke<{
-        stage: string;
-        backend: string;
-        url: string;
-        status?: number;
-        redirectStatuses: number[];
-        contentType?: string;
-        elapsedMs: number;
-        category: string;
-        errors: string[];
-        validServerInfo: boolean;
-        bodyPreview: string;
-      }>("diagnose_server", { server: api.account.server });
-      recordNetwork({
-        stage: report.stage,
-        method: "GET",
-        url: report.url,
-        backend: report.backend,
-        status: report.status,
-        redirected: report.redirectStatuses.length > 0,
-        redirectStatuses: report.redirectStatuses,
-        contentType: report.contentType,
-        bodyPreview: report.bodyPreview,
-        elapsedMs: report.elapsedMs,
-        category:
-          report.category === "ok"
-            ? undefined
-            : (report.category as NetworkCategory),
-        underlying: report.errors.join(" → "),
-      });
-      setResult(
-        report.validServerInfo && report.status === 200
-          ? `底层连接正常 · HTTP 200 · ${report.elapsedMs} ms`
-          : `${networkLabels[report.category] || "连接诊断未通过"}${report.status ? ` · HTTP ${report.status}` : ""}。可复制诊断查看详细原因。`,
-      );
-    } catch {
-      setResult("底层诊断未完成，请稍后重试。");
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function copyDiagnostics() {
-    try {
-      await navigator.clipboard.writeText(
-        JSON.stringify(
-          { version: APP_VERSION, requests: readNetworkDiagnostics() },
-          null,
-          2,
-        ),
-      );
-      setResult("匿名诊断已复制，未包含服务器地址、密码或令牌。");
-    } catch {
-      setResult("无法复制诊断，请检查剪贴板权限。");
-    }
-  }
-  const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
+  const set = (
+    patch: Partial<Settings> | ((current: Settings) => Partial<Settings>),
+  ) =>
+    onChange((current) => ({
+      ...current,
+      ...(typeof patch === "function" ? patch(current) : patch),
+    }));
   return (
     <div
       className="modal-backdrop"
@@ -215,8 +166,8 @@ export default function SettingsPanel({
         aria-labelledby="settings-title"
       >
         <header>
-          <h2 id="settings-title">设置</h2>
-          <button aria-label="关闭设置" onClick={onClose}>
+          <h2 id="settings-title">{t("library.settings")}</h2>
+          <button aria-label={t("settings.close_settings")} onClick={onClose}>
             <X size={20} />
           </button>
         </header>
@@ -224,7 +175,7 @@ export default function SettingsPanel({
           <nav
             className="settings-category-nav"
             role="tablist"
-            aria-label="设置分类"
+            aria-label={t("settings.settings_categories")}
             aria-orientation="vertical"
           >
             {sections.map((tab, index) => {
@@ -285,39 +236,66 @@ export default function SettingsPanel({
             {section === "appearance" && <AppearanceSettings />}
             {section === "playback" && (
               <>
-                <h3>播放偏好</h3>
+                <h3>{t("settings.playback_preferences")}</h3>
+                <label className="source-preference-setting">
+                  {t("detail.best_source_policy")}
+                  <Select
+                    aria-label={t("detail.best_source_policy")}
+                    value={settings.sourcePreference || "resolution"}
+                    onChange={(e) =>
+                      set({
+                        sourcePreference: e.target
+                          .value as Settings["sourcePreference"],
+                      })
+                    }
+                  >
+                    <option value="resolution">
+                      {t("detail.highest_resolution")}
+                    </option>
+                    <option value="bitrate">
+                      {t("detail.highest_bitrate")}
+                    </option>
+                  </Select>
+                  <small>{t("detail.auto_source_hint")}</small>
+                </label>
                 <SwitchField
-                  title="在客户端内播放"
-                  description="关闭后使用独立视频窗口，下次开播生效"
+                  title={t("settings.play_within_the_app")}
+                  description={t(
+                    "settings.when_off_use_a_separate_video_window",
+                  )}
                   checked={settings.embedded}
                   onChange={(value) => set({ embedded: value })}
                 />
                 <NumberField
-                  title="片头跳过秒数"
+                  title={t("settings.intro_skip_duration_seconds")}
                   value={settings.introSeconds}
                   min={0}
                   max={600}
                   onChange={(value) => set({ introSeconds: value })}
                 />
                 <NumberField
-                  title="片尾预留秒数"
+                  title={t("settings.credits_skip_duration_seconds")}
                   value={settings.outroSeconds}
                   min={0}
                   max={600}
                   onChange={(value) => set({ outroSeconds: value })}
                 />
                 <SwitchField
-                  title="自动播放下一集"
-                  description="当前集完成并同步进度后继续播放"
+                  title={t("settings.auto_play_next_episode")}
+                  description={t(
+                    "settings.continue_after_this_episode_finishes_and_progress",
+                  )}
                   checked={settings.autoNext}
                   onChange={(value) => set({ autoNext: value })}
                 />
                 <SettingRow
-                  title="播放兼容模式"
-                  description="默认优先直接播放；服务器无直接播放源时协商转码"
+                  title={t("settings.playback_compatibility_mode")}
+                  description={t(
+                    "settings.prefer_direct_play_by_default_negotiate_transcoding",
+                  )}
                 >
                   <Select
-                    aria-label="播放兼容模式"
+                    aria-label={t("settings.playback_compatibility_mode")}
                     value={settings.compatibility || "prefer-direct"}
                     onChange={(e) =>
                       set({
@@ -326,53 +304,62 @@ export default function SettingsPanel({
                       })
                     }
                   >
-                    <option value="prefer-direct">优先直接播放</option>
-                    <option value="auto">自动（按服务器源顺序）</option>
-                    <option value="direct-only">仅直接播放</option>
+                    <option value="prefer-direct">
+                      {t("settings.prefer_direct_play")}
+                    </option>
+                    <option value="auto">
+                      {t("settings.auto_server_source_order")}
+                    </option>
+                    <option value="direct-only">
+                      {t("settings.direct_play_only")}
+                    </option>
                   </Select>
                 </SettingRow>
               </>
             )}
             {section === "audio" && (
               <>
-                <SettingRow title="首选音轨">
+                <SettingRow title={t("settings.preferred_audio_language")}>
                   <Select
-                    aria-label="首选音轨"
+                    aria-label={t("settings.preferred_audio_language")}
                     value={settings.audioLanguage}
                     onChange={(e) => set({ audioLanguage: e.target.value })}
                   >
-                    <option value="auto">跟随服务器</option>
-                    <option value="zh">中文</option>
-                    <option value="en">英语</option>
-                    <option value="ja">日语</option>
+                    <option value="auto">{t("settings.server_default")}</option>
+                    <option value="zh">{t("settings.chinese")}</option>
+                    <option value="en">{t("settings.english")}</option>
+                    <option value="ja">{t("settings.japanese")}</option>
                   </Select>
                 </SettingRow>
               </>
             )}
             {section === "subtitles" && (
               <>
-                <SettingRow title="首选字幕">
+                <SettingRow title={t("settings.preferred_subtitle_language")}>
                   <Select
-                    aria-label="首选字幕"
+                    aria-label={t("settings.preferred_subtitle_language")}
                     value={settings.subtitleLanguage}
                     onChange={(e) => set({ subtitleLanguage: e.target.value })}
                   >
-                    <option value="auto">跟随服务器</option>
-                    <option value="off">默认关闭</option>
-                    <option value="zh">中文</option>
-                    <option value="en">英语</option>
-                    <option value="ja">日语</option>
+                    <option value="auto">{t("settings.server_default")}</option>
+                    <option value="off">{t("settings.off_by_default")}</option>
+                    <option value="zh">{t("settings.chinese")}</option>
+                    <option value="en">{t("settings.english")}</option>
+                    <option value="ja">{t("settings.japanese")}</option>
                   </Select>
                 </SettingRow>
                 <p className="setting-note">
-                  字幕大小、延迟与双字幕在播放器的字幕和播放设置浮层中调整。
+                  {" "}
+                  {t(
+                    "settings.adjust_subtitle_size_delay_and_dual_subtitles",
+                  )}{" "}
                 </p>
               </>
             )}
             {section === "playback" && (
               <>
                 <SliderField
-                  title="启动音量"
+                  title={t("settings.initial_volume")}
                   description={settings.volume + "%"}
                   value={settings.volume}
                   min={0}
@@ -380,20 +367,25 @@ export default function SettingsPanel({
                   onChange={(value) => set({ volume: value })}
                 />
                 <SwitchField
-                  title="播放时全屏"
+                  title={t("settings.start_playback_in_fullscreen")}
                   checked={settings.fullscreen}
                   onChange={(value) => set({ fullscreen: value })}
                 />
-                <p className="setting-note">偏好自动保存，下次开播生效。</p>
+                <p className="setting-note">
+                  {t(
+                    "settings.preferences_are_saved_automatically_and_apply_to",
+                  )}
+                </p>
                 <ActionRow>
                   <button
                     className="secondary"
                     onClick={() => {
                       api?.cache.clear();
-                      setResult("内存缓存已清空。");
+                      setResult(t("settings.memory_cache_cleared"));
                     }}
                   >
-                    清空内存缓存
+                    {" "}
+                    {t("settings.clear_memory_cache")}{" "}
                   </button>
                 </ActionRow>
               </>
@@ -407,20 +399,33 @@ export default function SettingsPanel({
             )}
             {section === "subtitles" && (
               <>
-                <h3>本地外挂弹幕</h3>
+                <h3>{t("settings.local_danmaku")}</h3>
                 <p className="setting-note">
-                  在内嵌播放器的“更多 → 弹幕”中选择 Bilibili XML 或 ASS
-                  文件。每部媒体、每一集分别绑定。
+                  {" "}
+                  {t("settings.choose_a_bilibili_xml_or_ass_file")}{" "}
                 </p>
+                <DanmakuSourceSettings
+                  value={settings.danmaku?.sources}
+                  onChange={(update) =>
+                    set((current) => ({
+                      danmaku: normalizeDanmaku({
+                        ...current.danmaku,
+                        sources: update(
+                          normalizeSources(current.danmaku?.sources),
+                        ),
+                      }),
+                    }))
+                  }
+                />
                 <DanmakuSettings
                   value={normalizeDanmaku(settings.danmaku)}
                   onChange={(patch) =>
-                    set({
+                    set((current) => ({
                       danmaku: normalizeDanmaku({
-                        ...settings.danmaku,
+                        ...current.danmaku,
                         ...patch,
                       }),
-                    })
+                    }))
                   }
                 />
               </>
@@ -443,61 +448,9 @@ export default function SettingsPanel({
                 onChange={onChange}
               />
             )}
-            {section === "connection" && (
-              <>
-                <h3>服务器连接</h3>
-                {api?.account.remark && (
-                  <p className="connection-address">{api.account.remark}</p>
-                )}
-                <p className="server-address">
-                  {api?.account.server || "演示模式 · 未连接服务器"}
-                </p>
-                {onEndpoints && (
-                  <SettingRow
-                    title="多线路管理"
-                    description="管理当前服务器的连接线路，可自动选择或手动固定。"
-                  >
-                    <button
-                      className="secondary"
-                      disabled={!api}
-                      onClick={onEndpoints}
-                    >
-                      <Network size={15} aria-hidden="true" />
-                      多线路管理
-                    </button>
-                  </SettingRow>
-                )}
-                <ActionRow>
-                  <button
-                    className="secondary"
-                    disabled={!api || busy}
-                    onClick={check}
-                  >
-                    <RefreshCw size={15} className={busy ? "spin" : ""} />
-                    {busy ? "正在检查…" : "检查连接"}
-                  </button>
-                  {isTauri() && (
-                    <button
-                      className="secondary"
-                      disabled={!api || busy}
-                      onClick={diagnose}
-                    >
-                      获取底层诊断
-                    </button>
-                  )}
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    onClick={copyDiagnostics}
-                  >
-                    复制连接诊断
-                  </button>
-                </ActionRow>
-              </>
-            )}
             {result && (
               <p role="status" className="connection-result">
-                {result}
+                {localizeMessage(result)}
               </p>
             )}
             <small>Miry v{APP_VERSION}</small>

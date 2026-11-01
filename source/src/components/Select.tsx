@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import {
   Children,
   Fragment,
@@ -44,6 +46,8 @@ export default function Select({
   className = "",
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement>) {
+  useI18n();
+
   const options = optionsOf(children);
   const [local, setLocal] = useState(
     String(defaultValue ?? options[0]?.value ?? ""),
@@ -95,7 +99,11 @@ export default function Select({
       <Popover
         id={id}
         role="listbox"
-        label={props["aria-label"] ? props["aria-label"] + "选项" : undefined}
+        label={
+          props["aria-label"]
+            ? props["aria-label"] + t("library.options")
+            : undefined
+        }
         open={open}
         anchor={trigger}
         onClose={close}

@@ -138,16 +138,26 @@ fn presentation(binding: &Binding) -> Result<LocalFile, String> {
     })
 }
 #[cfg(windows)]
-fn pick(owner: usize) -> Result<Option<PathBuf>, String> {
+fn pick(owner: usize, english: bool) -> Result<Option<PathBuf>, String> {
     use windows_sys::Win32::UI::Controls::Dialogs::{
         GetOpenFileNameW, OFN_EXPLORER, OFN_FILEMUSTEXIST, OFN_NOCHANGEDIR, OFN_PATHMUSTEXIST,
         OPENFILENAMEW,
     };
     let mut name = vec![0u16; 32768];
-    let filter: Vec<u16> = "Local Danmaku (XML / ASS)\0*.xml;*.ass\0\0"
-        .encode_utf16()
-        .collect();
-    let title: Vec<u16> = "选择本地弹幕文件\0".encode_utf16().collect();
+    let filter: Vec<u16> = if english {
+        "Local danmaku (XML / ASS)\0*.xml;*.ass\0\0"
+    } else {
+        "本地弹幕 (XML / ASS)\0*.xml;*.ass\0\0"
+    }
+    .encode_utf16()
+    .collect();
+    let title: Vec<u16> = if english {
+        "Choose local danmaku file\0"
+    } else {
+        "选择本地弹幕文件\0"
+    }
+    .encode_utf16()
+    .collect();
     let mut dialog = OPENFILENAMEW {
         lStructSize: std::mem::size_of::<OPENFILENAMEW>() as u32,
         hwndOwner: owner as _,
@@ -168,6 +178,7 @@ fn pick(owner: usize) -> Result<Option<PathBuf>, String> {
 pub async fn danmaku_pick(
     window: tauri::WebviewWindow,
     files: tauri::State<'_, Files>,
+    language: Option<String>,
 ) -> Result<Option<LocalFile>, String> {
     storage(&window)?;
     #[cfg(windows)]
@@ -180,7 +191,8 @@ pub async fn danmaku_pick(
             .hwnd()
             .map_err(|_| "无法打开文件选择")?
             .0 as usize;
-        let path = tauri::async_runtime::spawn_blocking(move || pick(owner))
+        let english = language.as_deref() == Some("en-US");
+        let path = tauri::async_runtime::spawn_blocking(move || pick(owner, english))
             .await
             .map_err(|_| "无法打开文件选择")??;
         let Some(path) = path else { return Ok(None) };
@@ -200,7 +212,7 @@ pub async fn danmaku_pick(
     }
     #[cfg(not(windows))]
     {
-        let _ = files;
+        let _ = (files, language);
         Err("此版本仅支持 Windows".into())
     }
 }

@@ -11,7 +11,7 @@ import {
   suppressRouteWarnings,
   routeWarningsSuppressed,
 } from "./smartRoutes";
-import { saveRoute } from "../stores/routes";
+import { saveRoute, readRoutes, deleteRoute } from "../stores/routes";
 vi.mock("@tauri-apps/api/core", () => ({
   isTauri: () => true,
   invoke: vi.fn(),
@@ -96,6 +96,64 @@ it("keeps the manual pin while recommending another route and isolates servers",
     mode: "manual",
     pinned: account.server,
   });
+});
+it("recomputes cached recommendations after priority, disable and deletion while preserving a manual pin", () => {
+  const home = readRoutes(account).find((r) => r.url === account.server)!;
+  saveRouteTest(account, home, { ...good(), apiTtfbMs: 80 });
+  saveRouteTest(account, backup, { ...good(), apiTtfbMs: 20 });
+  expect(readRouteQuality(account).recommended).toBe(backup.url);
+  setRouteMode(account, "manual", backup.url);
+  saveRoute(account, { ...home, priority: 0 });
+  expect(readRouteQuality(account)).toMatchObject({
+    recommended: home.url,
+    mode: "manual",
+    pinned: backup.url,
+  });
+  saveRoute(account, { ...home, priority: 0, enabled: false });
+  expect(readRouteQuality(account).recommended).toBe(backup.url);
+  deleteRoute(account, backup.url);
+  expect(readRouteQuality(account).recommended).toBeUndefined();
+});
+it("does not commit an old asynchronous quality result after its route has changed", async () => {
+  const { invoke } = await import("@tauri-apps/api/core");
+  const owner = { ...account, userId: "late-quality" },
+    target = { ...backup, userId: "late-quality" };
+  saveRoute(owner, target);
+  let finish!: (value: unknown) => void;
+  vi.mocked(invoke).mockImplementation(async (command) =>
+    command === "route_probe"
+      ? new Promise((resolve) => {
+          finish = resolve;
+        })
+      : undefined,
+  );
+  const operation = testRoute(owner, target, new AbortController().signal);
+  await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+  saveRoute(owner, { ...target, priority: 1 });
+  const latest = saveRouteTest(owner, target, { ...good(), apiTtfbMs: 20 });
+  finish(good());
+  await expect(operation).rejects.toHaveProperty("name", "AbortError");
+  expect(readRouteQuality(owner).tests[target.url]).toEqual(latest);
+});
+it("keeps a newer measurement when an older probe finishes against unchanged configuration", async () => {
+  const { invoke } = await import("@tauri-apps/api/core");
+  const owner = { ...account, userId: "newer-measurement" },
+    target = { ...backup, userId: "newer-measurement" };
+  saveRoute(owner, target);
+  let finish!: (value: unknown) => void;
+  vi.mocked(invoke).mockImplementation(async (command) =>
+    command === "route_probe"
+      ? new Promise((resolve) => {
+          finish = resolve;
+        })
+      : undefined,
+  );
+  const operation = testRoute(owner, target, new AbortController().signal);
+  await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+  const latest = saveRouteTest(owner, target, { ...good(), apiTtfbMs: 20 });
+  finish(good());
+  await expect(operation).rejects.toHaveProperty("name", "AbortError");
+  expect(readRouteQuality(owner).tests[target.url]).toEqual(latest);
 });
 it("expires recommendations and preserves the bitrate used for scoring", () => {
   const now = vi.spyOn(Date, "now").mockReturnValue(1e12);

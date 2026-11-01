@@ -33,20 +33,20 @@ afterEach(() => {
   for (const key of ["theme", "uiSize", "sidebar"])
     delete document.documentElement.dataset[key];
 });
-it("keeps existing users dark and validates persisted values", () => {
+it("defaults to system and validates persisted values", () => {
   expect(readAppearance()).toEqual({
-    theme: "dark",
+    theme: "system",
     uiSize: "standard",
     sidebarCollapsed: null,
   });
   localStorage.setItem("miry-appearance", "null");
-  expect(readAppearance().theme).toBe("dark");
+  expect(readAppearance().theme).toBe("system");
   localStorage.setItem(
     "miry-appearance",
     JSON.stringify({ theme: "invalid", uiSize: 123, sidebarCollapsed: "yes" }),
   );
   expect(readAppearance()).toEqual({
-    theme: "dark",
+    theme: "system",
     uiSize: "standard",
     sidebarCollapsed: null,
   });
@@ -54,6 +54,12 @@ it("keeps existing users dark and validates persisted values", () => {
 it("updates dark/light/system at the root and follows OS changes only in system mode", () => {
   dispose = initializeAppearance();
   const root = document.documentElement;
+  expect(root.dataset.theme).toBe("dark");
+  Object.assign(dark, { matches: false });
+  dark.dispatchEvent(new Event("change"));
+  expect(root.dataset.theme).toBe("light");
+  expect(localStorage.getItem("miry-appearance")).toBeNull();
+  Object.assign(dark, { matches: true });
   saveAppearance({ theme: "light" });
   expect(root.dataset.theme).toBe("light");
   dark.dispatchEvent(new Event("change"));

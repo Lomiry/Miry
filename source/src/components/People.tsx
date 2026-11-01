@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useMemo, useState } from "react";
 import { UserRound, ChevronDown, ChevronUp } from "lucide-react";
 import type { Item } from "../types/emby";
@@ -7,13 +9,27 @@ import Tooltip from "./Tooltip";
 
 type Person = NonNullable<Item["People"]>[number];
 const professions: Record<string, string> = {
-  Actor: "演员",
-  Director: "导演",
-  Writer: "编剧",
-  Producer: "制片",
-  Composer: "作曲",
-  GuestStar: "客串",
-  VoiceActor: "配音",
+  get Actor() {
+    return t("library.actor");
+  },
+  get Director() {
+    return t("library.director");
+  },
+  get Writer() {
+    return t("library.writer");
+  },
+  get Producer() {
+    return t("library.producer");
+  },
+  get Composer() {
+    return t("library.composer");
+  },
+  get GuestStar() {
+    return t("library.guest_star");
+  },
+  get VoiceActor() {
+    return t("library.voice_actor");
+  },
 };
 export function personItem(person: Person): Item {
   return {
@@ -26,6 +42,8 @@ export function personItem(person: Person): Item {
   };
 }
 function PersonArt({ person, api }: { person: Item; api: EmbyClient | null }) {
+  useI18n();
+
   const src = api?.image(person, false, 160);
   const [failed, setFailed] = useState("");
   return (
@@ -55,17 +73,28 @@ export function Cast({
   api: EmbyClient | null;
   onPerson: (item: Item) => void;
 }) {
+  useI18n();
+
   const [expanded, setExpanded] = useState(false);
   return (
-    <section className="cast cast-section" aria-label="演职人员">
-      <SectionHeader className="cast-heading" title="演职人员" level={3}>
+    <section
+      className="cast cast-section"
+      aria-label={t("library.cast_and_crew")}
+    >
+      <SectionHeader
+        className="cast-heading"
+        title={t("library.cast_and_crew")}
+        level={3}
+      >
         {people.length > 8 && (
           <button
             className="text-button"
             aria-expanded={expanded}
             onClick={() => setExpanded((value) => !value)}
           >
-            {expanded ? "收起" : `查看全部 · ${people.length}`}
+            {expanded
+              ? t("library.show_less_2")
+              : t("library.view_all_3", { p0: people.length })}
             {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </button>
         )}
@@ -83,7 +112,7 @@ export function Cast({
             person.Role ||
             professions[person.Type || ""] ||
             person.Type ||
-            "演职员";
+            t("library.cast_member");
           return (
             <Tooltip
               key={`${person.Id}-${index}`}
@@ -99,7 +128,7 @@ export function Cast({
                 className="cast-person"
                 key={`${person.Id}-${index}`}
                 disabled={!person.Id}
-                aria-label={`查看人物 ${person.Name}`}
+                aria-label={t("library.view_person", { p0: person.Name })}
                 onClick={() => onPerson(item)}
               >
                 <PersonArt person={item} api={api} />
@@ -137,18 +166,20 @@ export default function PersonDetail({
   item: Item;
   api: EmbyClient | null;
 }) {
+  useI18n();
+
   const [expanded, setExpanded] = useState(false);
   const overview = useMemo(
     () => plainOverview(item.Overview || ""),
     [item.Overview],
   );
   return (
-    <section className="person-detail" aria-label="人物详情">
+    <section className="person-detail" aria-label={t("library.person_details")}>
       <PersonArt person={item} api={api} />
       <div className="person-description">
-        <span className="person-eyebrow">演职员</span>
+        <span className="person-eyebrow">{t("library.cast_member")}</span>
         <h1>{item.Name}</h1>
-        <h3>人物简介</h3>
+        <h3>{t("library.biography")}</h3>
         <p
           className={
             expanded || overview.length <= 260
@@ -156,7 +187,7 @@ export default function PersonDetail({
               : "person-biography"
           }
         >
-          {overview || "服务器暂无人物简介"}
+          {overview || t("library.no_biography_available_from_the_server")}
         </p>
         {overview.length > 260 && (
           <button
@@ -164,7 +195,7 @@ export default function PersonDetail({
             aria-expanded={expanded}
             onClick={() => setExpanded((value) => !value)}
           >
-            {expanded ? "收起简介" : "展开简介"}
+            {expanded ? t("library.show_less") : t("library.show_more")}
             {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </button>
         )}

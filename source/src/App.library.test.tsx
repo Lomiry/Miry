@@ -8,6 +8,7 @@ import {
   within,
   waitFor,
   act,
+  fireEvent,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
@@ -15,6 +16,8 @@ import { saveAccount } from "./stores/account";
 import type { Item } from "./types/emby";
 import { readAccount } from "./stores/account";
 import { readSortPreference } from "./stores/browsePreferences";
+import { setLanguage, t } from "./i18n/core";
+import { ResolutionIndex } from "./api/resolutionIndex";
 
 vi.mock("@tauri-apps/api/core", () => ({
   isTauri: () => false,
@@ -41,10 +44,572 @@ beforeEach(() => {
     false,
   );
 });
+function observeBatches() {
+  const callbacks: IntersectionObserverCallback[] = [];
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      constructor(callback: IntersectionObserverCallback) {
+        callbacks.push(callback);
+      }
+      observe() {}
+      disconnect() {}
+    },
+  );
+  return () =>
+    act(() =>
+      callbacks.at(-1)?.(
+        [{ isIntersecting: true }] as IntersectionObserverEntry[],
+        {} as IntersectionObserver,
+      ),
+    );
+}
+it.each([120, 500, 1000, 5200])(
+  "loads all %d controlled items without duplicate batches or an unbounded mounted list",
+  async (length) => {
+    server();
+    const fallback = globalThis.fetch;
+    const dataset = Array.from({ length }, (_, i) => ({
+      Id: `large-${i}`,
+      Name: `Controlled ${i}`,
+      Type: "Movie",
+    }));
+    const offsets: number[] = [];
+    let active = 0,
+      maxActive = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (address: string, init?: RequestInit) => {
+        const url = new URL(address),
+          p = url.searchParams;
+        if (
+          url.pathname.endsWith("/Items") &&
+          p.get("ParentId") === "movies" &&
+          p.get("Recursive") === "true"
+        ) {
+          const start = Number(p.get("StartIndex") || 0),
+            limit = Number(p.get("Limit") || 30);
+          offsets.push(start);
+          active++;
+          maxActive = Math.max(maxActive, active);
+          await Promise.resolve();
+          active--;
+          return new Response(
+            JSON.stringify({
+              Items: dataset.slice(start, start + limit),
+              TotalRecordCount: length,
+            }),
+          );
+        }
+        return fallback(address, init);
+      }),
+    );
+    localStorage.setItem("miry-browse-mode", "infinite");
+    localStorage.setItem("miry-browse-page-size", "100");
+    const intersect = observeBatches(),
+      user = userEvent.setup(),
+      started = performance.now();
+    const view = render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+    );
+    for (let loaded = 100; loaded < length; loaded += 100) {
+      await screen.findByText(
+        t("library.loaded_count", { count: Math.min(loaded, length) }),
+      );
+      await screen.findByRole("button", { name: t("library.load_more") });
+      intersect();
+      intersect();
+      intersect();
+    }
+    await screen.findByText(t("library.loaded_count", { count: length }));
+    expect(offsets).toEqual(
+      Array.from({ length: Math.ceil(length / 100) }, (_, i) => i * 100),
+    );
+    expect(maxActive).toBe(1);
+    expect(
+      view.container.querySelectorAll(
+        '.grid button[aria-label^="查看详情 Controlled"]',
+      ).length,
+    ).toBeLessThanOrEqual(length <= 120 ? 120 : 12);
+    expect(screen.queryByLabelText("每页显示")).toBeNull();
+    expect(screen.getByRole("button", { name: "刷新" })).toBeTruthy();
+    // Diagnostic timing is jsdom scripting only; it is not a native FPS measurement.
+    console.info(
+      JSON.stringify({
+        fixture: length,
+        batches: offsets.length,
+        maxActive,
+        domNodes: view.container.querySelectorAll("*").length,
+        scriptMs: Math.round(performance.now() - started),
+      }),
+    );
+  },
+  20000,
+);
+
+it("restores library, filter, sort and infinite mode on refresh, with page-only controls returning in pages mode", async () => {
+  const calls = server(),
+    user = userEvent.setup();
+  const view = render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findAllByText("1–30 / 65");
+  await pickSelect(user, screen.getByLabelText("观看状态"), "unplayed");
+  await pickSelect(user, screen.getByLabelText("媒体排序"), "DateCreated");
+  await pickSelect(user, screen.getByLabelText("浏览模式"), "infinite");
+  await screen.findByText("已加载 30 项");
+  expect(screen.queryByLabelText("每页显示")).toBeNull();
+  view.unmount();
+  render(<App />);
+  await screen.findByText("已加载 30 项");
+  expect(screen.getByLabelText("观看状态").getAttribute("data-value")).toBe(
+    "unplayed",
+  );
+  expect(screen.getByLabelText("媒体排序").getAttribute("data-value")).toBe(
+    "DateCreated",
+  );
+  expect(screen.getByLabelText("浏览模式").getAttribute("data-value")).toBe(
+    "infinite",
+  );
+  expect(
+    calls
+      .filter((u) => u.searchParams.get("ParentId") === "movies")
+      .at(-1)
+      ?.searchParams.get("IsPlayed"),
+  ).toBe("false");
+  await pickSelect(user, screen.getByLabelText("浏览模式"), "pages");
+  expect(await screen.findByLabelText("每页显示")).toBeTruthy();
+});
+
+it.each(["http500", "timeout"])(
+  "preserves loaded rows during a controlled slow %s batch and retries the same offset",
+  async (failure) => {
+    server();
+    const base = globalThis.fetch,
+      user = userEvent.setup(),
+      intersect = observeBatches();
+    let finish!: () => void,
+      attempts = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((address: string, init?: RequestInit) => {
+        const url = new URL(address);
+        if (
+          url.searchParams.get("ParentId") === "movies" &&
+          url.searchParams.get("StartIndex") === "30" &&
+          ++attempts === 1
+        ) {
+          return new Promise<Response>((resolve, reject) => {
+            finish = () =>
+              failure === "http500"
+                ? resolve(new Response("{}", { status: 500 }))
+                : reject(
+                    new DOMException("Controlled timeout", "TimeoutError"),
+                  );
+          });
+        }
+        return base(address, init);
+      }),
+    );
+    localStorage.setItem("miry-browse-mode", "infinite");
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+    );
+    await screen.findByRole("button", { name: "加载更多" });
+    intersect();
+    intersect();
+    await waitFor(() => expect(finish).toBeTypeOf("function"));
+    expect(movieNames()).toHaveLength(30);
+    expect(screen.getByRole("button", { name: "刷新" })).toBeTruthy();
+    await act(async () => finish());
+    await user.click(await screen.findByRole("button", { name: "重试加载" }));
+    await screen.findByText("已加载 60 项");
+    expect(attempts).toBe(2);
+  },
+);
+function cachedRetryFixture(repeats = 1, hold = false) {
+  server();
+  const base = globalThis.fetch;
+  const state = {
+    requests: 0,
+    calls: [] as URL[],
+    signal: undefined as AbortSignal | undefined,
+    finish: undefined as (() => void) | undefined,
+  };
+  vi.spyOn(Date, "now").mockReturnValue(Date.now()); // No cache expiry during the regression.
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (address: string, init?: RequestInit) => {
+      const url = new URL(address);
+      state.calls.push(url);
+      if (
+        url.pathname.endsWith("/Items") &&
+        url.searchParams.get("ParentId") === "movies" &&
+        url.searchParams.get("StartIndex") === "30"
+      ) {
+        state.requests++;
+        if (state.requests <= repeats)
+          return new Response(
+            JSON.stringify({
+              Items: movies.slice(0, 30),
+              TotalRecordCount: 65,
+            }),
+          );
+        const response = new Response(
+          JSON.stringify({
+            Items: [movies[29], ...movies.slice(30, 59)],
+            TotalRecordCount: 65,
+          }),
+        );
+        if (hold) {
+          state.signal = init?.signal as AbortSignal;
+          return new Promise<Response>((resolve) => {
+            state.finish = () => resolve(response);
+          });
+        }
+        return response;
+      }
+      return base(address, init);
+    }),
+  );
+  localStorage.setItem("miry-browse-mode", "infinite");
+  return state;
+}
+it("retries a cached invalid batch before expiry, keeps retry on another failure and merges fresh data without reloading successful batches", async () => {
+  const fixture = cachedRetryFixture(2),
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  intersect();
+  await screen.findByRole("button", { name: "重试加载" });
+  expect(fixture.requests).toBe(1);
+  await user.click(screen.getByRole("button", { name: "重试加载" }));
+  await screen.findByRole("button", { name: "重试加载" });
+  expect(fixture.requests).toBe(2);
+  await user.click(screen.getByRole("button", { name: "重试" }));
+  await screen.findByText("已加载 59 项");
+  expect(fixture.requests).toBe(3);
+  expect(
+    screen.queryByText("服务器重复返回已加载的媒体，请重试或刷新列表。"),
+  ).toBeNull();
+  expect(movieNames()).toHaveLength(59);
+  expect(
+    fixture.calls.filter(
+      (url) =>
+        url.pathname.endsWith("/Items") &&
+        url.searchParams.get("ParentId") === "movies" &&
+        url.searchParams.get("StartIndex") === "0",
+    ),
+  ).toHaveLength(1);
+});
+it("admits only one underlying retry request across repeated clicks on both retry buttons", async () => {
+  const fixture = cachedRetryFixture(1, true),
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  intersect();
+  const retry = await screen.findByRole("button", { name: "重试加载" });
+  const other = screen.getByRole("button", { name: "重试" });
+  act(() => {
+    fireEvent.click(retry);
+    fireEvent.click(other);
+    fireEvent.click(retry);
+  });
+  await waitFor(() => expect(fixture.finish).toBeTypeOf("function"));
+  expect(fixture.requests).toBe(2);
+  await act(async () => fixture.finish?.());
+  await screen.findByText("已加载 59 项");
+  expect(fixture.requests).toBe(2);
+});
+it("preserves an infinite browse batch and scoped retry when only the server remark changes", async () => {
+  const fixture = cachedRetryFixture(1),
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  intersect();
+  await screen.findByRole("button", { name: "重试加载" });
+  const requests = fixture.calls.length;
+  await user.click(screen.getByRole("button", { name: "编辑服务器与线路" }));
+  await user.type(screen.getByLabelText("服务器备注"), "Browse integration");
+  await user.click(screen.getByRole("button", { name: "保存修改" }));
+  expect(readAccount()?.remark).toBe("Browse integration");
+  expect(fixture.calls).toHaveLength(requests);
+  expect(movieNames()).toHaveLength(30);
+  await user.click(screen.getByRole("button", { name: "重试加载" }));
+  await screen.findByText("已加载 59 项");
+  expect(fixture.requests).toBe(2);
+  expect(
+    fixture.calls.filter(
+      (url) =>
+        url.searchParams.get("ParentId") === "movies" &&
+        url.searchParams.get("StartIndex") === "0",
+    ),
+  ).toHaveLength(1);
+});
+it.each(["library", "sort", "filter"])(
+  "cancels a forced retry on %s changes and rejects its late data",
+  async (change) => {
+    const fixture = cachedRetryFixture(1, true),
+      user = userEvent.setup(),
+      intersect = observeBatches();
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+    );
+    await screen.findByText("已加载 30 项");
+    intersect();
+    await user.click(await screen.findByRole("button", { name: "重试加载" }));
+    await waitFor(() => expect(fixture.finish).toBeTypeOf("function"));
+    if (change === "library")
+      await user.click(screen.getByRole("button", { name: "剧集档案" }));
+    else if (change === "sort")
+      await pickSelect(user, screen.getByLabelText("媒体排序"), "DateCreated");
+    else await pickSelect(user, screen.getByLabelText("观看状态"), "played");
+    await screen.findByText(change === "sort" ? "已加载 30 项" : "已加载 1 项");
+    expect(fixture.signal?.aborted).toBe(true);
+    await act(async () => fixture.finish?.());
+    expect(movieNames()).not.toContain(movies[30].Name);
+    expect(screen.queryByRole("button", { name: "重试加载" })).toBeNull();
+  },
+);
+it("switches resolution filtering to pages explicitly and preserves the existing index", async () => {
+  server();
+  const index = vi
+    .spyOn(ResolutionIndex.prototype, "page")
+    .mockResolvedValue({ Items: movies.slice(0, 10), TotalRecordCount: 10 });
+  localStorage.setItem("miry-browse-mode", "infinite");
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  await pickSelect(user, screen.getByLabelText("清晰度"), "1080p");
+  await screen.findAllByText("1–10 / 10");
+  expect(screen.getByLabelText("浏览模式").getAttribute("data-value")).toBe(
+    "pages",
+  );
+  expect(localStorage.getItem("miry-browse-mode")).toBe("pages");
+  expect(screen.getByText(/分辨率筛选使用分页/)).toBeTruthy();
+  expect(index).toHaveBeenCalledTimes(1);
+  await pickSelect(user, screen.getByLabelText("清晰度"), "");
+  await pickSelect(user, screen.getByLabelText("浏览模式"), "infinite");
+  await screen.findByText("已加载 30 项");
+});
+it("loads exactly one next batch on repeated intersections and restores details", async () => {
+  const slow = { start: 30 } as {
+    start: number;
+    finish?: () => void;
+    signal?: AbortSignal;
+  };
+  const calls = server(undefined, slow),
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findAllByText("1–30 / 65");
+  await pickSelect(user, screen.getByLabelText("浏览模式"), "infinite");
+  await screen.findByText("已加载 30 项");
+  intersect();
+  intersect();
+  intersect();
+  await waitFor(() => expect(slow.finish).toBeTypeOf("function"));
+  expect(
+    calls.filter(
+      (url) =>
+        url.searchParams.get("ParentId") === "movies" &&
+        url.searchParams.get("StartIndex") === "30",
+    ),
+  ).toHaveLength(1);
+  const batches = calls.filter(
+    (url) =>
+      url.pathname.endsWith("/Items") &&
+      url.searchParams.get("ParentId") === "movies",
+  );
+  const firstQuery = Object.fromEntries(batches[0].searchParams);
+  expect(Object.fromEntries(batches.at(-1)!.searchParams)).toEqual({
+    ...firstQuery,
+    StartIndex: "30",
+  });
+  expect(
+    screen.getByRole("button", { name: "查看详情 测试电影 01" }),
+  ).toBeTruthy();
+  await act(async () => slow.finish?.());
+  await screen.findByText("已加载 60 项");
+  const panel = document.querySelector("main")!;
+  panel.scrollTop = 900;
+  const count = calls.length;
+  await user.click(
+    screen.getByRole("button", { name: "查看详情 测试电影 31" }),
+  );
+  await screen.findByRole("heading", { name: "测试电影 31" });
+  await user.click(screen.getByRole("button", { name: "返回上一页" }));
+  await screen.findByText("已加载 60 项");
+  expect(panel.scrollTop).toBe(900);
+  expect(
+    calls
+      .slice(count)
+      .filter((url) => url.searchParams.get("ParentId") === "movies"),
+  ).toHaveLength(0);
+  intersect();
+  await screen.findByText("已加载 65 项");
+  await screen.findByText("已到列表末尾");
+  expect(movieNames()).toHaveLength(65);
+});
+it("cancels a pending infinite batch on filtering and ignores its late response", async () => {
+  const slow = { start: 30 } as {
+    start: number;
+    finish?: () => void;
+    signal?: AbortSignal;
+  };
+  const calls = server(undefined, slow),
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  localStorage.setItem("miry-browse-mode", "infinite");
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  intersect();
+  await waitFor(() => expect(slow.finish).toBeTypeOf("function"));
+  await pickSelect(user, screen.getByLabelText("观看状态"), "played");
+  await screen.findByText("已加载 1 项");
+  expect(slow.signal?.aborted).toBe(true);
+  await act(async () => slow.finish?.());
+  expect(movieNames()).toHaveLength(1);
+  expect(
+    calls
+      .filter((url) => url.searchParams.get("IsPlayed") === "true")
+      .at(-1)
+      ?.searchParams.get("StartIndex"),
+  ).toBe("0");
+});
+it("keeps loaded rows on next-batch failure, retries the same offset and resets on mode changes", async () => {
+  server();
+  const base = globalThis.fetch,
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  let failing = true,
+    attempts = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (address: string, init?: RequestInit) => {
+      const url = new URL(address);
+      if (
+        url.searchParams.get("ParentId") === "movies" &&
+        url.searchParams.get("StartIndex") === "30"
+      ) {
+        attempts++;
+        if (failing) return new Response("{}", { status: 503 });
+      }
+      return base(address, init);
+    }),
+  );
+  localStorage.setItem("miry-browse-mode", "infinite");
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  intersect();
+  await screen.findByRole("button", { name: "重试加载" });
+  expect(movieNames()).toHaveLength(30);
+  intersect();
+  expect(attempts).toBe(1);
+  failing = false;
+  await user.click(screen.getByRole("button", { name: "重试加载" }));
+  await screen.findByText("已加载 60 项");
+  expect(attempts).toBe(2);
+  await pickSelect(user, screen.getByLabelText("浏览模式"), "pages");
+  await screen.findAllByText("1–30 / 65");
+  expect(movieNames()).toHaveLength(30);
+});
+it("deduplicates overlapping batches and stops automatic loading when the server repeats a whole batch", async () => {
+  server();
+  const base = globalThis.fetch,
+    user = userEvent.setup(),
+    intersect = observeBatches();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (address: string, init?: RequestInit) => {
+      const url = new URL(address),
+        start = url.searchParams.get("StartIndex");
+      if (url.searchParams.get("ParentId") === "movies" && start === "30")
+        return new Response(
+          JSON.stringify({
+            Items: [movies[29], ...movies.slice(30, 59)],
+            TotalRecordCount: 100,
+          }),
+        );
+      if (url.searchParams.get("ParentId") === "movies" && start === "60")
+        return new Response(
+          JSON.stringify({ Items: movies.slice(0, 30), TotalRecordCount: 100 }),
+        );
+      return base(address, init);
+    }),
+  );
+  localStorage.setItem("miry-browse-mode", "infinite");
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findByText("已加载 30 项");
+  intersect();
+  await screen.findByText("已加载 59 项");
+  expect(movieNames()).toHaveLength(59);
+  intersect();
+  await screen.findByText("服务器重复返回已加载的媒体，请重试或刷新列表。");
+  expect(movieNames()).toHaveLength(59);
+});
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  setLanguage("zh-CN", false);
+});
+
+it("switches a mounted library without Emby requests, navigation changes or translating server names", async () => {
+  const calls = server();
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
+  );
+  await screen.findAllByText("1–30 / 65");
+  const card = screen.getByRole("button", { name: "查看详情 测试电影 01" });
+  act(() => card.focus());
+  const count = calls.length;
+  act(() => setLanguage("en-US"));
+  expect(
+    screen.getByRole("button", { name: "View details for 测试电影 01" }),
+  ).toBe(card);
+  expect(screen.getByRole("heading", { name: "电影档案" })).toBeTruthy();
+  expect(screen.getByLabelText("Sort media")).toBeTruthy();
+  expect(document.activeElement).toBe(card);
+  expect(calls).toHaveLength(count);
+  act(() => setLanguage("zh-CN"));
+  expect(screen.getByRole("button", { name: "查看详情 测试电影 01" })).toBe(
+    card,
+  );
+  expect(calls).toHaveLength(count);
 });
 
 it("persists sort and direction through home, another library, sidebar snapshots, detail and remount", async () => {
@@ -89,9 +654,6 @@ it("persists sort and direction through home, another library, sidebar snapshots
   );
   view.unmount();
   render(<App />);
-  await user.click(
-    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
-  );
   await screen.findAllByText("1–30 / 65");
   expect(screen.getByLabelText("媒体排序").getAttribute("data-value")).toBe(
     "CommunityRating",
@@ -302,7 +864,9 @@ it.each([true, false])(
       ),
     );
     const ratingCalls = calls.filter(
-      (url) => url.searchParams.get("SortBy") === "CommunityRating,SortName",
+      (url) =>
+        url.searchParams.get("SortBy") === "CommunityRating,SortName" &&
+        url.searchParams.get("Limit") !== "120",
     );
     expect(ratingCalls.map((url) => url.searchParams.get("SortOrder"))).toEqual(
       ["Descending", "Ascending"],
@@ -417,9 +981,6 @@ it("changes server page size, resets bounds and keeps the selector available on 
   await screen.findAllByText("1–50 / 65");
   view.unmount();
   render(<App />);
-  await user.click(
-    await screen.findByRole("button", { name: "打开媒体库 电影档案" }),
-  );
   await screen.findAllByText("1–50 / 65");
   expect(screen.getByLabelText("每页显示").getAttribute("data-value")).toBe(
     "50",

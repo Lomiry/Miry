@@ -85,6 +85,7 @@ async fn measure(
     server: String,
     expected: String,
     media: Option<MediaSample>,
+    ignore_certificate_errors: bool,
 ) -> Result<Metrics, String> {
     let base = server_url(&server)?;
     if expected.is_empty() || expected.len() > 256 {
@@ -99,6 +100,7 @@ async fn measure(
         }
     });
     let client = Client::builder()
+        .danger_accept_invalid_certs(ignore_certificate_errors)
         .redirect(policy)
         .timeout(Duration::from_secs(4))
         .build()
@@ -255,6 +257,7 @@ pub async fn route_probe(
     server: String,
     expected: String,
     media: Option<MediaSample>,
+    ignore_certificate_errors: Option<bool>,
 ) -> Result<Metrics, String> {
     if window.label() != "main" || id.len() > 72 {
         return Err("线路测试由主窗口管理。".into());
@@ -295,7 +298,7 @@ pub async fn route_probe(
             .remove(&id);
         return Err("已取消线路测试。".into());
     }
-    let result = tokio::select! {_ = cancelled.changed()=>Err("已取消线路测试。".into()),result=measure(server,expected,media)=>result};
+    let result = tokio::select! {_ = cancelled.changed()=>Err("已取消线路测试。".into()),result=measure(server,expected,media,ignore_certificate_errors.unwrap_or(false))=>result};
     state
         .active
         .lock()
@@ -380,7 +383,7 @@ mod tests {
     #[tokio::test]
     async fn real_range_is_bounded_and_metadata_is_unauthenticated() {
         let (url, server) = fixture("s", 206, "bytes 0-262143/1000000");
-        let m = measure(url, "s".into(), media()).await.unwrap();
+        let m = measure(url, "s".into(), media(), false).await.unwrap();
         assert_eq!(m.samples, 3);
         assert_eq!(m.sample_bytes, CAP);
         assert!(m.throughput_mbps.is_some());
@@ -392,7 +395,7 @@ mod tests {
     #[tokio::test]
     async fn mismatched_server_gets_no_authentication_or_media() {
         let (url, server) = fixture("other", 206, "bytes 0-262143/1000000");
-        assert!(measure(url, "s".into(), media()).await.is_err());
+        assert!(measure(url, "s".into(), media(), false).await.is_err());
         let requests = server.join().unwrap();
         assert_eq!(requests.len(), 1);
         assert!(!requests[0].contains("qa-private"));
@@ -404,7 +407,7 @@ mod tests {
             (206, "bytes 0-999999/1000000"),
         ] {
             let (url, server) = fixture("s", status, range);
-            let m = measure(url, "s".into(), media()).await.unwrap();
+            let m = measure(url, "s".into(), media(), false).await.unwrap();
             assert_eq!(m.sample_bytes, 0);
             assert!(m.throughput_mbps.is_none());
             assert!(!m.media_note.is_empty());

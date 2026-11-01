@@ -1,3 +1,5 @@
+import { t, setLanguage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useRef, useState } from "react";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import type { PlayerAction, PlayerUiModel } from "../player/uiModel";
@@ -11,6 +13,8 @@ import {
 } from "../danmaku/types";
 
 export default function PlayerOverlayWindow() {
+  useI18n();
+
   const [model, setModel] = useState<PlayerUiModel | null>(null);
   const [danmaku, setDanmaku] = useState<DanmakuDocument | null>(null);
   const [clock, setClock] = useState<DanmakuClock | null>(null);
@@ -85,7 +89,10 @@ export default function PlayerOverlayWindow() {
         listen<PlayerUiModel>(
           "player-ui-state",
           ({ payload }) => {
-            if (active) setModel(payload);
+            if (active) {
+              setLanguage(payload.language, false);
+              setModel(payload);
+            }
           },
           { target: "player-ui" },
         ),
@@ -146,7 +153,7 @@ export default function PlayerOverlayWindow() {
               keyboardFrame.current = requestAnimationFrame(() => {
                 const buttons = Array.from(
                   document.querySelectorAll<HTMLButtonElement>(
-                    ".player-heading button:not(:disabled), .player-console button:not(:disabled)",
+                    ".mini-exit:not(:disabled), .player-heading button:not(:disabled), .player-console button:not(:disabled)",
                   ),
                 );
                 buttons[payload.shiftKey ? buttons.length - 1 : 0]?.focus();
@@ -180,7 +187,7 @@ export default function PlayerOverlayWindow() {
       removers.forEach((fn) => fn());
       requests.current.forEach((r) => {
         clearTimeout(r.timer);
-        r.reject(new Error("控制层已关闭"));
+        r.reject(new Error(t("player.player_controls_closed")));
       });
       requests.current.clear();
     };
@@ -191,7 +198,7 @@ export default function PlayerOverlayWindow() {
       const timer = setTimeout(
         () => {
           requests.current.delete(id);
-          reject(new Error("操作超时，请重试。"));
+          reject(new Error(t("player.the_action_timed_out_try_again")));
         },
         action.kind === "danmaku" && action.command === "choose"
           ? 300000
@@ -207,7 +214,7 @@ export default function PlayerOverlayWindow() {
   return model ? (
     <section
       className="player-overlay-root"
-      aria-label="播放器控制"
+      aria-label={t("player.player_controls")}
       onFocusCapture={(event) => {
         if (isEditableTarget(event.target))
           void emitTo("main", "player-ui-focus", {}).catch(() => {});
@@ -217,15 +224,17 @@ export default function PlayerOverlayWindow() {
           void emitTo("main", "player-ui-focus", {}).catch(() => {});
       }}
     >
-      <DanmakuLayer
-        document={danmaku}
-        clock={clock}
-        settings={
-          model.danmaku
-            ? { ...model.danmaku.settings, offset: model.danmaku.offset }
-            : danmakuDefaults
-        }
-      />
+      {!model.mini && (
+        <DanmakuLayer
+          document={danmaku}
+          clock={clock}
+          settings={
+            model.danmaku
+              ? { ...model.danmaku.settings, offset: model.danmaku.offset }
+              : danmakuDefaults
+          }
+        />
+      )}
       <PlayerChrome model={model} dispatch={dispatch} owned />
     </section>
   ) : null;

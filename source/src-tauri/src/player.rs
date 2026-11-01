@@ -5,7 +5,7 @@ use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
     },
     time::Duration,
@@ -27,6 +27,8 @@ pub struct Launch {
     #[serde(skip)]
     recovery_path: Option<PathBuf>,
     server: String,
+    #[serde(default)]
+    ignore_certificate_errors: bool,
     user_id: String,
     token: String,
     device_id: String,
@@ -54,6 +56,12 @@ pub struct Launch {
     volume: Option<f64>,
     #[serde(default)]
     fullscreen: bool,
+    #[serde(default = "default_speed")]
+    speed: f64,
+    #[serde(default)]
+    muted: bool,
+    #[serde(default)]
+    preserve_presentation: bool,
     #[serde(default = "default_hardware_decode")]
     hardware_decode: bool,
     #[serde(default)]
@@ -74,6 +82,9 @@ pub struct Launch {
 fn default_hardware_decode() -> bool {
     true
 }
+fn default_speed() -> f64 {
+    1.0
+}
 #[derive(Clone, Deserialize)]
 struct Subtitle {
     url: String,
@@ -90,6 +101,10 @@ fn default_subtitle_scale() -> f64 {
 #[derive(Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
+    mini_presentation: Option<crate::mini_window::Presentation>,
+    subtitle_load_failed: bool,
+    #[serde(skip)]
+    external_subtitle_indexes: HashMap<i64, i64>,
     video_fit: VideoFit,
     #[serde(skip)]
     clock_epoch: u64,
@@ -111,7 +126,7 @@ pub struct Snapshot {
     finished: bool,
     sync_complete: bool,
     item_id: String,
-    play_session_id: String,
+    pub(crate) play_session_id: String,
     speed: f64,
     subtitle_delay: f64,
     subtitle_position: f64,
@@ -158,6 +173,16 @@ pub struct Clock {
     buffering: bool,
     session: String,
 }
+fn sampled_clock_position(s: &Snapshot, session: &str, epoch: u64, position: Option<f64>) -> f64 {
+    // A seek/session change during IPC invalidates that reply's old time base.
+    if s.play_session_id == session && s.clock_epoch == epoch {
+        position
+            .filter(|n| n.is_finite() && *n >= 0.0)
+            .unwrap_or(s.position)
+    } else {
+        s.position
+    }
+}
 #[tauri::command]
 pub async fn player_clock(player: tauri::State<'_, Player>) -> Result<Clock, String> {
     let guard = player.0.lock().await;
@@ -167,6 +192,10 @@ pub async fn player_clock(player: tauri::State<'_, Player>) -> Result<Clock, Str
     let tx = handle.tx.clone();
     let snapshot = handle.snapshot.clone();
     drop(guard);
+    let (sample_session, sample_epoch) = {
+        let s = snapshot.borrow();
+        (s.play_session_id.clone(), s.clock_epoch)
+    };
     let position = if snapshot.borrow().active && snapshot.borrow().loaded {
         rpc(&tx, json!(["get_property", "time-pos"]))
             .await?
@@ -176,7 +205,7 @@ pub async fn player_clock(player: tauri::State<'_, Player>) -> Result<Clock, Str
     };
     let s = snapshot.borrow();
     Ok(Clock {
-        position: position.unwrap_or(s.position),
+        position: sampled_clock_position(&s, &sample_session, sample_epoch, position),
         sampled_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -193,7 +222,24 @@ struct Rpc {
     command: Value,
     reply: Reply,
 }
+#[derive(Default)]
+struct TrackSelection {
+    serial: Mutex<()>,
+    subtitle_epoch: AtomicU64,
+}
+#[derive(Default)]
+struct SubtitleFiles(std::sync::Mutex<Vec<PathBuf>>);
+impl Drop for SubtitleFiles {
+    fn drop(&mut self) {
+        if let Ok(files) = self.0.get_mut() {
+            for file in files.iter() {
+                let _ = std::fs::remove_file(file);
+            }
+        }
+    }
+}
 struct Handle {
+    track_selection: Arc<TrackSelection>,
     #[cfg(windows)]
     _job: crate::child_job::Job,
     tx: mpsc::Sender<Rpc>,
@@ -203,6 +249,7 @@ struct Handle {
     process_done: watch::Receiver<bool>,
     snapshots: Arc<watch::Sender<Snapshot>>,
     requested_output: String,
+    _subtitle_files: Arc<SubtitleFiles>,
 }
 #[derive(Default)]
 pub struct Player(
@@ -225,6 +272,9 @@ pub enum UiEvent {
     RevealControls,
 }
 pub fn set_fullscreen(window: &tauri::WebviewWindow, fullscreen: bool) -> Result<(), String> {
+    if fullscreen && crate::mini_window::active(window.app_handle()) {
+        crate::mini_window::leave(window.app_handle(), true)?;
+    }
     window
         .set_fullscreen(fullscreen)
         .map_err(|e| e.to_string())?;
@@ -291,6 +341,8 @@ fn validate(launch: &Launch) -> Result<(), String> {
         || launch
             .volume
             .is_some_and(|n| !n.is_finite() || !(0.0..=100.0).contains(&n))
+        || !launch.speed.is_finite()
+        || !(0.5..=3.0).contains(&launch.speed)
         || !["DirectPlay", "DirectStream", "Transcode"].contains(&launch.play_method.as_str())
     {
         return Err("播放参数无效。".into());
@@ -321,9 +373,16 @@ pub async fn player_status(
     let mut s = h.snapshot.borrow().clone();
     s.sync_complete = *h.done.borrow();
     if s.embedded {
+        s.mini_presentation = Some(crate::mini_window::presentation(
+            window.app_handle(),
+            &s.play_session_id,
+        ));
         s.windows_hdr = crate::display::window_color(&window);
         s.ontop = window.is_always_on_top().unwrap_or(false);
         s.fullscreen = window.is_fullscreen().unwrap_or(false);
+        if let Some(host) = crate::mini_window::host(window.app_handle()) {
+            s.ontop = host.is_always_on_top().unwrap_or(false);
+        }
     }
     let policy = crate::quality::managed_hdr(&h.requested_output, s.windows_hdr.hdr);
     if h.requested_output == "source" && s.active && s.loaded && s.output_policy != policy {
@@ -369,25 +428,59 @@ pub async fn player_start(
     if player.3.load(Ordering::SeqCst) {
         return Err("应用正在退出，无法开始播放。".into());
     }
+    if !launch.preserve_presentation && crate::mini_window::active(window.app_handle()) {
+        let (send, receive) = tokio::sync::oneshot::channel();
+        let app = window.app_handle().clone();
+        window
+            .run_on_main_thread(move || {
+                let _ = send.send(crate::mini_window::leave(&app, true));
+            })
+            .map_err(|e| e.to_string())?;
+        receive
+            .await
+            .map_err(|_| "Mini window event loop unavailable".to_string())??;
+    }
     stop_inner(&player).await?;
     let mut guard = player.0.lock().await;
     let path = mpv_path()?;
     launch.ui_events = player.1.lock().map_err(|_| "窗口事件通道不可用")?.clone();
     launch.recovery_path = Some(crate::recovery::path(window.app_handle())?);
     if launch.embedded {
-        if launch.fullscreen {
+        if !launch.preserve_presentation && launch.fullscreen {
             set_fullscreen(&window, true)?;
         }
         launch.window_id = Some(crate::surface::ensure(window.clone()).await?);
     }
     match start(path, launch, false).await {
-        Ok(handle) => *guard = Some(handle),
+        Ok(mut handle) => {
+            let session = handle.snapshot.borrow().play_session_id.clone();
+            if launch_mini_session(&window, &session).await.is_err() {
+                let _ = stop_handle(&mut handle).await;
+                return Err("Mini presentation transfer failed".into());
+            }
+            *guard = Some(handle);
+        }
         Err(error) => {
-            let _ = set_fullscreen(&window, false);
             return Err(error);
         }
     }
     Ok(())
+}
+async fn launch_mini_session(window: &tauri::WebviewWindow, session: &str) -> Result<(), String> {
+    if !crate::mini_window::active(window.app_handle()) {
+        return Ok(());
+    }
+    let (send, receive) = oneshot::channel();
+    let app = window.app_handle().clone();
+    let session = session.to_string();
+    window
+        .run_on_main_thread(move || {
+            let _ = send.send(crate::mini_window::retarget(&app, &session));
+        })
+        .map_err(|e| e.to_string())?;
+    receive
+        .await
+        .map_err(|_| "Mini window event loop unavailable".to_string())?
 }
 #[tauri::command]
 pub async fn player_control(
@@ -396,7 +489,16 @@ pub async fn player_control(
     action: String,
     value: Option<f64>,
     expected_session_id: Option<String>,
+    window_only: Option<bool>,
 ) -> Result<(), String> {
+    if action == "fullscreen" && window_only.unwrap_or(false) {
+        let fullscreen = match value {
+            Some(0.0) => false,
+            Some(1.0) => true,
+            _ => !window.is_fullscreen().map_err(|e| e.to_string())?,
+        };
+        return set_fullscreen(&window, fullscreen);
+    }
     let snapshot = player
         .0
         .lock()
@@ -415,19 +517,31 @@ pub async fn player_control(
                 return set_fullscreen(&window, fullscreen);
             }
             "show" => {
-                window.show().map_err(|e| e.to_string())?;
-                window.unminimize().map_err(|e| e.to_string())?;
-                return window.set_focus().map_err(|e| e.to_string());
+                let app = window.app_handle().clone();
+                let (send, receive) = tokio::sync::oneshot::channel();
+                window
+                    .run_on_main_thread(move || {
+                        let _ = send.send(crate::tray::show_main(&app));
+                    })
+                    .map_err(|e| e.to_string())?;
+                return receive
+                    .await
+                    .map_err(|_| "Window event loop unavailable".to_string())?;
             }
             "ontop" => {
+                if let Some(host) = crate::mini_window::host(window.app_handle()) {
+                    return host
+                        .set_always_on_top(!host.is_always_on_top().map_err(|e| e.to_string())?)
+                        .map_err(|e| e.to_string());
+                }
                 return window
                     .set_always_on_top(!window.is_always_on_top().map_err(|e| e.to_string())?)
-                    .map_err(|e| e.to_string())
+                    .map_err(|e| e.to_string());
             }
             _ => {}
         }
     }
-    let tx = {
+    let (tx, track_selection) = {
         let guard = player.0.lock().await;
         let handle = guard.as_ref().ok_or("播放器尚未启动")?;
         if expected_session_id
@@ -436,7 +550,7 @@ pub async fn player_control(
         {
             return Err("播放会话已改变".into());
         }
-        handle.tx.clone()
+        (handle.tx.clone(), handle.track_selection.clone())
     };
     let n = value.unwrap_or(0.0);
     if !n.is_finite() {
@@ -447,8 +561,14 @@ pub async fn player_control(
         rpc(&tx, json!(["set_property", "ab-loop-b", "no"])).await?;
         return Ok(());
     }
-    if action == "subtitle" && n >= -1.0 && n.fract() == 0.0 {
-        return select_primary_subtitle(&tx, n as i64).await;
+    if ["subtitle", "audio"].contains(&action.as_str()) && n >= -1.0 && n.fract() == 0.0 {
+        if action == "subtitle" {
+            track_selection
+                .subtitle_epoch
+                .fetch_add(1, Ordering::SeqCst);
+        }
+        let _selection = track_selection.serial.lock().await;
+        return select_track(&tx, &action, n as i64).await;
     }
     if action == "secondarySubtitle" && n >= 0.0 {
         let primary = rpc(&tx, json!(["get_property", "sid"])).await?;
@@ -579,21 +699,194 @@ fn secondary_subtitle_command(action: &str, value: f64) -> Result<Value, String>
     };
     Ok(json!(["set_property", property, value]))
 }
-async fn select_primary_subtitle(tx: &mpsc::Sender<Rpc>, id: i64) -> Result<(), String> {
-    let secondary = rpc(tx, json!(["get_property", "secondary-sid"])).await?;
-    if id >= 0 && secondary.as_i64() == Some(id) {
-        rpc(tx, json!(["set_property", "secondary-sid", "no"])).await?;
+async fn fetch_subtitle(
+    launch: &Launch,
+    subtitle: &Subtitle,
+    files: &SubtitleFiles,
+) -> Result<PathBuf, String> {
+    let fail = || "External subtitle unavailable".to_string();
+    let server = reqwest::Url::parse(&launch.server).map_err(|_| fail())?;
+    let url = reqwest::Url::parse(&subtitle.url).map_err(|_| fail())?;
+    if !["http", "https"].contains(&url.scheme())
+        || url.origin() != server.origin()
+        || !url.username().is_empty()
+        || url.password().is_some()
+    {
+        return Err(fail());
     }
-    rpc(
-        tx,
-        json!([
-            "set_property",
-            "sid",
-            if id < 0 { json!("no") } else { json!(id) }
-        ]),
-    )
-    .await?;
-    Ok(())
+    let origin = server.origin();
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(launch.ignore_certificate_errors)
+        .timeout(Duration::from_secs(5))
+        .redirect(reqwest::redirect::Policy::custom(move |attempt| {
+            if attempt.previous().len() <= 3 && attempt.url().origin() == origin {
+                attempt.follow()
+            } else {
+                attempt.stop()
+            }
+        }))
+        .build()
+        .map_err(|_| fail())?;
+    let authorization = format!(
+        "Emby Client=\"Miry\", Device=\"Windows\", DeviceId=\"{}\", Version=\"{}\", Token=\"{}\"",
+        launch.device_id,
+        env!("CARGO_PKG_VERSION"),
+        launch.token
+    );
+    let mut response = client
+        .get(url.clone())
+        .header("Authorization", authorization)
+        .send()
+        .await
+        .map_err(|_| fail())?;
+    const LIMIT: usize = 8 * 1024 * 1024;
+    if !response.status().is_success()
+        || response.content_length().is_some_and(|n| n > LIMIT as u64)
+    {
+        return Err(fail());
+    }
+    let mut data = Vec::new();
+    while let Some(chunk) = response.chunk().await.map_err(|_| fail())? {
+        if data.len() + chunk.len() > LIMIT {
+            return Err(fail());
+        }
+        data.extend_from_slice(&chunk);
+    }
+    if data.is_empty() {
+        return Err(fail());
+    }
+    let extension = url
+        .path()
+        .rsplit('.')
+        .next()
+        .filter(|s| ["srt", "ass", "ssa", "vtt", "sub"].contains(s))
+        .unwrap_or("sub");
+    let path = std::env::temp_dir().join(format!(
+        "miry-subtitle-{}.{}",
+        uuid::Uuid::new_v4(),
+        extension
+    ));
+    files.0.lock().map_err(|_| fail())?.push(path.clone());
+    let mut file = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .await
+        .map_err(|_| fail())?;
+    file.write_all(&data).await.map_err(|_| fail())?;
+    file.flush().await.map_err(|_| fail())?;
+    Ok(path)
+}
+async fn load_external_subtitles(
+    tx: mpsc::Sender<Rpc>,
+    selection: Arc<TrackSelection>,
+    snapshots: Arc<watch::Sender<Snapshot>>,
+    launch: Launch,
+    files: Arc<SubtitleFiles>,
+    epoch: u64,
+) {
+    for subtitle in &launch.subtitles {
+        if !snapshots.borrow().active {
+            return;
+        }
+        let loaded = async {
+            let mut owner=snapshots.subscribe();
+            let path=tokio::select!{
+                result=fetch_subtitle(&launch,subtitle,&files)=>result?,
+                _=async{while owner.borrow().active{if owner.changed().await.is_err(){break}}}=>return Ok(()),
+            };
+            if !snapshots.borrow().active {
+                return Ok(());
+            }
+            rpc(
+                &tx,
+                json!([
+                    "sub-add",
+                    path.to_string_lossy(),
+                    "auto",
+                    subtitle.title,
+                    subtitle.language
+                ]),
+            )
+            .await?;
+            let tracks = rpc(&tx, json!(["get_property", "track-list"])).await?;
+            let id = tracks
+                .as_array()
+                .and_then(|tracks| {
+                    tracks.iter().find(|track| {
+                        track["type"] == "sub"
+                            && track["external-filename"]
+                                .as_str()
+                                .is_some_and(|p| std::path::Path::new(p) == path)
+                    })
+                })
+                .and_then(|track| track["id"].as_i64())
+                .ok_or("External subtitle unavailable")?;
+            snapshots.send_modify(|s| {
+                s.external_subtitle_indexes.insert(id, subtitle.index);
+            });
+            let _guard = selection.serial.lock().await;
+            if launch.subtitle_index == Some(subtitle.index)
+                && selection.subtitle_epoch.load(Ordering::SeqCst) == epoch
+                && snapshots.borrow().active
+            {
+                select_track(&tx, "subtitle", id).await?;
+            }
+            Ok::<(), String>(())
+        }
+        .await;
+        if loaded.is_err() && snapshots.borrow().active {
+            snapshots.send_modify(|s| s.subtitle_load_failed = true);
+        }
+    }
+}
+async fn select_track(tx: &mpsc::Sender<Rpc>, kind: &str, id: i64) -> Result<(), String> {
+    let property = if kind == "audio" { "aid" } else { "sid" };
+    let selected = rpc(tx, json!(["get_property", property])).await?;
+    let is_selected = |value: &Value| {
+        if id < 0 {
+            value == "no" || value == false
+        } else {
+            value.as_i64() == Some(id)
+        }
+    };
+    if is_selected(&selected) {
+        return Ok(());
+    }
+    let secondary = if kind == "subtitle" {
+        Some(rpc(tx, json!(["get_property", "secondary-sid"])).await?)
+    } else {
+        None
+    };
+    let result = async {
+        if secondary
+            .as_ref()
+            .is_some_and(|value| value.as_i64() == Some(id))
+        {
+            rpc(tx, json!(["set_property", "secondary-sid", "no"])).await?;
+        }
+        rpc(
+            tx,
+            json!([
+                "set_property",
+                property,
+                if id < 0 { json!("no") } else { json!(id) }
+            ]),
+        )
+        .await?;
+        if !is_selected(&rpc(tx, json!(["get_property", property])).await?) {
+            return Err("播放器未应用轨道选择".into());
+        }
+        Ok::<(), String>(())
+    }
+    .await;
+    if result.is_err() {
+        let _ = rpc(tx, json!(["set_property", property, selected])).await;
+        if let Some(secondary) = secondary {
+            let _ = rpc(tx, json!(["set_property", "secondary-sid", secondary])).await;
+        }
+    }
+    result
 }
 #[tauri::command]
 pub async fn player_key(
@@ -616,12 +909,60 @@ pub async fn player_key(
     Ok(())
 }
 #[tauri::command]
+pub async fn player_mini(
+    window: tauri::WebviewWindow,
+    command: String,
+    play_session_id: String,
+) -> Result<crate::mini_window::Presentation, String> {
+    if window.label() != "main" {
+        return Err("Mini window belongs to main".into());
+    }
+    if command == "leave" {
+        let (send, receive) = oneshot::channel();
+        let main = window.clone();
+        window
+            .run_on_main_thread(move || {
+                let _ = send.send(crate::mini_window::apply(&main, "leave", &play_session_id));
+            })
+            .map_err(|e| e.to_string())?;
+        return receive
+            .await
+            .map_err(|_| "Mini window event loop unavailable".to_string())?;
+    }
+    let player = window.state::<Player>();
+    // Share the existing stop/start serialization boundary.
+    let _operation = player.2.lock().await;
+    let valid = player.0.lock().await.as_ref().is_some_and(|h| {
+        let s = h.snapshot.borrow();
+        s.embedded && s.active && s.play_session_id == play_session_id
+    });
+    if !valid {
+        return Err("Stale playback session".into());
+    }
+    let (send, receive) = tokio::sync::oneshot::channel();
+    let main = window.clone();
+    window
+        .run_on_main_thread(move || {
+            let _ = send.send(crate::mini_window::apply(&main, &command, &play_session_id));
+        })
+        .map_err(|e| e.to_string())?;
+    receive
+        .await
+        .map_err(|_| "Mini window event loop unavailable".to_string())?
+}
+
+#[tauri::command]
 pub async fn player_stop(
     player: tauri::State<'_, Player>,
     window: tauri::WebviewWindow,
+    preserve_presentation: Option<bool>,
 ) -> Result<Snapshot, String> {
-    crate::player_ui::dispose(window.app_handle())?;
-    let state = stop(&player, |sample| {
+    let _operation = player.2.lock().await;
+    let preserve = preserve_presentation.unwrap_or(false);
+    if !preserve && crate::player_ui::dispose(window.app_handle()).is_err() {
+        eprintln!("player stop: window disposal failed");
+    }
+    let state = stop_inner_with_sample(&player, |sample| {
         let _ = window.emit("player-final-snapshot", sample);
     })
     .await?;
@@ -631,7 +972,7 @@ pub async fn player_stop(
             crate::recovery::clear(&path);
         }
     }
-    if window.is_fullscreen().unwrap_or(false) {
+    if !preserve && window.is_fullscreen().unwrap_or(false) {
         set_fullscreen(&window, false)?;
     }
     Ok(state)
@@ -719,6 +1060,12 @@ async fn start(path: PathBuf, launch: Launch, headless: bool) -> Result<Handle, 
             ..Default::default()
         });
     command.arg("--no-config").args(quality.arguments()?);
+    // Applies only to this native playback process, never to application HTTP.
+    command.arg(if launch.ignore_certificate_errors {
+        "--tls-verify=no"
+    } else {
+        "--tls-verify=yes"
+    });
     if launch.ui_events.is_some() {
         command.arg("--input-default-bindings=no");
     }
@@ -740,6 +1087,12 @@ async fn start(path: PathBuf, launch: Launch, headless: bool) -> Result<Handle, 
             "--fullscreen=no"
         })
         .arg(format!("--volume={}", launch.volume.unwrap_or(75.0)))
+        .arg(format!("--speed={}", launch.speed))
+        .arg(if launch.muted {
+            "--mute=yes"
+        } else {
+            "--mute=no"
+        })
         .arg(format!("--input-ipc-server={pipe}"))
         .arg("--title=Miry · Player")
         .stdin(std::process::Stdio::null())
@@ -757,8 +1110,10 @@ async fn start(path: PathBuf, launch: Launch, headless: bool) -> Result<Handle, 
     if let Some(id) = launch.window_id {
         command.arg(format!("--wid={id}")).args([
             "--osc=no",
-            "--input-cursor=yes",
-            "--cursor-autohide=1000",
+            // The owned WebView controls idle hiding. mpv must not set a null
+            // cursor underneath a visible/paused/hovered control layer.
+            "--input-cursor=no",
+            "--cursor-autohide=no",
             "--fullscreen=no",
         ]);
     }
@@ -822,6 +1177,8 @@ async fn start(path: PathBuf, launch: Launch, headless: bool) -> Result<Handle, 
         snap_tx.clone(),
         done_tx,
     ));
+    let track_selection = Arc::new(TrackSelection::default());
+    let subtitle_files = Arc::new(SubtitleFiles::default());
     tokio::spawn(run_ipc(
         child,
         reader,
@@ -831,8 +1188,13 @@ async fn start(path: PathBuf, launch: Launch, headless: bool) -> Result<Handle, 
         launch.clone(),
         stopping,
         process_tx,
+        tx.clone(),
+        track_selection.clone(),
+        subtitle_files.clone(),
     ));
     let mut handle = Handle {
+        track_selection,
+        _subtitle_files: subtitle_files,
         _job: job,
         tx,
         snapshot,
@@ -1071,6 +1433,9 @@ async fn run_ipc<R, W>(
     launch: Launch,
     mut stopping: watch::Receiver<bool>,
     process_done: watch::Sender<bool>,
+    commands: mpsc::Sender<Rpc>,
+    track_selection: Arc<TrackSelection>,
+    subtitle_files: Arc<SubtitleFiles>,
 ) where
     R: tokio::io::AsyncRead + Unpin + Send + 'static,
     W: tokio::io::AsyncWrite + Unpin + Send + 'static,
@@ -1186,7 +1551,7 @@ async fn run_ipc<R, W>(
                             let value=if index==Some(-1) {Some(json!("no"))} else if index.is_some() {tracks.iter().find(|t| t["type"]==kind && t["ff-index"].as_i64()==index).map(|t|t["id"].clone())} else {None};
                             if let Some(value)=value { serial+=1; let _=write_command(&mut writer,json!(["set_property",property,value]),serial).await; }
                         }
-                        for subtitle in &launch.subtitles { serial+=1; let flag=if launch.subtitle_index==Some(subtitle.index) {"select"} else {"auto"}; let _=write_command(&mut writer,json!(["sub-add",subtitle.url,flag,subtitle.title,subtitle.language]),serial).await; }
+                        if !launch.subtitles.is_empty(){let epoch=track_selection.subtitle_epoch.load(Ordering::SeqCst);tokio::spawn(load_external_subtitles(commands.clone(),track_selection.clone(),snapshots.clone(),launch.clone(),subtitle_files.clone(),epoch));}
                         serial+=1; let _=write_command(&mut writer,json!(["set_property","sub-pos",launch.subtitle_position]),serial).await;
                         serial+=1; let _=write_command(&mut writer,json!(["set_property","sub-scale",launch.subtitle_scale]),serial).await;
                         serial+=1; let _=write_command(&mut writer,json!(["set_property","secondary-sub-pos",launch.secondary_subtitle_position]),serial).await;
@@ -1308,11 +1673,17 @@ fn track_index(snapshot: &Snapshot, kind: &str, launch: &Launch) -> Option<i64> 
         }
     }
     match track {
-        Some(t) if t["external"] == true => launch
-            .subtitles
-            .iter()
-            .find(|s| t["external-filename"].as_str() == Some(s.url.as_str()))
-            .map(|s| s.index),
+        Some(t) if kind == "sub" && t["external"] == true => snapshot
+            .external_subtitle_indexes
+            .get(&t["id"].as_i64().unwrap_or(-1))
+            .copied()
+            .or_else(|| {
+                launch
+                    .subtitles
+                    .iter()
+                    .find(|s| t["external-filename"].as_str() == Some(s.url.as_str()))
+                    .map(|s| s.index)
+            }),
         Some(t) => t["ff-index"].as_i64(),
         None if kind == "sub" => Some(-1),
         None => None,
@@ -1383,6 +1754,7 @@ async fn report_loop(
     done: watch::Sender<bool>,
 ) {
     let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(launch.ignore_certificate_errors)
         .timeout(Duration::from_secs(5))
         .redirect(reqwest::redirect::Policy::none())
         .build()
@@ -1490,6 +1862,7 @@ async fn report_loop(
                 }
             }
             let final_client = reqwest::Client::builder()
+                .danger_accept_invalid_certs(launch.ignore_certificate_errors)
                 .timeout(Duration::from_secs(2))
                 .redirect(reqwest::redirect::Policy::none())
                 .build()
@@ -1574,6 +1947,26 @@ async fn report_loop(
 #[cfg(test)]
 mod tests {
     #[test]
+    fn clock_reply_must_belong_to_the_current_seek_and_session() {
+        let mut s = super::Snapshot::default();
+        s.play_session_id = "current".into();
+        s.clock_epoch = 3;
+        s.position = 52.0;
+        assert_eq!(
+            super::sampled_clock_position(&s, "current", 3, Some(53.0)),
+            53.0
+        );
+        for (session, epoch) in [("previous", 3), ("current", 2)] {
+            assert_eq!(
+                super::sampled_clock_position(&s, session, epoch, Some(10.0)),
+                52.0
+            );
+        }
+        for value in [None, Some(f64::NAN), Some(f64::INFINITY), Some(-1.0)] {
+            assert_eq!(super::sampled_clock_position(&s, "current", 3, value), 52.0);
+        }
+    }
+    #[test]
     fn progress_failures_are_quiet_until_consecutive_and_reset_on_success() {
         let mut failures = 0;
         assert_eq!(super::progress_feedback(&mut failures, true), "");
@@ -1607,6 +2000,7 @@ mod tests {
         }
     }
     use super::*;
+    include!("player_lifecycle_tests.rs");
     #[tokio::test]
     async fn video_fit_rolls_back_partial_failure() {
         let (tx, mut requests) = mpsc::channel::<Rpc>(24);
@@ -1872,6 +2266,14 @@ mod tests {
             assert!(validate(&a).is_err());
         }
     }
+    #[test]
+    fn certificate_policy_defaults_securely_and_is_session_local() {
+        let mut opted_in = launch();
+        assert!(!opted_in.ignore_certificate_errors);
+        opted_in.ignore_certificate_errors = true;
+        assert!(validate(&opted_in).is_ok());
+        assert!(!launch().ignore_certificate_errors);
+    }
     #[cfg(windows)]
     #[tokio::test]
     #[ignore = "requires bundled mpv and MIRY_TEST_VIDEO; native secondary controls and restart"]
@@ -2015,6 +2417,16 @@ mod tests {
         Arc<Mutex<Vec<(String, Value)>>>,
         tokio::task::JoinHandle<()>,
     ) {
+        report_server_with_progress_failure(status, None).await
+    }
+    async fn report_server_with_progress_failure(
+        status: u16,
+        stall_progress: Option<bool>,
+    ) -> (
+        String,
+        Arc<Mutex<Vec<(String, Value)>>>,
+        tokio::task::JoinHandle<()>,
+    ) {
         use tokio::{io::AsyncReadExt, net::TcpListener};
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let server = format!("http://{}/emby", listener.local_addr().unwrap());
@@ -2054,7 +2466,16 @@ mod tests {
                     records
                         .lock()
                         .await
-                        .push((path, serde_json::from_slice(&body).unwrap()));
+                        .push((path.clone(), serde_json::from_slice(&body).unwrap()));
+                    let status = if path.ends_with("/Progress") {
+                        match stall_progress {
+                            Some(true) => std::future::pending::<u16>().await,
+                            Some(false) => 500,
+                            None => status,
+                        }
+                    } else {
+                        status
+                    };
                     let _ = writer.write_all(format!("HTTP/1.1 {status} Test\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").as_bytes()).await;
                 });
             }
@@ -2213,6 +2634,76 @@ mod tests {
     }
     #[cfg(windows)]
     #[tokio::test]
+    #[ignore = "requires bundled mpv and MIRY_TEST_VIDEO; isolated Progress 500/timeout stop gate"]
+    async fn real_mpv_progress_failure_bounds_stop_and_preserves_one_stopped() {
+        for stall in [false, true] {
+            let (media, _, media_task) = mock_server().await;
+            let (reports, calls, report_task) =
+                report_server_with_progress_failure(204, Some(stall)).await;
+            let mut a = launch();
+            a.server = reports;
+            a.url = format!("{media}/Videos/movie/stream");
+            let mut h = start(mpv_path().unwrap(), a, true).await.unwrap();
+            wait_state(&mut h, |s| s.loaded && s.position > 0.0).await;
+            timeout(Duration::from_secs(3), async {
+                while !calls
+                    .lock()
+                    .await
+                    .iter()
+                    .any(|(p, _)| p.ends_with("/Playing"))
+                {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+            })
+            .await
+            .unwrap();
+            let mut process_done = h.process_done.clone();
+            let began = Instant::now();
+            let (stopped, ()) = tokio::join!(stop_handle(&mut h), async {
+                timeout(Duration::from_secs(3), wait_done(&mut process_done))
+                    .await
+                    .expect("HTTP failure must not retain the mpv process");
+            });
+            let state = stopped.expect("failed Progress must complete stop with a warning");
+            assert!(began.elapsed() < Duration::from_secs(14));
+            assert!(!state.active);
+            assert!(*h.process_done.borrow());
+            assert!(state.sync_complete);
+            assert!(!state.sync_error.is_empty());
+            let records = calls.lock().await;
+            let final_report = records
+                .iter()
+                .rposition(|(p, _)| p.ends_with("/Stopped"))
+                .unwrap();
+            assert!(records[final_report - 1].0.ends_with("/Progress"));
+            assert_eq!(
+                records[final_report - 1].1["PositionTicks"],
+                records[final_report].1["PositionTicks"]
+            );
+            assert_eq!(
+                records
+                    .iter()
+                    .filter(|(p, _)| p.ends_with("/Stopped"))
+                    .count(),
+                1
+            );
+            drop(records);
+            stop_handle(&mut h).await.unwrap();
+            assert_eq!(
+                calls
+                    .lock()
+                    .await
+                    .iter()
+                    .filter(|(p, _)| p.ends_with("/Stopped"))
+                    .count(),
+                1
+            );
+            report_task.abort();
+            media_task.abort();
+        }
+    }
+    #[cfg(windows)]
+    #[tokio::test]
     #[ignore = "requires bundled mpv and MIRY_TEST_VIDEO; shutdown while playing regression"]
     async fn real_mpv_shutdown_while_playing_reports_once_and_reclaims_the_child() {
         let (server, calls, task) = mock_server().await;
@@ -2327,6 +2818,9 @@ mod tests {
                 a,
                 stopping,
                 process_done,
+                _requests_tx.clone(),
+                Arc::new(TrackSelection::default()),
+                Arc::new(SubtitleFiles::default()),
             ));
             timeout(Duration::from_secs(3), wait_done(&mut reclaimed))
                 .await
@@ -2741,7 +3235,7 @@ mod tests {
             .await
             .unwrap();
         wait_state(&mut h, |s| s.secondary_subtitle == sub.as_i64()).await;
-        select_primary_subtitle(&h.tx, sub.as_i64().unwrap())
+        select_track(&h.tx, "subtitle", sub.as_i64().unwrap())
             .await
             .unwrap();
         assert_eq!(
@@ -2946,6 +3440,45 @@ mod tests {
         })
         .await
         .expect("embedded renderer should follow host size");
+        // Transfer the live surface, with its mpv renderer intact, to a second
+        // native parent and back. No start/loadfile/seek is used for the transfer.
+        let mini = crate::surface::TestSurface::new();
+        let original_parent = unsafe { GetParent(surface.handle as _) } as usize;
+        let mini_parent = unsafe { GetParent(mini.handle as _) } as usize;
+        let pid_before = rpc(&h.tx, json!(["get_property", "pid"])).await.unwrap();
+        rpc(&h.tx, json!(["set_property", "speed", 1.5]))
+            .await
+            .unwrap();
+        rpc(&h.tx, json!(["set_property", "volume", 37]))
+            .await
+            .unwrap();
+        for parent in [mini_parent, original_parent, mini_parent, original_parent] {
+            crate::mini_window::reparent(surface.handle, parent).unwrap();
+            assert_eq!(unsafe { GetParent(surface.handle as _) } as usize, parent);
+            assert_eq!(unsafe { GetParent(render) } as usize, surface.handle);
+            assert_eq!(
+                rpc(&h.tx, json!(["get_property", "pid"])).await.unwrap(),
+                pid_before
+            );
+            assert_eq!(
+                rpc(&h.tx, json!(["get_property", "pause"])).await.unwrap(),
+                json!(true)
+            );
+            assert_eq!(
+                rpc(&h.tx, json!(["get_property", "speed"])).await.unwrap(),
+                json!(1.5)
+            );
+            assert_eq!(
+                rpc(&h.tx, json!(["get_property", "volume"])).await.unwrap(),
+                json!(37.0)
+            );
+            let position = rpc(&h.tx, json!(["get_property", "time-pos"]))
+                .await
+                .unwrap()
+                .as_f64()
+                .unwrap();
+            assert!((position - 10.0).abs() < 1.0);
+        }
         rpc(&h.tx, json!(["quit"])).await.unwrap_or(Value::Null);
         timeout(Duration::from_secs(12), async {
             while !*h.done.borrow_and_update() {

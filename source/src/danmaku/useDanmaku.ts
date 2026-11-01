@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { t, getLanguage } from "../i18n/core";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { EmbyClient } from "../api/client";
 import type { Item } from "../types/emby";
@@ -18,7 +19,10 @@ import {
   rank,
   type DanmakuMatch,
 } from "./online";
-import { onlineProvider } from "./dandanplay";
+import { ProviderSources } from "./providerSources";
+import { normalizeSources } from "./sources";
+import { density } from "./density";
+import { mediaTimeline } from "./timeline";
 import { onlineErrorKind, onlineErrorMessage } from "./onlineError";
 import { requestScope } from "./requestDiagnostics";
 type Availability = { configured: boolean; mock: boolean; builtIn?: boolean };
@@ -27,17 +31,29 @@ export default function useDanmaku(
   item: Item | undefined,
   active: boolean,
   playbackSession = "",
+  duration = 0,
 ) {
   const local = useLocalDanmaku(api, item),
     identity = danmakuIdentity(api, item),
-    key = JSON.stringify(identity),
     context = item ? mediaContext(item) : undefined;
+  const sourceConfig = normalizeSources(local.metadata.settings.sources);
+  const sourceKey = JSON.stringify(sourceConfig);
+  const cacheKey = JSON.stringify([identity, sourceKey]);
   const contextKey = JSON.stringify(context),
-    mapping = item ? mappingIdentity(identity.scope, item) : "";
+    key = JSON.stringify([cacheKey, contextKey, playbackSession]),
+    mapping = item
+      ? mappingIdentity(
+          identity.scope,
+          item,
+          local.metadata.settings.sources ? sourceKey : "dandanplay",
+        )
+      : "";
   const instance = useRef(crypto.randomUUID());
+  // Presentation ownership must not expose account/source configuration.
+  const matchScope = useMemo(() => crypto.randomUUID(), [key]);
   const scope = () =>
     requestScope(
-      JSON.stringify([key, contextKey]),
+      JSON.stringify([cacheKey, contextKey]),
       playbackSession || instance.current,
     );
   const [availability, setAvailability] = useState<Availability>({
@@ -45,6 +61,12 @@ export default function useDanmaku(
       mock: false,
     }),
     [generation, setGeneration] = useState(0);
+  const onlineProvider = useMemo(
+    () => new ProviderSources(sourceConfig, availability.configured),
+    [sourceKey, availability.configured],
+  );
+  useEffect(() => () => onlineProvider.dispose(), [onlineProvider]);
+  const configured = isTauri() && onlineProvider.configured;
   const [online, setOnline] = useState<{
     key: string;
     document: DanmakuDocument | null;
@@ -53,6 +75,8 @@ export default function useDanmaku(
     status: string;
     loading: boolean;
     offset: number;
+    confirmed?: boolean;
+    pending?: boolean;
   }>({
     key,
     document: null,
@@ -64,9 +88,12 @@ export default function useDanmaku(
   const [source, setSource] = useState<"local" | "online">("local");
   const controller = useRef<AbortController | null>(null),
     current = useRef(key),
+    currentSource = useRef(sourceKey),
     mounted = useRef(true),
     serial = useRef(0);
+  const selectionPending = useRef<{ key: string } | null>(null);
   current.current = key;
+  currentSource.current = sourceKey;
   useEffect(() => {
     if (local.selectionRevision) setSource("local");
   }, [local.selectionRevision]);
@@ -102,6 +129,7 @@ export default function useDanmaku(
         mounted.current &&
         !c.signal.aborted &&
         current.current === key &&
+        currentSource.current === sourceKey &&
         serial.current === n,
     };
   }
@@ -111,14 +139,18 @@ export default function useDanmaku(
     manual = false,
     force = false,
     offset = 0,
+    candidates?: DanmakuMatch[],
   ) {
     if (!context) return;
-    if (match.recommended && task.valid())
+    if (task.valid())
       setOnline((v) => ({
         ...v,
-        candidates: v.candidates.some((m) => m.id === match.id)
-          ? v.candidates
-          : [match],
+        pending: true,
+        candidates:
+          candidates ||
+          (v.candidates.some((m) => m.id === match.id)
+            ? v.candidates
+            : [match]),
       }));
     const document = await onlineProvider.getComments(
       match.id,
@@ -127,34 +159,45 @@ export default function useDanmaku(
       task.scope,
     );
     if (!task.valid()) return;
-    setOnline({
+    setOnline((v) => ({
       key,
       document,
       match,
       candidates:
-        online.key === key && online.candidates.some((m) => m.id === match.id)
-          ? online.candidates
+        v.key === key && v.candidates.some((m) => m.id === match.id)
+          ? v.candidates
           : [match],
       status: document.entries.length
-        ? `已匹配：${match.title} · ${match.episodeTitle} · ${document.entries.length} 条弹幕`
-        : "已找到作品，但暂无可用弹幕",
+        ? t("danmaku.matched_comments", {
+            p0: match.title,
+            p1: match.episodeTitle,
+            p2: document.entries.length,
+          })
+        : t("danmaku.title_found_but_no_danmaku_is_available"),
       loading: false,
       offset,
-    });
+      confirmed: manual,
+      pending: false,
+    }));
     setSource("online");
     if (manual) saveAssociation(mapping, context, match, offset);
   }
-  function failed(e: unknown, task: ReturnType<typeof begin>) {
+  function failed(
+    e: unknown,
+    task: ReturnType<typeof begin>,
+    preserveLoaded = false,
+  ) {
     if (!task.valid()) return;
     const expired = onlineErrorKind(e) === "NOT_FOUND";
-    if (expired && context) saveAssociation(mapping, context);
+    if (expired && context && !preserveLoaded)
+      saveAssociation(mapping, context);
     setOnline((v) => ({
       ...v,
       key,
       status: onlineErrorMessage(e),
       loading: false,
-      match: expired ? undefined : v.match,
-      document: expired ? null : v.document,
+      match: expired && !preserveLoaded ? undefined : v.match,
+      document: expired && !preserveLoaded ? null : v.document,
     }));
   }
   useEffect(() => {
@@ -165,11 +208,11 @@ export default function useDanmaku(
       key,
       document: null,
       candidates: [],
-      status: availability.configured
+      status: configured
         ? local.metadata.bound
-          ? "本地文件优先，可手动搜索在线弹幕"
-          : "在线弹幕待匹配"
-        : "未配置在线弹幕服务，视频播放和本地弹幕可继续使用",
+          ? t("danmaku.local_files_take_priority_you_can_search")
+          : t("danmaku.online_danmaku_awaiting_a_match")
+        : t("danmaku.unconfigured_with_local"),
       loading: false,
       offset: 0,
     });
@@ -178,37 +221,48 @@ export default function useDanmaku(
       !local.ready ||
       local.metadata.bound ||
       local.metadata.settings.onlineEnabled === false ||
-      !availability.configured ||
+      !configured ||
       !context
     )
       return;
     const saved = association(mapping, context);
     if (!saved && local.metadata.settings.autoMatch === false) {
-      setOnline((v) => ({ ...v, status: "自动匹配已关闭，可手动搜索" }));
+      setOnline((v) => ({
+        ...v,
+        status: t("danmaku.automatic_matching_is_off_you_can_search"),
+      }));
       return;
     }
     const task = begin();
-    setOnline((v) => ({ ...v, status: "正在匹配…", loading: true }));
+    setOnline((v) => ({ ...v, status: t("danmaku.matching"), loading: true }));
     void (async () => {
-      if (saved) {
-        await loadMatch(saved.match, task, false, false, saved.offset);
-        return;
-      }
       const result = await onlineProvider.match(
         context,
         task.signal,
         task.scope,
+        saved,
       );
       if (!task.valid()) return;
-      if (result.selected) await loadMatch(result.selected, task);
+      if (result.selected)
+        await loadMatch(
+          result.selected,
+          task,
+          !!saved && saved.match.id === result.selected.id,
+          false,
+          result.offset,
+          result.candidates,
+        );
       else
         setOnline({
           key,
           document: null,
           candidates: result.candidates,
+          pending: !!result.candidates.length,
           status: result.candidates.length
-            ? "多个可能匹配，请确认"
-            : "未找到匹配结果 · 尝试仅输入作品名称，或使用原标题",
+            ? t("danmaku.multiple_possible_matches_choose_one_to_confirm")
+            : result.empty
+              ? t("danmaku.title_found_but_no_danmaku_is_available")
+              : t("danmaku.no_match_found_try_just_the_title"),
           loading: false,
           offset: 0,
         });
@@ -225,6 +279,7 @@ export default function useDanmaku(
     local.metadata.settings.onlineEnabled,
     local.metadata.settings.autoMatch,
     availability.configured,
+    sourceKey,
     generation,
     playbackSession,
   ]);
@@ -240,7 +295,18 @@ export default function useDanmaku(
     patch?: Partial<DanmakuSettings>,
     query?: string,
     matchId?: string,
+    expectedMatchScope?: string,
   ) {
+    if (command === "source-mode") {
+      if (query !== "auto" && !sourceConfig.sources.some((s) => s.id === query))
+        return;
+      controller.current?.abort();
+      serial.current++;
+      await local.action("settings", {
+        sources: { ...sourceConfig, mode: query! },
+      });
+      return;
+    }
     if (command === "choose") {
       controller.current?.abort();
       serial.current++;
@@ -248,7 +314,9 @@ export default function useDanmaku(
       setOnline((v) => ({
         ...v,
         loading: false,
-        status: v.loading ? "已取消在线匹配，可手动搜索" : v.status,
+        status: v.loading
+          ? t("danmaku.online_matching_cancelled_you_can_search_manually")
+          : v.status,
       }));
       return;
     }
@@ -283,6 +351,7 @@ export default function useDanmaku(
       try {
         const value = await invoke<Availability>("danmaku_online_configure", {
           clear: command === "clear-credential",
+          language: getLanguage(),
         });
         onlineProvider.clear();
         if (mounted.current) {
@@ -293,7 +362,9 @@ export default function useDanmaku(
         if (mounted.current)
           setOnline((v) => ({
             ...v,
-            status: "凭据文件不可用，请选择已授权的 JSON 文件",
+            status: t(
+              "danmaku.credentials_file_unavailable_select_an_authorized_json",
+            ),
           }));
       }
       return;
@@ -301,17 +372,32 @@ export default function useDanmaku(
     if (
       !active ||
       !context ||
-      !availability.configured ||
+      !configured ||
       local.metadata.settings.onlineEnabled === false
     )
       return;
     if (command === "search" && (!query || query.trim().length < 2)) return;
+    if (
+      command === "select" &&
+      expectedMatchScope !== undefined &&
+      expectedMatchScope !== matchScope
+    )
+      throw Error(t("danmaku.candidate_expired"));
+    if (
+      command === "select" &&
+      !currentOnline?.candidates.some((m) => m.id === matchId)
+    )
+      throw Error(t("danmaku.candidate_expired"));
+    if (command === "select" && selectionPending.current?.key === key) return;
+    const selection = command === "select" ? { key } : null;
+    if (selection) selectionPending.current = selection;
     const task = begin();
     setOnline((v) => ({
       ...v,
       key,
       loading: true,
-      status: command === "search" ? "正在搜索…" : "正在匹配…",
+      status:
+        command === "search" ? t("danmaku.searching") : t("danmaku.matching"),
     }));
     try {
       if (command === "search") {
@@ -327,12 +413,13 @@ export default function useDanmaku(
             ...v,
             key,
             candidates: ranked.candidates,
+            pending: !!ranked.candidates.length,
             loading: false,
             status: ranked.selected
-              ? "已找到推荐匹配，请确认"
+              ? t("danmaku.recommended_match_found_confirm_to_continue")
               : results.length
-                ? "多个可能匹配，请确认"
-                : "未找到匹配结果 · 尝试仅输入作品名称，或使用原标题",
+                ? t("danmaku.multiple_possible_matches_choose_one_to_confirm")
+                : t("danmaku.no_match_found_try_just_the_title"),
           }));
       } else if (command === "select") {
         const match = currentOnline?.candidates.find((m) => m.id === matchId);
@@ -342,7 +429,7 @@ export default function useDanmaku(
         await loadMatch(
           currentOnline.match,
           task,
-          false,
+          !!currentOnline.confirmed,
           true,
           currentOnline.offset,
         );
@@ -351,7 +438,9 @@ export default function useDanmaku(
         setOnline((v) => ({
           ...v,
           loading: false,
-          status: `已匹配：${v.match?.title || "在线弹幕"}`,
+          status: t("danmaku.matched", {
+            p0: v.match?.title || t("danmaku.online_danmaku"),
+          }),
         }));
       } else {
         saveAssociation(mapping, context);
@@ -361,49 +450,130 @@ export default function useDanmaku(
           task.scope,
         );
         if (!task.valid()) return;
-        if (result.selected) await loadMatch(result.selected, task);
+        if (result.selected)
+          await loadMatch(
+            result.selected,
+            task,
+            false,
+            false,
+            result.offset,
+            result.candidates,
+          );
         else
           setOnline({
             key,
             document: null,
             candidates: result.candidates,
+            pending: !!result.candidates.length,
             status: result.candidates.length
-              ? "多个可能匹配，请确认"
-              : "未找到匹配结果 · 尝试仅输入作品名称，或使用原标题",
+              ? t("danmaku.multiple_possible_matches_choose_one_to_confirm")
+              : result.empty
+                ? t("danmaku.title_found_but_no_danmaku_is_available")
+                : t("danmaku.no_match_found_try_just_the_title"),
             loading: false,
             offset: 0,
           });
       }
     } catch (e) {
-      failed(e, task);
+      failed(e, task, command === "select" || command === "search");
+    } finally {
+      if (selection && selectionPending.current === selection)
+        selectionPending.current = null;
     }
   }
-  const document =
+  const rawDocument =
     active && local.ready
       ? selectedSource === "online"
         ? currentOnline?.document || null
         : local.document
       : null;
-  const metadata: DanmakuPresentation = {
-    ...local.metadata,
-    source: selectedSource,
-    ...(selectedSource === "online"
-      ? {
-          name: currentOnline?.match?.title || "",
-          count: document?.entries.length || 0,
-          skipped: document?.skipped || 0,
-          offset: currentOnline?.offset || 0,
-          status: "",
-        }
-      : {}),
-    online: {
-      ...availability,
-      status: currentOnline?.status || "未配置在线弹幕服务",
-      query: context ? defaultQuery(context) : "",
-      candidates: currentOnline?.candidates || [],
-      match: currentOnline?.match,
-      loading: currentOnline?.loading || false,
-    },
-  };
+  const document = useMemo(
+    () => (rawDocument ? mediaTimeline(rawDocument, duration) : null),
+    [rawDocument, duration],
+  );
+  const query = context ? defaultQuery(context) : "";
+  const heatmap = useMemo(
+    () =>
+      density(
+        item?.Type === "TvChannel" ? null : document,
+        duration,
+        selectedSource === "online"
+          ? currentOnline?.offset || 0
+          : local.metadata.offset,
+      ),
+    [
+      document,
+      item?.Type,
+      duration,
+      selectedSource,
+      currentOnline?.offset,
+      local.metadata.offset,
+    ],
+  );
+  const metadata = useMemo<DanmakuPresentation>(
+    () => ({
+      ...local.metadata,
+      source: selectedSource,
+      density: heatmap,
+      ...(selectedSource === "online"
+        ? {
+            name: currentOnline?.match?.title || "",
+            count: document?.entries.length || 0,
+            skipped: document?.skipped || 0,
+            offset: currentOnline?.offset || 0,
+            status: "",
+          }
+        : {}),
+      online: {
+        sessionKey: matchScope,
+        context,
+        confirmed: currentOnline?.confirmed,
+        pending: currentOnline?.pending || false,
+        loadedCount: currentOnline?.document?.entries.length,
+        videoDuration: currentOnline?.document?.videoDuration,
+        ...availability,
+        configured,
+        mode: sourceConfig.mode,
+        sources: sourceConfig.sources.map(({ id, name, enabled }) => ({
+          id,
+          name,
+          enabled,
+        })),
+        sourceName:
+          selectedSource === "online" &&
+          currentOnline?.document &&
+          currentOnline.match
+            ? sourceConfig.sources.find(
+                (s) =>
+                  s.id ===
+                  (currentOnline.match!.id.includes(":")
+                    ? currentOnline.match!.id.split(":")[0]
+                    : "dandanplay"),
+              )?.name
+            : undefined,
+        failures: onlineProvider.failures,
+        status:
+          currentOnline?.status ||
+          t("danmaku.online_danmaku_is_not_configured"),
+        query,
+        candidates: currentOnline?.candidates || [],
+        match: currentOnline?.match,
+        loading: currentOnline?.loading || false,
+      },
+    }),
+    [
+      local.metadata,
+      selectedSource,
+      document,
+      availability,
+      configured,
+      onlineProvider,
+      currentOnline,
+      query,
+      heatmap,
+      matchScope,
+      contextKey,
+    ],
+  );
   return { document, metadata, action };
 }

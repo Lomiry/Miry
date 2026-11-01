@@ -108,8 +108,8 @@
 .media-row .quick-card-button span {
   display: none;
 }
-.media-row:hover,
-.media-row:focus-within {
+.media-row-detail:hover:not(:disabled),
+.media-row-detail:focus-visible {
   background: var(--surface-raised);
 }
 .media-row button:focus-visible {

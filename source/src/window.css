@@ -122,22 +122,6 @@
 .desktop-frame aside > .brand {
   display: none;
 }
-.desktop-frame .login-layout {
-  min-height: var(--app-height);
-  background: transparent;
-}
-.desktop-frame .login-layout > .login-story {
-  display: none;
-}
-.desktop-frame .login-panel {
-  padding-top: 56px;
-}
-.desktop-frame .server-login .login-layout {
-  min-height: 0;
-}
-.desktop-frame .server-login .login-panel {
-  padding-top: 48px;
-}
 .desktop-frame .playback-stage {
   height: min(57dvh, calc(var(--app-height) - 360px), 680px);
 }
@@ -149,20 +133,4 @@
 }
 .native-fullscreen .window-caption {
   display: none;
-}
-@media (max-width: 900px) {
-  .window-brand {
-    flex-basis: 187px;
-    padding-left: 12px;
-  }
-}
-@media (max-width: 640px) {
-  .window-brand {
-    flex-basis: 67px;
-    padding: 0;
-    justify-content: center;
-  }
-  .window-brand strong {
-    display: none;
-  }
 }

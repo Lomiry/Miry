@@ -197,15 +197,23 @@ pub fn danmaku_online_cancel(
 }
 
 #[cfg(windows)]
-fn pick_config(owner: usize) -> Option<std::path::PathBuf> {
+fn pick_config(owner: usize, english: bool) -> Option<std::path::PathBuf> {
     use windows_sys::Win32::UI::Controls::Dialogs::*;
     let mut name = vec![0u16; 32768];
-    let filter: Vec<u16> = "Provider credential (JSON)\0*.json\0\0"
-        .encode_utf16()
-        .collect();
-    let title: Vec<u16> = "选择已授权的弹弹play凭据文件（仅本次运行）\0"
-        .encode_utf16()
-        .collect();
+    let filter: Vec<u16> = if english {
+        "Provider credentials (JSON)\0*.json\0\0"
+    } else {
+        "服务凭据 (JSON)\0*.json\0\0"
+    }
+    .encode_utf16()
+    .collect();
+    let title: Vec<u16> = if english {
+        "Choose authorized 弹弹play credentials (this session only)\0"
+    } else {
+        "选择已授权的弹弹play凭据文件（仅本次运行）\0"
+    }
+    .encode_utf16()
+    .collect();
     let mut dialog = OPENFILENAMEW {
         lStructSize: std::mem::size_of::<OPENFILENAMEW>() as u32,
         hwndOwner: owner as _,
@@ -229,6 +237,7 @@ pub async fn danmaku_online_configure(
     window: tauri::WebviewWindow,
     service: tauri::State<'_, Service>,
     clear: bool,
+    language: Option<String>,
 ) -> Result<Availability, Failure> {
     main_only(&window)?;
     if availability(&service).built_in {
@@ -248,9 +257,10 @@ pub async fn danmaku_online_configure(
             .hwnd()
             .map_err(|_| failure("config"))?
             .0 as usize;
+        let english = language.as_deref() == Some("en-US");
         let config =
             tauri::async_runtime::spawn_blocking(move || -> Result<Option<Config>, Failure> {
-                let Some(path) = pick_config(owner) else {
+                let Some(path) = pick_config(owner, english) else {
                     return Ok(None);
                 };
                 let file = std::fs::File::open(path).map_err(|_| failure("config"))?;

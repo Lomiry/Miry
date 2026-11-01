@@ -22,10 +22,15 @@ export function historyArtwork(item: Item): Partial<Item> {
   );
 }
 const key = (account: Account) => "miry-history:" + connectionId(account);
-function write(account: Account, list: WatchedEntry[]) {
+function write(
+  account: Account,
+  list: WatchedEntry[],
+  requirePersistence = false,
+) {
   try {
     localStorage.setItem(key(account), JSON.stringify(list));
   } catch {
+    if (requirePersistence) throw new Error("Playback history write failed");
     /* Playback stays available. */
   }
   return list;
@@ -68,6 +73,7 @@ export function recordHistory(
   item: Item,
   position?: number,
   finished = false,
+  { requirePersistence = false }: { requirePersistence?: boolean } = {},
 ) {
   // Only display metadata is retained, never media URLs, authentication or stream sources.
   const safe: Item = {
@@ -96,7 +102,7 @@ export function recordHistory(
     { item: safe, at: Date.now() },
     ...readHistory(account).filter((e) => e.item.Id !== item.Id),
   ].slice(0, 100);
-  return write(account, list);
+  return write(account, list, requirePersistence);
 }
 export function clearHistory(account: Account) {
   localStorage.removeItem(key(account));

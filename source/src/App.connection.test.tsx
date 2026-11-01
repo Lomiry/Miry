@@ -4,6 +4,8 @@ import { render, cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { clearNetworkDiagnostics } from "./api/diagnostics";
+import { rememberConnection } from "./stores/connections";
+import { readRoutes } from "./stores/routes";
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
@@ -12,6 +14,85 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   clearNetworkDiagnostics();
+});
+it("blocks a known address that now exposes a different server identity before login", async () => {
+  rememberConnection(
+    {
+      server: "https://media.example.test/emby",
+      serverId: "old",
+      userId: "u",
+      token: "test-only",
+      name: "demo",
+      deviceId: "d",
+    },
+    false,
+  );
+  const fetch = vi
+    .fn()
+    .mockResolvedValue(
+      new Response(
+        JSON.stringify({ Id: "new", ServerName: "New", Version: "4.9" }),
+      ),
+    );
+  vi.stubGlobal("fetch", fetch);
+  render(<App />);
+  const user = userEvent.setup();
+  await user.type(
+    screen.getByLabelText("服务器地址"),
+    "https://media.example.test/emby",
+  );
+  await user.type(screen.getByLabelText("用户名"), "demo");
+  await user.click(screen.getByRole("button", { name: "连接服务器" }));
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "服务器身份不一致",
+  );
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+it("imports only after review and Connect, leaving other addresses unverified without credentials", async () => {
+  const fetch = vi.fn(
+    async (address: string) =>
+      new Response(
+        JSON.stringify(
+          address.endsWith("/System/Info/Public")
+            ? { Id: "s", ServerName: "Demo", Version: "4.9" }
+            : address.endsWith("/AuthenticateByName")
+              ? { User: { Id: "u", Name: "demo" }, AccessToken: "test-only" }
+              : { Items: [], TotalRecordCount: 0 },
+        ),
+      ),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(screen.getByRole("button", { name: "智能导入" }));
+  await user.type(
+    screen.getByLabelText("粘贴连接说明"),
+    "https://a.example.test\nhttps://b.example.test",
+  );
+  await user.click(screen.getByRole("button", { name: "解析并预览" }));
+  expect(fetch).not.toHaveBeenCalled();
+  expect(screen.getAllByLabelText("服务器地址")).toHaveLength(1);
+  await user.click(screen.getByRole("button", { name: "填入连接表单" }));
+  await user.type(screen.getByLabelText("用户名"), "demo");
+  expect(fetch).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "连接服务器" }));
+  await screen.findByRole("button", { name: "编辑服务器与线路" });
+  const pending = readRoutes({
+    server: "https://a.example.test",
+    userId: "u",
+    token: "test-only",
+    name: "demo",
+    deviceId: "d",
+    serverId: "s",
+  }).find((r) => r.status === "pending");
+  expect(pending).toMatchObject({
+    serverId: "",
+    url: "https://b.example.test",
+  });
+  expect(JSON.stringify(pending)).not.toContain("test-only");
+  expect(
+    fetch.mock.calls.every(([url]) => !url.includes("b.example.test")),
+  ).toBe(true);
 });
 it("probes 8443 before authenticating and loads libraries only after successful login", async () => {
   const fetch = vi.fn(
@@ -50,8 +131,8 @@ it("probes 8443 before authenticating and loads libraries only after successful 
     fetch.mock.calls.slice(0, 3).map(([url]) => new URL(url).pathname),
   ).toEqual([
     "/System/Info/Public",
-    "/emby/Users/AuthenticateByName",
-    "/emby/Users/u/Views",
+    "/Users/AuthenticateByName",
+    "/Users/u/Views",
   ]);
   expect(fetch.mock.calls[0][1].headers["X-Emby-Token"]).toBeUndefined();
 });

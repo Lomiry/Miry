@@ -1,3 +1,5 @@
+import { useI18n } from "../i18n/react";
+import { t, localizeMessage } from "../i18n/core";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 
 export function subtitlePositionAt(
@@ -20,6 +22,7 @@ export default function SecondarySubtitlePosition({
   send: (value: number, persist: boolean) => Promise<void>;
   onClose: (value: number) => void;
 }) {
+  useI18n();
   const original = useRef(value);
   const [draft, setDraft] = useState(value);
   const draftRef = useRef(value);
@@ -55,7 +58,7 @@ export default function SecondarySubtitlePosition({
           await currentSend.current(next, false);
           if (alive.current) setError("");
         } catch {
-          if (alive.current) setError("预览未完成，请重试或取消。");
+          if (alive.current) setError(t("player.position_preview_failed"));
         }
       }
     })().finally(() => {
@@ -89,8 +92,8 @@ export default function SecondarySubtitlePosition({
       if (alive.current) {
         setError(
           confirm
-            ? "位置保存失败，请重试或取消。"
-            : "位置恢复失败，请重试取消。",
+            ? t("player.position_save_failed")
+            : t("player.position_restore_failed"),
         );
         setBusy(false);
         closing.current = false;
@@ -108,7 +111,7 @@ export default function SecondarySubtitlePosition({
       className="secondary-subtitle-position"
       role="dialog"
       aria-modal="true"
-      aria-label="调整次字幕位置"
+      aria-label={t("player.secondary_subtitle_position")}
       data-ui-overlay
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -138,7 +141,7 @@ export default function SecondarySubtitlePosition({
         className="secondary-subtitle-position-handle"
         style={{ top: `${draft}%`, transform: `translate(-50%, -${draft}%)` }}
         role="slider"
-        aria-label="次字幕垂直位置"
+        aria-label={t("player.secondary_subtitle_vertical")}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={draft}
@@ -178,27 +181,26 @@ export default function SecondarySubtitlePosition({
           }
         }}
       >
-        ↕ 次字幕目标位置 · {draft}%
+        {t("player.secondary_subtitle_target")}
+        {draft}%
       </button>
       <div
         className="secondary-subtitle-position-actions"
         style={draft >= 50 ? { top: 16, bottom: "auto" } : undefined}
       >
-        <p>
-          上下拖动预览位置，也可使用方向键。文本字幕保留原生边距；位图字幕不支持移动。
-        </p>
+        <p>{t("player.secondary_position_help")}</p>
         <div>
           <button disabled={busy} onClick={() => preview(0)}>
-            恢复默认
+            {t("library.restore_defaults")}
           </button>
           <button disabled={busy} onClick={() => void finish(false)}>
-            取消
+            {t("network.cancel")}
           </button>
           <button disabled={busy} onClick={() => void finish(true)}>
-            确认位置
+            {t("player.confirm_position")}
           </button>
         </div>
-        {error && <p role="alert">{error}</p>}
+        {error && <p role="alert">{localizeMessage(error)}</p>}
       </div>
     </div>
   );

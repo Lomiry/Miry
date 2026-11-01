@@ -118,11 +118,24 @@ it("rejects a longer, faster scroll that would catch its predecessor", () => {
   );
   expect(engine.step(1.1)).toHaveLength(1);
 });
-it("enforces density and safe area while leaving subtitles below the default area", () => {
+it("uses the full viewport by default", () => {
+  const engine = new DanmakuScheduler(
+    Array.from({ length: 48 }, (_, i) => entry(0, String(i))),
+    danmakuDefaults,
+    800,
+    1080,
+    () => 100,
+  );
+  const active = engine.step(1);
+  expect(active.some((e) => e.y > 1080 * 0.75)).toBe(true);
+  expect(active.every((e) => e.y + danmakuDefaults.fontSize < 1080)).toBe(true);
+  expect(active.length).toBeLessThanOrEqual(48);
+});
+it("enforces density and a configured safe area for subtitles", () => {
   const entries = Array.from({ length: 100 }, (_, i) => entry(0, String(i)));
   const engine = new DanmakuScheduler(
     entries,
-    { ...danmakuDefaults, density: 24 },
+    { ...danmakuDefaults, density: 24, area: 0.75 },
     800,
     1080,
     () => 100,

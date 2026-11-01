@@ -1,6 +1,10 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { Film, Tv, Layers, ListVideo } from "lucide-react";
 import type { Item } from "../types/emby";
 export default function PosterFallback({ item }: { item: Item }) {
+  useI18n();
+
   const Icon =
     item.Type === "BoxSet"
       ? Layers
@@ -22,13 +26,13 @@ export default function PosterFallback({ item }: { item: Item }) {
     <div
       className="poster-fallback"
       role="img"
-      aria-label={item.Name + " · 默认封面"}
+      aria-label={item.Name + t("library.default_artwork")}
     >
       <Icon size={28} aria-hidden="true" />
       <span className="poster-initials" aria-hidden="true">
         {initials || "M"}
       </span>
-      <small>暂无封面</small>
+      <small>{t("library.no_artwork")}</small>
     </div>
   );
 }

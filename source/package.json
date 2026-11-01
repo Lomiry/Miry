@@ -1,12 +1,13 @@
 {
   "name": "miry-emby",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "check:i18n": "node scripts/i18n-audit.mjs",
     "tauri": "node scripts/tauri.mjs"
   },
   "dependencies": {

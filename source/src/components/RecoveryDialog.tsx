@@ -1,3 +1,6 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import useDialogFocus from "./useDialogFocus";
 import { useRef } from "react";
 import type { RecoveryRecord } from "../player/recovery";
@@ -16,6 +19,8 @@ export default function RecoveryDialog({
   onContinue: () => void;
   onIgnore: () => void;
 }) {
+  useI18n();
+
   const ref = useRef<HTMLElement>(null);
   const onIgnore = useDialogFocus(ref, finishIgnore, busy);
   return (
@@ -33,21 +38,26 @@ export default function RecoveryDialog({
         aria-labelledby="recovery-title"
       >
         <header>
-          <h2 id="recovery-title">上次播放意外中断</h2>
+          <h2 id="recovery-title">
+            {t("library.your_last_playback_was_interrupted")}
+          </h2>
         </header>
         <div className="settings-body">
           <h3>{privateText(record.title)}</h3>
           <p>{formatTime(record.position)}</p>
           <p className="setting-note">
-            这是本机中断记录，与服务器“继续观看”独立。继续播放前需连接同一服务器。
+            {" "}
+            {t("library.this_is_a_local_interrupted_playback_record")}{" "}
           </p>
           <button className="primary" disabled={busy} onClick={onContinue}>
-            从中断位置继续
+            {" "}
+            {t("library.resume_interrupted_playback")}{" "}
           </button>
           <button className="secondary" disabled={busy} onClick={onIgnore}>
-            忽略中断记录
+            {" "}
+            {t("library.dismiss_record")}{" "}
           </button>
-          {error && <p role="alert">{error}</p>}
+          {error && <p role="alert">{displayError(error)}</p>}
         </div>
       </section>
     </div>

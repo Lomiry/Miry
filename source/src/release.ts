@@ -13,6 +13,7 @@ export interface ReleaseInfo {
   url: string;
   published_at: string | null;
   newer: boolean;
+  update_ready: boolean;
   assets: { name: string; size: number; browser_download_url: string }[];
 }
 

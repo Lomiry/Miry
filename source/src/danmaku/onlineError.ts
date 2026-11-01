@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 export type OnlineErrorKind =
   | "NETWORK_ERROR"
   | "AUTH_ERROR"
@@ -48,25 +49,25 @@ export function onlineErrorKind(error: unknown): OnlineErrorKind {
 export function onlineErrorMessage(error: unknown) {
   switch (onlineErrorKind(error)) {
     case "NETWORK_ERROR":
-      return "暂时无法连接弹弹play开放弹幕网络，请稍后重试";
+      return t("danmaku.could_not_connect_to_the_play_open");
     case "AUTH_ERROR":
-      return "弹弹play服务暂时不可用，请稍后重试";
+      return t("danmaku.the_play_service_is_unavailable_try_again");
     case "RATE_LIMITED":
-      return "弹弹play服务当前请求受限，请稍后再试。\n在线弹幕暂时不可用，不影响视频播放。";
+      return t("danmaku.the_play_service_is_rate_limited_try");
     case "NO_MATCH":
-      return "未找到匹配的弹幕作品，可尝试手动搜索";
+      return t("danmaku.no_matching_danmaku_title_found_try_a");
     case "NO_COMMENTS":
-      return "已找到作品，但暂无可用弹幕";
+      return t("danmaku.title_found_but_no_danmaku_is_available");
     case "INVALID_RESPONSE":
-      return "弹弹play返回的数据暂时不可用，请稍后重试";
+      return t("danmaku.the_data_returned_by_play_is_unavailable");
     case "CANCELLED":
-      return "已取消在线请求，可继续手动搜索";
+      return t("danmaku.online_request_cancelled_you_can_search_manually");
     case "UNCONFIGURED":
-      return "未配置在线弹幕服务，视频播放和本地弹幕可继续使用";
+      return t("danmaku.unconfigured_with_local");
     case "NOT_FOUND":
-      return "匹配资源已失效，请更换匹配";
+      return t("danmaku.this_match_is_no_longer_available_choose");
     default:
-      return "弹弹play服务暂时不可用，请稍后重试";
+      return t("danmaku.the_play_service_is_unavailable_try_again");
   }
 }
 

@@ -27,12 +27,32 @@ it("removes the automatic update switch without changing other preferences", () 
 });
 it("shows stable branding and actions without an editable release URL or startup request", () => {
   const view = about();
-  expect(screen.getByRole("heading", { name: "Miry v1.0.7" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Miry v1.0.8" })).toBeTruthy();
   expect(screen.queryByLabelText("发布信息地址")).toBeNull();
   expect(view.container.querySelector('input[type="url"]')).toBeNull();
   expect(screen.getByRole("button", { name: "检查新版本" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "导出匿名诊断" })).toBeTruthy();
   expect(invoke).not.toHaveBeenCalled();
+});
+it("exposes close and minimize tray behavior with old defaults", async () => {
+  const onChange = vi.fn();
+  render(
+    <DesktopSettings settings={defaults} onChange={onChange} api={null} />,
+  );
+  expect(
+    screen
+      .getByRole("combobox", { name: "关闭窗口时" })
+      .getAttribute("data-value"),
+  ).toBe("exit");
+  expect(
+    screen
+      .getByRole("combobox", { name: "最小化窗口时" })
+      .getAttribute("data-value"),
+  ).toBe("minimize");
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("combobox", { name: "关闭窗口时" }));
+  await user.click(screen.getByRole("option", { name: "隐藏到托盘" }));
+  expect(onChange).toHaveBeenLastCalledWith({ ...defaults, closeToTray: true });
 });
 it("checks the built-in source and offers the shared in-app update without opening a browser", async () => {
   vi.mocked(invoke).mockResolvedValue({
@@ -54,6 +74,20 @@ it("checks the built-in source and offers the shared in-app update without openi
   expect(invoke).toHaveBeenCalledExactlyOnceWith("check_release");
   const { updateSnapshot } = await import("../stores/inAppUpdate");
   expect(updateSnapshot().release?.version).toBe("1.1.0");
+});
+it("offers explicit native exit even when close-to-tray is enabled", async () => {
+  vi.mocked(invoke).mockResolvedValue(undefined);
+  render(
+    <DesktopSettings
+      settings={{ ...defaults, closeToTray: true }}
+      onChange={vi.fn()}
+      api={null}
+    />,
+  );
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "退出 Miry" }));
+  expect(invoke).toHaveBeenCalledExactlyOnceWith("exit_app");
 });
 it.each(["1.0.1", "0.9.9"])(
   "treats release %s as current without offering an older installer",

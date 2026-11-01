@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import type { ReactNode } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import Tooltip from "./Tooltip";
@@ -8,20 +10,26 @@ export function ViewToggle({
   list: boolean;
   onChange: (list: boolean) => void;
 }) {
+  useI18n();
+
   return (
-    <div className="view-switch" role="group" aria-label="显示方式">
-      <Tooltip text="海报视图">
+    <div
+      className="view-switch"
+      role="group"
+      aria-label={t("library.view_mode")}
+    >
+      <Tooltip text={t("library.poster_view")}>
         <button
-          aria-label="海报视图"
+          aria-label={t("library.poster_view")}
           aria-pressed={!list}
           onClick={() => onChange(false)}
         >
           <LayoutGrid size={17} />
         </button>
       </Tooltip>
-      <Tooltip text="列表视图">
+      <Tooltip text={t("library.list_view")}>
         <button
-          aria-label="列表视图"
+          aria-label={t("library.list_view")}
           aria-pressed={list}
           onClick={() => onChange(true)}
         >
@@ -40,6 +48,8 @@ export default function PageHeader({
   count: ReactNode;
   actions?: ReactNode;
 }) {
+  useI18n();
+
   return (
     <div className="page-header">
       <div className="section-heading">

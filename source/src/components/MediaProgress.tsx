@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import type { Item } from "../types/emby";
 
 export function mediaProgress(item: Item) {
@@ -13,13 +15,15 @@ export function mediaProgress(item: Item) {
 }
 
 export default function MediaProgress({ item }: { item: Item }) {
+  useI18n();
+
   const percentage = mediaProgress(item);
   if (!percentage) return null;
   return (
     <div
       className="media-progress"
       role="progressbar"
-      aria-label="观看进度"
+      aria-label={t("library.watch_progress")}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(percentage)}

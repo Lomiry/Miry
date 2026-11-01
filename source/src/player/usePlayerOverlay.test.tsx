@@ -7,6 +7,7 @@ import { usePlayerOverlay } from "./usePlayerOverlay";
 import { usePlayerChrome } from "./usePlayerChrome";
 import type { PlayerUiModel } from "./uiModel";
 import { danmakuDefaults, type DanmakuClock } from "../danmaku/types";
+import { setLanguage } from "../i18n/core";
 vi.mock("@tauri-apps/api/core", () => ({
   isTauri: () => true,
   invoke: vi.fn(async () => {}),
@@ -16,7 +17,85 @@ vi.mock("@tauri-apps/api/event", () => ({
   listen: vi.fn(async () => () => {}),
 }));
 beforeEach(() => vi.clearAllMocks());
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  setLanguage("zh-CN", false);
+});
+it("keeps the bridge alive while Mini leaves main-window typing and playback keys alone", async () => {
+  const action = vi.fn();
+  const model = { state: { tracks: [] } } as unknown as PlayerUiModel;
+  const view = renderHook(
+    ({ mainInput }) =>
+      usePlayerOverlay(true, model, action, undefined, mainInput),
+    { initialProps: { mainInput: true } },
+  );
+  await act(async () => {});
+  const subscriptions = vi.mocked(listen).mock.calls.length;
+  view.rerender({ mainInput: false });
+  vi.mocked(emitTo).mockClear();
+  const key = new KeyboardEvent("keydown", {
+    key: " ",
+    code: "Space",
+    bubbles: true,
+    cancelable: true,
+  });
+  act(() => document.body.dispatchEvent(key));
+  expect(key.defaultPrevented).toBe(false);
+  expect(emitTo).not.toHaveBeenCalled();
+  expect(vi.mocked(listen).mock.calls).toHaveLength(subscriptions);
+});
+it("synchronizes language on live updates and a new handshake without playback actions or document retransfers", async () => {
+  const handlers = new Map<string, (e: unknown) => unknown>();
+  const remove = vi.fn();
+  vi.mocked(listen).mockImplementation(async (name, handler) => {
+    handlers.set(name, handler as never);
+    return remove;
+  });
+  const model = {
+    state: { tracks: [] },
+    error: "",
+  } as unknown as PlayerUiModel;
+  const document = { entries: [], skipped: 0, format: "XML" as const };
+  const action = vi.fn();
+  const view = renderHook(() =>
+    usePlayerOverlay(true, model, action, { document, clock: null }),
+  );
+  await act(async () => {});
+  await act(async () => handlers.get("player-ui-ready")!({}));
+  const subscriptions = vi.mocked(listen).mock.calls.length;
+  vi.mocked(emitTo).mockClear();
+  act(() => setLanguage("en-US"));
+  expect(emitTo).toHaveBeenCalledWith(
+    "player-ui",
+    "player-ui-state",
+    expect.objectContaining({ language: "en-US" }),
+  );
+  expect(vi.mocked(listen).mock.calls).toHaveLength(subscriptions);
+  expect(vi.mocked(emitTo).mock.calls.map(([, event]) => event)).toEqual([
+    "player-ui-state",
+  ]);
+  expect(action).not.toHaveBeenCalled();
+  expect(invoke).not.toHaveBeenCalled();
+  await act(async () => handlers.get("player-ui-ready")!({}));
+  expect(emitTo).toHaveBeenLastCalledWith(
+    "player-ui",
+    "player-danmaku-clock",
+    null,
+  );
+  expect(
+    vi
+      .mocked(emitTo)
+      .mock.calls.filter(([, event]) => event === "player-ui-state")
+      .at(-1)?.[2],
+  ).toEqual(expect.objectContaining({ language: "en-US" }));
+  const oldReady = handlers.get("player-ui-ready")!;
+  view.unmount();
+  vi.mocked(emitTo).mockClear();
+  act(() => setLanguage("zh-CN"));
+  await act(async () => oldReady({}));
+  expect(emitTo).not.toHaveBeenCalled();
+  expect(remove).toHaveBeenCalledTimes(5);
+});
 it("transfers bounded danmaku data once per document/readiness while clock and chrome update independently", async () => {
   const handlers = new Map<string, (e: unknown) => unknown>();
   vi.mocked(listen).mockImplementation(async (name, handler) => {

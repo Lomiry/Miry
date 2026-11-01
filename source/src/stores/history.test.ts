@@ -64,6 +64,18 @@ it("does not break active playback when local storage is full", () => {
   });
   expect(() => recordHistory(account, item, 30)).not.toThrow();
 });
+it("reports a required write failure without replacing the persisted position", () => {
+  recordHistory(account, item, 12);
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new DOMException("Quota", "QuotaExceededError");
+  });
+  expect(() =>
+    recordHistory(account, item, 30, false, { requirePersistence: true }),
+  ).toThrow("Playback history write failed");
+  expect(readHistory(account)[0].item.UserData?.PlaybackPositionTicks).toBe(
+    120000000,
+  );
+});
 it("retains series artwork and patches old covers without changing progress or time", () => {
   const original = recordHistory(
     account,

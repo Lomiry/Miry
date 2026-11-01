@@ -5,8 +5,10 @@ beforeEach(() => localStorage.clear());
 it("canonicalizes the server and isolates usernames across servers", () => {
   saveLoginHint("https://one.test/emby/", "User One");
   saveLoginHint("https://two.test", "User Two");
-  expect(readLoginHint("https://one.test/")).toBe("User One");
-  expect(readLoginHint("https://two.test/emby")).toBe("User Two");
+  expect(readLoginHint("https://one.test/emby")).toBe("User One");
+  expect(readLoginHint("https://two.test/")).toBe("User Two");
+  expect(readLoginHint("https://one.test/")).toBe("");
+  expect(readLoginHint("https://two.test/emby")).toBe("");
   expect(readLoginHint("https://third.test")).toBe("");
 });
 it("retains only ten recent server/user names", () => {

@@ -6,12 +6,14 @@ export async function pickSelect(
   value: string | { name: string },
 ) {
   await user.click(trigger);
+  const role =
+    trigger.getAttribute("aria-haspopup") === "menu"
+      ? "menuitemradio"
+      : "option";
   const option =
     typeof value === "string"
-      ? screen
-          .getAllByRole("option")
-          .find((node) => node.dataset.value === value)
-      : screen.getByRole("option", value);
+      ? screen.getAllByRole(role).find((node) => node.dataset.value === value)
+      : screen.getByRole(role, value);
   if (!option) throw Error("Missing select value " + value);
   await user.click(option);
 }

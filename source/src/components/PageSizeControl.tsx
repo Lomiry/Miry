@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useId, useState } from "react";
 import Select from "./Select";
 import { isComposingKey } from "../player/shortcuts";
@@ -10,11 +12,24 @@ import {
 
 // Keep new copy together for the future shared translation catalog.
 const copy = {
-  label: "每页显示",
-  custom: "自定义",
-  input: "自定义每页数量",
-  apply: "应用",
-  hint: `请输入 ${minPageSize}–${maxPageSize} 的整数`,
+  get label() {
+    return t("library.items_per_page");
+  },
+  get custom() {
+    return t("library.custom");
+  },
+  get input() {
+    return t("library.custom_items_per_page");
+  },
+  get apply() {
+    return t("library.apply");
+  },
+  get hint() {
+    return t("library.enter_a_whole_number_from_to", {
+      p0: minPageSize,
+      p1: maxPageSize,
+    });
+  },
 };
 export default function PageSizeControl({
   value,
@@ -23,6 +38,8 @@ export default function PageSizeControl({
   value: number;
   onChange: (value: number) => void;
 }) {
+  useI18n();
+
   const [custom, setCustom] = useState(
     !pageSizeOptions.some((n) => n === value),
   );

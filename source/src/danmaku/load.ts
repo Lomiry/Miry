@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 import type { DanmakuDocument } from "./types";
 import { parseDanmaku } from "./parser";
 export function parseLocalFile(
@@ -14,7 +15,8 @@ export function parseLocalFile(
       type: "module",
     });
     const timer = setTimeout(
-      () => finish(Error("弹幕解析超时，请检查文件。")),
+      () =>
+        finish(Error(t("danmaku.danmaku_parsing_timed_out_check_the_file"))),
       15000,
     );
     const abort = () => finish(new DOMException("Aborted", "AbortError"));
@@ -29,7 +31,8 @@ export function parseLocalFile(
       e: MessageEvent<{ document?: DanmakuDocument; error?: string }>,
     ) =>
       finish(e.data.error ? Error(e.data.error) : undefined, e.data.document);
-    worker.onerror = () => finish(Error("无法解析弹幕文件。"));
+    worker.onerror = () =>
+      finish(Error(t("danmaku.could_not_parse_the_danmaku_file")));
     worker.postMessage({ text, name });
   });
 }

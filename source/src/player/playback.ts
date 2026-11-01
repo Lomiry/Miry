@@ -1,3 +1,9 @@
+import { t } from "../i18n/core";
+import {
+  rankSources,
+  type PlaybackSelection,
+  type SourcePreference,
+} from "./sourcePreference";
 import type { Item, MediaSource, PlaybackInfo } from "../types/emby";
 import { ApiError, type EmbyClient } from "../api/client";
 import { recordNetwork } from "../api/diagnostics";
@@ -28,12 +34,15 @@ function deliveredUrl(
   try {
     url = new URL(delivery, server + "/");
   } catch {
-    throw new PlaybackError(`${method}-url`, "服务器返回的播放入口无效。");
+    throw new PlaybackError(
+      `${method}-url`,
+      t("player.the_server_returned_an_invalid_playback_url"),
+    );
   }
   if (!["http:", "https:"].includes(url.protocol))
     throw new PlaybackError(
       "unsupported-protocol",
-      "播放入口仅支持 HTTP 或 HTTPS。",
+      t("player.playback_urls_must_use_http_or_https"),
     );
   if (
     url.username ||
@@ -41,7 +50,10 @@ function deliveredUrl(
     url.hash ||
     /(?:^|\/)Download(?:\/|$)/i.test(url.pathname)
   )
-    throw new PlaybackError(`${method}-url`, "服务器返回的播放入口无效。");
+    throw new PlaybackError(
+      `${method}-url`,
+      t("player.the_server_returned_an_invalid_playback_url"),
+    );
   return url;
 }
 export const mpvProfile = {
@@ -122,7 +134,10 @@ export function streamUrl(
     source.SupportsDirectStream === true &&
     !source.DirectStreamUrl
   )
-    throw new PlaybackError("DirectStream-url", "服务器未提供直接串流入口。");
+    throw new PlaybackError(
+      "DirectStream-url",
+      t("player.the_server_did_not_provide_a_direct"),
+    );
   if (source.DirectStreamUrl) {
     const delivered = deliveredUrl(
       api.account.server,
@@ -135,7 +150,7 @@ export function streamUrl(
       delivered.hash ||
       /(?:^|\/)Download(?:\/|$)/i.test(delivered.pathname)
     )
-      throw new Error("服务器返回的播放入口无效。");
+      throw new Error(t("player.the_server_returned_an_invalid_playback_url"));
     if (delivered.origin === base.origin) url = delivered;
     else if (
       source.SupportsDirectPlay !== true &&
@@ -143,7 +158,7 @@ export function streamUrl(
     )
       throw new PlaybackError(
         "DirectStream-url",
-        "服务器的直接串流入口不属于当前连接。",
+        t("player.the_direct_stream_url_does_not_belong"),
       );
   }
   // Authentication stays in HTTP headers; signed delivery parameters remain intact.
@@ -163,16 +178,21 @@ export function chooseSource(
   info: PlaybackInfo,
   sourceId?: string,
   mode: Settings["compatibility"] = "direct-only",
+  preference: SourcePreference = "resolution",
 ): MediaSource {
   if (!info || typeof info !== "object" || !Array.isArray(info.MediaSources))
     throw new PlaybackError(
       "playback-info-format",
-      "服务器返回的播放信息格式无效。",
+      t("player.the_server_returned_invalid_playback_information"),
     );
   if (info.ErrorCode)
     throw new PlaybackError(
       "no-playable-source",
-      `服务器无法准备播放：${/^[a-z0-9_]{1,64}$/i.test(info.ErrorCode) ? info.ErrorCode : "无可用媒体源"}`,
+      t("player.the_server_could_not_prepare_playback", {
+        p0: /^[a-z0-9_]{1,64}$/i.test(info.ErrorCode)
+          ? info.ErrorCode
+          : t("player.no_media_source_available"),
+      }),
     );
   const candidates = info.MediaSources.filter(
     (s) =>
@@ -189,11 +209,12 @@ export function chooseSource(
     s.SupportsTranscoding === true &&
     typeof s.TranscodingUrl === "string" &&
     !!s.TranscodingUrl;
+  const ranked = rankSources(candidates, preference);
   const source =
     mode === "auto"
-      ? candidates?.find((s) => direct(s) || transcode(s))
-      : candidates?.find(direct) ||
-        (mode !== "direct-only" ? candidates?.find(transcode) : undefined);
+      ? ranked.find((s) => direct(s) || transcode(s))
+      : ranked.find(direct) ||
+        (mode !== "direct-only" ? ranked.find(transcode) : undefined);
   if (!source) {
     if (
       mode !== "direct-only" &&
@@ -203,11 +224,11 @@ export function chooseSource(
     )
       throw new PlaybackError(
         "no-transcoding-url",
-        "服务器未提供转码播放入口。",
+        t("player.the_server_did_not_provide_a_transcoding"),
       );
     throw new PlaybackError(
       "no-playable-source",
-      "此媒体无法直接播放或协商兼容播放，或需要动态开启媒体源。",
+      t("player.this_media_cannot_be_played_directly_or"),
     );
   }
   return source;
@@ -222,13 +243,36 @@ export function preferredStream(
     en: ["en", "eng"],
     ja: ["ja", "jpn"],
   };
+  const wanted = Object.values(aliases).find((group) =>
+    group.includes(language.toLowerCase()),
+  ) || [language.toLowerCase()];
   return source.MediaStreams?.find(
-    (s) =>
-      s.Type === type &&
-      (aliases[language] || [language]).includes(
-        (s.Language || "").toLowerCase(),
-      ),
+    (s) => s.Type === type && wanted.includes((s.Language || "").toLowerCase()),
   )?.Index;
+}
+// Only language/off policy crosses media boundaries, never an old mpv track ID.
+export function continuationSettings(
+  settings: Settings,
+  snapshot: PlayerSnapshot | null,
+): Settings {
+  if (!snapshot) return settings;
+  const audio = snapshot.tracks?.find(
+    (track) => track.type === "audio" && track.selected,
+  );
+  const subtitles =
+    snapshot.tracks?.filter((track) => track.type === "sub") || [];
+  const primary = subtitles.find(
+    (track) =>
+      (track["main-selection"] === 0 || track.selected) &&
+      track.id !== snapshot.secondarySubtitle,
+  );
+  return {
+    ...settings,
+    audioLanguage: audio?.lang || settings.audioLanguage,
+    subtitleLanguage:
+      primary?.lang ||
+      (subtitles.length && !primary ? "off" : settings.subtitleLanguage),
+  };
 }
 async function preparePlaybackInner(
   api: EmbyClient,
@@ -238,6 +282,7 @@ async function preparePlaybackInner(
   sourceId?: string,
   settings: Settings = defaults,
   context?: { mediaSourceId?: string; playMethod?: string },
+  selection?: PlaybackSelection,
 ) {
   const startTicks = fromStart ? 0 : item.UserData?.PlaybackPositionTicks || 0;
   let info = await api.request<PlaybackInfo>(
@@ -246,6 +291,12 @@ async function preparePlaybackInner(
     {
       UserId: api.account.userId,
       MediaSourceId: sourceId,
+      ...(selection?.sourceId === sourceId
+        ? {
+            AudioStreamIndex: selection?.audioIndex,
+            SubtitleStreamIndex: selection?.subtitleIndex,
+          }
+        : {}),
       StartTimeTicks: startTicks,
       IsPlayback: true,
       AutoOpenLiveStream: false,
@@ -260,6 +311,7 @@ async function preparePlaybackInner(
     info,
     sourceId,
     settings.compatibility || "prefer-direct",
+    settings.sourcePreference,
   );
   if (context) {
     context.mediaSourceId = source.Id;
@@ -287,6 +339,12 @@ async function preparePlaybackInner(
         {
           UserId: api.account.userId,
           MediaSourceId: source.Id,
+          ...(selection?.sourceId === source.Id
+            ? {
+                AudioStreamIndex: selection?.audioIndex,
+                SubtitleStreamIndex: selection?.subtitleIndex,
+              }
+            : {}),
           CurrentPlaySessionId: info.PlaySessionId,
           StartTimeTicks: 0,
           IsPlayback: true,
@@ -310,13 +368,13 @@ async function preparePlaybackInner(
           api.account.server + "/",
         ).searchParams.get("StartTimeTicks");
       if (nextOffset && Number(nextOffset) > 0)
-        throw Error("服务器未提供完整可定位的兼容播放流，请选择直接播放源。");
+        throw Error(t("player.the_server_did_not_provide_a_complete"));
     }
   }
   if (typeof info.PlaySessionId !== "string" || !info.PlaySessionId)
     throw new PlaybackError(
       "playback-info-format",
-      "服务器没有返回有效的播放会话 ID。",
+      t("player.the_server_did_not_return_a_valid"),
     );
   const subtitles = (source.MediaStreams || [])
     .filter((s) => s.Type === "Subtitle" && s.IsExternal && s.DeliveryUrl)
@@ -352,7 +410,10 @@ async function preparePlaybackInner(
         {
           url: url.toString(),
           index: s.Index,
-          title: s.DisplayTitle || s.Language || `字幕 ${s.Index}`,
+          title:
+            s.DisplayTitle ||
+            s.Language ||
+            t("player.subtitle_number", { p0: s.Index }),
           language: s.Language || "",
         },
       ];
@@ -375,9 +436,33 @@ async function preparePlaybackInner(
       ? index
       : undefined;
   };
+  const selectedIndex = (type: "Audio" | "Subtitle") => {
+    if (selection?.sourceId !== source.Id) return undefined;
+    const index =
+      type === "Audio" ? selection.audioIndex : selection.subtitleIndex;
+    if (type === "Subtitle" && index === -1) return -1;
+    return Number.isInteger(index) &&
+      source.MediaStreams?.some((s) => s.Type === type && s.Index === index)
+      ? index
+      : undefined;
+  };
+  for (const type of ["Audio", "Subtitle"] as const) {
+    const requested = selectedIndex(type),
+      delivered = deliveryIndex(type);
+    if (
+      requested !== undefined &&
+      delivered !== undefined &&
+      requested !== delivered
+    )
+      throw new PlaybackError(
+        "track-selection-unavailable",
+        t("detail.selection_unavailable"),
+      );
+  }
   return {
     serverId: api.account.serverId || "",
     server: api.account.server,
+    ignoreCertificateErrors: api.account.ignoreCertificateErrors === true,
     userId: api.account.userId,
     token: api.account.token,
     deviceId: api.account.deviceId,
@@ -392,12 +477,14 @@ async function preparePlaybackInner(
     startSeconds: startTicks / 10000000,
     audioIndex:
       deliveryIndex("Audio") ??
+      selectedIndex("Audio") ??
       (settings.audioLanguage === "auto"
         ? source.DefaultAudioStreamIndex
         : (preferredStream(source, "Audio", settings.audioLanguage) ??
           source.DefaultAudioStreamIndex)),
     subtitleIndex:
       deliveryIndex("Subtitle") ??
+      selectedIndex("Subtitle") ??
       (settings.subtitleLanguage === "off"
         ? -1
         : settings.subtitleLanguage === "auto"
@@ -411,6 +498,9 @@ async function preparePlaybackInner(
     secondarySubtitlePosition: settings.secondarySubtitlePosition,
     secondarySubtitleScale: settings.secondarySubtitleScale,
     volume: settings.volume,
+    speed: 1,
+    muted: false,
+    preservePresentation: false,
     fullscreen: settings.fullscreen,
     hardwareDecode: settings.hardwareDecode,
     embedded: settings.embedded,
@@ -431,6 +521,7 @@ export async function preparePlayback(
   signal?: AbortSignal,
   sourceId?: string,
   settings: Settings = defaults,
+  selection?: PlaybackSelection,
 ) {
   const context = {
     mediaSourceId: sourceId,
@@ -445,6 +536,7 @@ export async function preparePlayback(
       sourceId,
       settings,
       context,
+      selection,
     );
   } catch (error) {
     if (
@@ -459,12 +551,14 @@ export async function preparePlayback(
         : error instanceof ApiError
           ? new PlaybackError(
               "playback-info-request",
-              `播放信息获取失败${status ? `（HTTP ${status}）` : ""}，请检查连接和账号权限。`,
+              t("player.could_not_retrieve_playback_information_check_your", {
+                p0: status ? `（HTTP ${status}）` : "",
+              }),
               status,
             )
           : new PlaybackError(
               "playback-info-format",
-              "服务器返回的播放信息无效。",
+              t("player.the_server_returned_invalid_playback_information_2"),
             );
     recordNetwork({
       stage: "playback-preparation",
@@ -492,11 +586,12 @@ export async function preparePlayback(
 }
 export function transcodeUrl(
   api: EmbyClient,
-  item: Item,
+  _item: Item,
   source: MediaSource,
   session: string,
 ) {
-  if (!source.TranscodingUrl) throw Error("服务器没有提供兼容播放入口。");
+  if (!source.TranscodingUrl)
+    throw Error(t("player.the_server_did_not_provide_a_compatibility"));
   deliveredUrl(api.account.server, source.TranscodingUrl, "Transcode");
   const url = resolveMediaUrl(api.account.server, source.TranscodingUrl),
     base = new URL(api.account.server);
@@ -508,7 +603,9 @@ export function transcodeUrl(
     url.hash ||
     /(?:^|\/)Download(?:\/|$)/i.test(url.pathname)
   )
-    throw Error("服务器返回的兼容播放入口无效。");
+    throw Error(
+      t("player.the_server_returned_an_invalid_compatibility_playback"),
+    );
   for (const k of [...url.searchParams.keys()])
     if (
       ["api_key", "access_token", "accesstoken", "x-emby-token"].includes(
@@ -534,6 +631,9 @@ export interface Track {
   "external-filename"?: string;
 }
 export interface PlayerSnapshot {
+  subtitleLoadFailed?: boolean;
+  miniPresentation?: import("./useMiniWindow").MiniPresentation;
+  persistenceId?: string;
   videoFit?: VideoFit;
   syncTimeouts?: number;
   playMethod?: string;

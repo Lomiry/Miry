@@ -1,6 +1,6 @@
 {
-  "version": "1.0.7",
-  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "version": "1.0.8",
+  "cargo_lock_sha256": "310f37e89da02bcbdba393f4e693b5afc321d62b7456e6b533781e05a0821025",
   "scope": "Windows normal/build package additions relative to published v1.0.6; no dependency license election or blanket Miry MIT grant",
   "components": [
     {

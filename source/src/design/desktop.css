@@ -35,10 +35,10 @@
   --surface-hover: #dfe7e3;
   --text: #202b26;
   --muted: #4c6057;
-  --subtle: #5f7168;
+  --subtle: #52645b;
   --line: #253e2926;
-  --line-strong: #253e2947;
-  --accent: #207750;
+  --line-strong: #6c7d73;
+  --accent: #196b46;
   --accent-hover: #165e3d;
   --accent-soft: #58b88a24;
   --accent-ink: #f3fff8;
@@ -70,7 +70,7 @@
   --muted: #bac3c0;
   --subtle: #9ba8a3;
   --line: #ffffff21;
-  --line-strong: #ffffff38;
+  --line-strong: #77837d;
   --accent: #96e2bd;
   --accent-hover: #b5f0d1;
   --accent-soft: #96e2bd14;
@@ -80,6 +80,9 @@
   --warning: #f4d49b;
   --overlay: #0009;
   --scrollbar: #89958e66;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #89958e55;
+  --scrollbar-thumb-hover: #a6b2ab88;
   --shadow-menu: 0 8px 28px #0007;
   --shadow-dialog: 0 16px 64px #0009;
   --artwork-bg: #232c29;
@@ -111,11 +114,28 @@ textarea {
   font-size: var(--font-control);
 }
 button:disabled,
-input:disabled {
-  opacity: 0.45;
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 1;
+  color: var(--muted);
+  cursor: not-allowed;
+  border-style: dashed;
 }
-.sidebar,
-.window-brand {
+button.primary:disabled {
+  color: var(--muted);
+  background: var(--surface-hover);
+  border: 1px dashed var(--line-strong);
+}
+small {
+  color: var(--subtle);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--subtle);
+  opacity: 1;
+}
+.sidebar {
   transition:
     width 200ms ease-out,
     flex-basis 200ms ease-out;
@@ -257,8 +277,7 @@ input:disabled {
   display: none;
 }
 .sidebar[data-collapsed="true"] .nav-label,
-.sidebar[data-collapsed="true"] .library-nav-heading,
-.sidebar[data-collapsed="true"] .server-switcher {
+.sidebar[data-collapsed="true"] .library-nav-heading {
   opacity: 0;
   max-height: 0;
   margin: 0;
@@ -271,15 +290,6 @@ input:disabled {
 }
 .sidebar[data-collapsed="true"] .account > div:nth-child(2) {
   display: none;
-}
-:root[data-sidebar="collapsed"] .window-brand {
-  padding-left: 18px;
-  gap: 0;
-}
-:root[data-sidebar="collapsed"] .window-brand strong {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
 }
 .card-caption > strong {
   font-size: var(--font-body);
@@ -371,7 +381,7 @@ input:disabled {
   border-color: var(--line-strong);
 }
 .search input::placeholder {
-  color: var(--subtle);
+  color: var(--muted);
 }
 .settings-layout {
   grid-template-columns: calc(178px * var(--ui-scale)) minmax(0, 1fr);
@@ -452,11 +462,8 @@ input:disabled {
 main,
 .browse-main,
 .sidebar-scroll,
-.settings-body,
 .catalog-shortcuts,
-.shelf-track,
-.ui-popover,
-.player-popover-scroll {
+.shelf-track {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 ::-webkit-scrollbar {

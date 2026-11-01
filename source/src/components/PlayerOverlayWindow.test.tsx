@@ -9,23 +9,86 @@ import {
 } from "@testing-library/react";
 import PlayerOverlayWindow from "./PlayerOverlayWindow";
 import { emitTo, listen } from "@tauri-apps/api/event";
+import { t, setLanguage, getLanguage, languageKey } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 vi.mock("@tauri-apps/api/event", () => ({
   emitTo: vi.fn(async () => {}),
   listen: vi.fn(async () => () => {}),
 }));
+vi.mock("../danmaku/DanmakuLayer", () => ({
+  default: () => <div data-testid="danmaku-renderer" />,
+}));
 vi.mock("./PlayerChrome", () => ({
-  default: ({ dispatch }: { dispatch: (a: unknown) => Promise<void> }) => (
-    <div>
-      <input aria-label="测试编辑框" />
-      <button onClick={() => void dispatch({ kind: "return" })}>
-        测试退出
-      </button>
-    </div>
-  ),
+  default: ({ dispatch }: { dispatch: (a: unknown) => Promise<void> }) => {
+    useI18n();
+    return (
+      <div>
+        <span>{t("player.subtitles")}</span>
+        <input aria-label="测试编辑框" />
+        <button onClick={() => void dispatch({ kind: "return" })}>
+          测试退出
+        </button>
+      </div>
+    );
+  },
 }));
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  setLanguage("zh-CN", false);
+});
+it("unmounts the danmaku renderer in Mini even if an old document/clock arrives after entry", async () => {
+  const handlers = new Map<string, (e: unknown) => void>();
+  vi.mocked(listen).mockImplementation(async (name, fn) => {
+    handlers.set(name, fn as never);
+    return () => {};
+  });
+  render(<PlayerOverlayWindow />);
+  await act(async () => {});
+  act(() => handlers.get("player-ui-state")!({ payload: { mini: false } }));
+  expect(screen.getByTestId("danmaku-renderer")).toBeTruthy();
+  act(() => handlers.get("player-ui-state")!({ payload: { mini: true } }));
+  act(() => handlers.get("player-danmaku-data")!({ payload: { entries: [] } }));
+  act(() =>
+    handlers.get("player-danmaku-clock")!({ payload: { position: 10 } }),
+  );
+  expect(screen.queryByTestId("danmaku-renderer")).toBeNull();
+  act(() => handlers.get("player-ui-state")!({ payload: { mini: false } }));
+  expect(screen.getByTestId("danmaku-renderer")).toBeTruthy();
+});
+it("updates an existing Overlay from main state and recovers the latest locale on recreation without persisting stale ownership", async () => {
+  const handlers = new Map<string, (e: unknown) => void>();
+  vi.mocked(listen).mockImplementation(async (name, fn) => {
+    handlers.set(name, fn as never);
+    return () => {};
+  });
+  localStorage.setItem(languageKey, "zh-CN");
+  const view = render(<PlayerOverlayWindow />);
+  await act(async () => {});
+  act(() =>
+    handlers.get("player-ui-state")!({ payload: { language: "zh-CN" } }),
+  );
+  const input = screen.getByLabelText("测试编辑框");
+  act(() => input.focus());
+  vi.mocked(emitTo).mockClear();
+  act(() =>
+    handlers.get("player-ui-state")!({ payload: { language: "en-US" } }),
+  );
+  expect(screen.getByText("Subtitles")).toBeTruthy();
+  expect(document.activeElement).toBe(input);
+  expect(localStorage.getItem(languageKey)).toBe("zh-CN");
+  expect(emitTo).not.toHaveBeenCalled();
+  const stale = handlers.get("player-ui-state")!;
+  view.unmount();
+  act(() => stale({ payload: { language: "zh-CN" } }));
+  expect(getLanguage()).toBe("en-US");
+  render(<PlayerOverlayWindow />);
+  await act(async () => {});
+  expect(emitTo).toHaveBeenCalledWith("main", "player-ui-ready", {});
+  act(() =>
+    handlers.get("player-ui-state")!({ payload: { language: "en-US" } }),
+  );
+  expect(screen.getByText("Subtitles")).toBeTruthy();
 });
 it("announces readiness after listening, forwards return only to main and accepts its acknowledgement", async () => {
   const handlers = new Map<string, (e: unknown) => void>();

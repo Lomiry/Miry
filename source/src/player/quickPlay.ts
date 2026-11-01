@@ -1,8 +1,9 @@
+import { t } from "../i18n/core";
 import { ApiError, type EmbyClient } from "../api/client";
 import type { Item } from "../types/emby";
 
 export function episodeLabel(item: Item) {
-  return `${item.ParentIndexNumber !== undefined ? `第 ${item.ParentIndexNumber} 季 · ` : ""}${item.IndexNumber !== undefined ? `第 ${item.IndexNumber} 集 · ` : ""}${item.Name}`;
+  return `${item.ParentIndexNumber !== undefined ? t("player.season", { p0: item.ParentIndexNumber }) : ""}${item.IndexNumber !== undefined ? t("player.episode", { p0: item.IndexNumber }) : ""}${item.Name}`;
 }
 const playable = (item: Item) =>
   item.Type === "Episode" && !item.IsMissing && !item.IsVirtual;
@@ -75,6 +76,7 @@ export async function resolveQuickPlay(
       signal,
     )
   ).Items.find(playable);
-  if (!first) throw new Error("暂时没有可播放的剧集，请刷新或选择其他季。");
+  if (!first)
+    throw new Error(t("player.no_playable_episodes_right_now_refresh_or"));
   return first;
 }

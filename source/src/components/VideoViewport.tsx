@@ -1,47 +1,69 @@
-import { useEffect, useRef } from "react";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
+import { useCallback, useEffect, useRef } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 let viewportSequence = 0;
 let surfaceWork = Promise.resolve();
 export default function VideoViewport({
   visible,
   controls = false,
+  detached = false,
 }: {
   visible: boolean;
   controls?: boolean;
+  detached?: boolean;
 }) {
+  useI18n();
+
   const node = useRef<HTMLDivElement>(null);
+  const observer = useRef<ResizeObserver | null>(null);
   const shown = useRef(visible),
+    transferred = useRef(detached),
     overlay = useRef(controls),
     refresh = useRef<() => void>(() => {});
   shown.current = visible;
+  transferred.current = detached;
   overlay.current = controls;
-  useEffect(() => refresh.current(), [visible, controls]);
+  const setNode = useCallback((element: HTMLDivElement | null) => {
+    observer.current?.disconnect();
+    node.current = element;
+    if (element) {
+      observer.current?.observe(element);
+      refresh.current();
+    }
+  }, []);
+  useEffect(() => refresh.current(), [visible, controls, detached]);
   useEffect(() => {
-    if (!isTauri() || !node.current) return;
+    if (!isTauri()) return;
     let active = true,
       frame = 0,
       last = "",
       lastOverlay = "",
-      originRevision = 0,
-      work = Promise.resolve();
+      originRevision = 0;
     const owner = `viewport-${Date.now()}-${++viewportSequence}`;
     const attached = invoke("player_overlay_attach", { owner });
     let nativeScale = window.devicePixelRatio || 1;
     let removeScale: (() => void) | undefined;
     let removeMove: (() => void) | undefined;
     let removeResize: (() => void) | undefined;
+    let removeTray: (() => void) | undefined;
     const update = () => {
       if (!active) return;
-      const bounds = node.current!.getBoundingClientRect();
+      if (!node.current && !transferred.current) return;
+      // Mini owns the native geometry. Keep this owner mounted without a main
+      // window video element; release only when the playback session ends.
+      const bounds = node.current?.getBoundingClientRect();
       // Rust expects window logical units; CSS pixels also include WebView zoom.
       const zoom = (window.devicePixelRatio || nativeScale) / nativeScale;
       const rect = {
-        x: Math.round(bounds.x * zoom),
-        y: Math.round(bounds.y * zoom),
-        width: Math.round(bounds.width * zoom),
-        height: Math.round(bounds.height * zoom),
+        x: Math.round((bounds?.x || 0) * zoom),
+        y: Math.round((bounds?.y || 0) * zoom),
+        width: Math.round((bounds?.width || 0) * zoom),
+        height: Math.round((bounds?.height || 0) * zoom),
         visible:
+          !!bounds &&
           shown.current &&
           !document.hidden &&
           bounds.width > 0 &&
@@ -57,7 +79,7 @@ export default function VideoViewport({
       if (!videoChanged && !overlayChanged) return;
       last = signature;
       lastOverlay = overlaySignature;
-      surfaceWork = work = surfaceWork
+      surfaceWork = surfaceWork
         .then(async () => {
           await attached;
           if (!active) return;
@@ -82,6 +104,20 @@ export default function VideoViewport({
           }
         })
         .then((remove) => (active ? (removeResize = remove) : remove()))
+        .catch(() => {});
+      void listen(
+        "tray-restored",
+        () => {
+          if (!active) return;
+          // Hidden WebViews may not emit visibilitychange/resize. Force a fresh
+          // projection with the existing owner even when the CSS bounds match.
+          last = "";
+          lastOverlay = "";
+          schedule();
+        },
+        { target: "main" },
+      )
+        .then((remove) => (active ? (removeTray = remove) : remove()))
         .catch(() => {});
       void appWindow
         .onMoved?.(() => {
@@ -117,11 +153,11 @@ export default function VideoViewport({
     } catch {
       /* An unavailable window API retains the existing logical bounds. */
     }
-    const observer =
+    observer.current =
       typeof ResizeObserver === "undefined"
         ? null
         : new ResizeObserver(schedule);
-    observer?.observe(node.current);
+    if (node.current) observer.current?.observe(node.current);
     window.addEventListener("resize", schedule);
     window.addEventListener("scroll", schedule, true);
     document.addEventListener("visibilitychange", schedule);
@@ -129,10 +165,12 @@ export default function VideoViewport({
     return () => {
       active = false;
       cancelAnimationFrame(frame);
-      observer?.disconnect();
+      observer.current?.disconnect();
+      observer.current = null;
       removeScale?.();
       removeMove?.();
       removeResize?.();
+      removeTray?.();
       refresh.current = () => {};
       window.removeEventListener("resize", schedule);
       window.removeEventListener("scroll", schedule, true);
@@ -140,7 +178,9 @@ export default function VideoViewport({
       void attached
         .then(() => invoke("player_overlay_release", { owner }))
         .catch(() => {});
-      surfaceWork = work
+      // Even a mount cleaned up before its first frame must retain work queued
+      // by previous owners; their delayed hides must precede the next show.
+      surfaceWork = surfaceWork
         .finally(async () => {
           const rect = { x: 0, y: 0, width: 0, height: 0, visible: false };
           await invoke("player_surface", { rect });
@@ -148,5 +188,11 @@ export default function VideoViewport({
         .catch(() => {});
     };
   }, []);
-  return <div className="video-viewport" ref={node} aria-label="视频画面" />;
+  return detached ? null : (
+    <div
+      className="video-viewport"
+      ref={setNode}
+      aria-label={t("library.video_surface")}
+    />
+  );
 }

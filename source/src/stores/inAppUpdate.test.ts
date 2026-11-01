@@ -14,6 +14,7 @@ const candidate = {
   version: "1.1.0",
   url: "https://github.com/Lomiry/Miry/releases/tag/v1.1.0",
   notes: "Notes",
+  updateReady: true,
 };
 it("streams real bytes and unknown totals, rejects parallel downloads and survives remounts", async () => {
   let finish!: () => void;
@@ -119,4 +120,110 @@ it("never installs after a stop failure and releases the shutdown gate", async (
     vi.mocked(invoke).mock.calls.some(([cmd]) => cmd === "install_update"),
   ).toBe(false);
   expect(store.updateSnapshot().phase).toBe("error");
+});
+
+it.each([false, undefined])(
+  "blocks download and install when signing readiness is %s",
+  async (updateReady) => {
+    const store = await import("./inAppUpdate");
+    store.offerUpdate({ ...candidate, updateReady });
+    await store.downloadUpdate();
+    await store.installUpdate(vi.fn(), true);
+    expect(invoke).not.toHaveBeenCalled();
+    expect(store.updateSnapshot().phase).toBe("error");
+  },
+);
+
+it("cancels an owned download, ignores late progress/completion and permits a fresh retry", async () => {
+  let finish!: () => void;
+  vi.mocked(invoke).mockImplementation((command) =>
+    command === "download_update"
+      ? new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+      : Promise.resolve(),
+  );
+  const store = await import("./inAppUpdate");
+  store.offerUpdate(candidate);
+  const pending = store.downloadUpdate();
+  const args = vi.mocked(invoke).mock.calls[0][1] as {
+    requestId: string;
+    onProgress: { onmessage: (value: unknown) => void };
+  };
+  await store.cancelDownload();
+  expect(invoke).toHaveBeenLastCalledWith("cancel_update_download", {
+    requestId: args.requestId,
+  });
+  expect(store.updateSnapshot().phase).toBe("cancelling");
+  args.onProgress.onmessage({ phase: "verifying" });
+  store.offerUpdate({ ...candidate, version: "2.0.0" });
+  store.clearUpdate();
+  await store.downloadUpdate();
+  expect(store.updateSnapshot().release?.version).toBe(candidate.version);
+  expect(invoke).toHaveBeenCalledTimes(2);
+  finish();
+  await pending;
+  expect(store.updateSnapshot().phase).toBe("cancelled");
+  await store.installUpdate(vi.fn(), true);
+  expect(invoke).toHaveBeenCalledTimes(2);
+  vi.mocked(invoke).mockResolvedValue(undefined);
+  await store.downloadUpdate();
+  expect(store.updateSnapshot().phase).toBe("ready");
+  const retry = vi.mocked(invoke).mock.calls[2][1] as { requestId: string };
+  expect(retry.requestId).not.toBe(args.requestId);
+  args.onProgress.onmessage({ phase: "downloading" });
+  expect(store.updateSnapshot().phase).toBe("ready");
+});
+
+it("keeps cancellation safe when the cancellation IPC fails and the original download later rejects", async () => {
+  let fail!: (reason: string) => void;
+  vi.mocked(invoke).mockImplementation((command) =>
+    command === "download_update"
+      ? new Promise<void>((_, reject) => {
+          fail = reject;
+        })
+      : Promise.reject("IPC failed"),
+  );
+  const store = await import("./inAppUpdate");
+  store.offerUpdate(candidate);
+  const pending = store.downloadUpdate();
+  await store.cancelDownload();
+  expect(store.updateSnapshot().phase).toBe("cancelling");
+  fail("download timeout");
+  await pending;
+  expect(store.updateSnapshot().phase).toBe("cancelled");
+  await store.installUpdate(vi.fn(), true);
+  expect(invoke).toHaveBeenCalledTimes(2);
+});
+
+it("never calls playback preparation when the native shutdown gate rejects", async () => {
+  vi.mocked(invoke).mockResolvedValue(undefined);
+  const store = await import("./inAppUpdate");
+  store.offerUpdate(candidate);
+  await store.downloadUpdate();
+  vi.mocked(invoke).mockRejectedValueOnce("Application is exiting");
+  const prepare = vi.fn();
+  await store.installUpdate(prepare, true);
+  expect(prepare).not.toHaveBeenCalled();
+  expect(invoke).toHaveBeenLastCalledWith("cancel_update_install");
+  expect(
+    vi.mocked(invoke).mock.calls.some(([cmd]) => cmd === "install_update"),
+  ).toBe(false);
+});
+
+it("retains the app after a failed final save or installer handoff and does not automatically retry", async () => {
+  vi.mocked(invoke).mockResolvedValue(undefined);
+  const store = await import("./inAppUpdate");
+  store.offerUpdate(candidate);
+  await store.downloadUpdate();
+  vi.mocked(invoke).mockImplementation(async (command) => {
+    if (command === "install_update")
+      throw Error("Final save receipt timed out");
+  });
+  await store.installUpdate(vi.fn(), true);
+  expect(store.updateSnapshot().phase).toBe("error");
+  expect(invoke).toHaveBeenLastCalledWith("cancel_update_install");
+  expect(
+    vi.mocked(invoke).mock.calls.filter(([cmd]) => cmd === "install_update"),
+  ).toHaveLength(1);
 });

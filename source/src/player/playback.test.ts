@@ -16,6 +16,36 @@ const api = new EmbyClient({
   deviceId: "device",
 });
 afterEach(() => vi.unstubAllGlobals());
+it("passes only the current connection certificate policy into the native session", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            PlaySessionId: "session",
+            MediaSources: [{ Id: "source", SupportsDirectPlay: true }],
+          }),
+        ),
+    ),
+  );
+  for (const enabled of [false, true, false]) {
+    const client = new EmbyClient({
+      ...api.account,
+      ignoreCertificateErrors: enabled,
+    });
+    vi.spyOn(client, "request").mockResolvedValue({
+      PlaySessionId: "session",
+      MediaSources: [{ Id: "source", SupportsDirectPlay: true }],
+    });
+    const launch = await preparePlayback(
+      client,
+      { Id: "movie", Name: "Movie", Type: "Movie" },
+      false,
+    );
+    expect(launch.ignoreCertificateErrors).toBe(enabled);
+  }
+});
 it.each(["fit", "fill", "stretch"] as const)(
   "restores %s on each new video launch",
   async (videoFit) => {

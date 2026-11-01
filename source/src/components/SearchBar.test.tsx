@@ -14,6 +14,30 @@ vi.mock("@tauri-apps/api/webview", () => ({
 }));
 beforeEach(() => localStorage.clear());
 afterEach(() => cleanup());
+it("removes known account credentials from legacy history and does not record them on submission", async () => {
+  recordSearch("demo", "Fixture User");
+  recordSearch("demo", "Dune");
+  localStorage.setItem(
+    "miry-search-history",
+    JSON.stringify({ demo: ["Fixture User", "Dune", "a".repeat(40)] }),
+  );
+  const search = vi.fn(),
+    user = userEvent.setup();
+  render(
+    <SearchBar
+      scope="demo"
+      onSearch={search}
+      sensitiveValues={["Fixture User", "synthetic-token"]}
+    />,
+  );
+  expect(readSearchHistory("demo")).toEqual(["Dune"]);
+  expect(localStorage.getItem("miry-search-history")).toBe(
+    JSON.stringify({ demo: ["Dune"] }),
+  );
+  await user.type(screen.getByLabelText("搜索媒体"), "synthetic-token{Enter}");
+  expect(search).toHaveBeenCalledWith("synthetic-token");
+  expect(readSearchHistory("demo")).toEqual(["Dune"]);
+});
 it("realistic pointer focus and keyboard editing reach the input and request main WebView focus", async () => {
   native.enabled = true;
   native.focus.mockClear();

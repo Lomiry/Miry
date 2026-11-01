@@ -8,16 +8,55 @@ import { rustDeltaNotices } from "./rust-delta-notices.mjs";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
 const env = { ...process.env };
+// An ordinary local NSIS test installer is not a signed updater artifact.
+const testNsis = args.includes("--test-nsis");
+if (testNsis) {
+  const cargoSeparator = args.indexOf("--");
+  const buildArgs = args.slice(
+    1,
+    cargoSeparator < 0 ? args.length : cargoSeparator,
+  );
+  const cargoArgs = cargoSeparator < 0 ? [] : args.slice(cargoSeparator + 1);
+  if (
+    args[0] !== "build" ||
+    buildArgs.some((arg) => !["--test-nsis", "--ci", "--help"].includes(arg)) ||
+    cargoArgs.some((arg) => !["--locked", "--offline"].includes(arg))
+  ) {
+    console.error(
+      "测试 NSIS 模式仅支持 build、--ci、--help 和 Cargo --locked/--offline，不能合并额外配置。",
+    );
+    process.exit(1);
+  }
+  args.splice(args.indexOf("--test-nsis"), 1);
+  const separator = args.indexOf("--");
+  args.splice(
+    separator < 0 ? args.length : separator,
+    0,
+    "--bundles",
+    "nsis",
+    "--config",
+    JSON.stringify({ bundle: { createUpdaterArtifacts: false } }),
+  );
+  console.error(
+    "测试 NSIS：不生成 updater 签名产物；正式更新签名门禁保持不变。",
+  );
+}
 if (args[0] === "build") {
   const config = JSON.parse(
     readFileSync(path.join(root, "src-tauri/tauri.conf.json"), "utf8"),
   );
+  const policy = JSON.parse(
+    readFileSync(path.join(root, "src-tauri/updater-policy.json"), "utf8"),
+  );
   if (
+    !testNsis &&
     config.bundle.createUpdaterArtifacts &&
-    (!config.plugins?.updater?.pubkey || !env.TAURI_SIGNING_PRIVATE_KEY)
+    (policy.signingReady !== true ||
+      !config.plugins?.updater?.pubkey ||
+      !env.TAURI_SIGNING_PRIVATE_KEY)
   ) {
     console.error(
-      "更新签名尚未就绪：请配置正式公钥和受控 TAURI_SIGNING_PRIVATE_KEY；构建已停止，未生成安装包。",
+      "更新签名尚未就绪：请先审阅 updater-policy.json，并确认正式公钥与受控 TAURI_SIGNING_PRIVATE_KEY 对应；构建已停止，未生成安装包。",
     );
     process.exit(1);
   }

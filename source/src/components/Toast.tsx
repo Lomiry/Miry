@@ -1,3 +1,5 @@
+import { t, localizeMessage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useRef } from "react";
 import { Check, Info, AlertTriangle, AlertCircle, X } from "lucide-react";
 export type ToastTone = "success" | "info" | "warning" | "error";
@@ -15,6 +17,8 @@ export default function Toast({
   onDismiss: () => void;
   tone?: ToastTone;
 }) {
+  useI18n();
+
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
   useEffect(() => {
@@ -36,8 +40,11 @@ export default function Toast({
       role={tone === "error" ? "alert" : "status"}
     >
       <Icon size={16} />
-      <span>{message}</span>
-      <button aria-label="关闭提示" onClick={onDismiss}>
+      <span>{localizeMessage(message)}</span>
+      <button
+        aria-label={t("library.dismiss_notification")}
+        onClick={onDismiss}
+      >
         <X size={14} />
       </button>
     </div>

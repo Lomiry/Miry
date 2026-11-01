@@ -1,3 +1,6 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import Select from "./Select";
 import { useEffect, useState } from "react";
 import type { EmbyClient } from "../api/client";
@@ -41,6 +44,8 @@ export default function EpisodeBrowser({
   onPageChange?: (season: string, page: number) => void;
   progressItems?: Item[];
 }) {
+  useI18n();
+
   const [seasonId, setSeasonId] = useState(
     parent.Type === "Season"
       ? parent.Id
@@ -97,7 +102,9 @@ export default function EpisodeBrowser({
       })
       .catch((e) => {
         if (!controller.signal.aborted)
-          setError(privateText(e.message || "剧集加载失败。"));
+          setError(
+            privateText(e.message || t("library.could_not_load_episodes")),
+          );
       })
       .finally(() => {
         if (!controller.signal.aborted) setBusy(false);
@@ -126,14 +133,15 @@ export default function EpisodeBrowser({
         : continuing || visibleEpisodes.find((ep) => !ep.UserData?.Played)
       : continuing;
   return (
-    <section className="episode-browser" aria-label="选集播放">
-      <SectionHeader className="section-heading" title="选集播放">
+    <section className="episode-browser" aria-label={t("library.episodes")}>
+      <SectionHeader className="section-heading" title={t("library.episodes")}>
         {parent.Type === "Series" && (
           <div className="season-selection">
             <label>
-              季{" "}
+              {" "}
+              {t("library.season")}{" "}
               <Select
-                aria-label="选择季"
+                aria-label={t("library.select_season")}
                 value={seasonId}
                 onChange={(e) => {
                   setSeasonId(e.target.value);
@@ -149,7 +157,11 @@ export default function EpisodeBrowser({
               </Select>
             </label>
             <IconButton
-              label={`查看 ${seasons.find((s) => s.Id === seasonId)?.Name || "本季"}详情`}
+              label={t("library.view_details_for", {
+                p0:
+                  seasons.find((s) => s.Id === seasonId)?.Name ||
+                  t("library.this_season"),
+              })}
               onClick={() => {
                 const season = seasons.find((s) => s.Id === seasonId);
                 if (season) onDetail(season);
@@ -164,9 +176,11 @@ export default function EpisodeBrowser({
         <div
           className="episode-list episode-skeleton"
           role="status"
-          aria-label="正在加载剧集"
+          aria-label={t("library.loading_episodes")}
         >
-          <span className="visually-hidden">正在加载剧集…</span>
+          <span className="visually-hidden">
+            {t("library.loading_episodes_2")}
+          </span>
           {Array.from({ length: reservedRows }, (_, i) => (
             <div className="episode-row" key={i} aria-hidden="true">
               <div className="episode-skeleton-thumb" />
@@ -179,8 +193,8 @@ export default function EpisodeBrowser({
         </div>
       ) : error ? (
         <ErrorState
-          title="剧集暂时无法加载"
-          message={error}
+          title={t("library.episodes_are_unavailable_right_now")}
+          message={displayError(error)}
           onRetry={() => setRetry((n) => n + 1)}
         />
       ) : episodes.length ? (
@@ -213,7 +227,9 @@ export default function EpisodeBrowser({
                   </div>
                   <div className="episode-description">
                     <span className="episode-number">
-                      第 {ep.IndexNumber ?? "?"} 集
+                      {t("library.episode_number", {
+                        episode: ep.IndexNumber ?? "?",
+                      })}
                     </span>
                     <strong title={ep.Name}>{ep.Name}</strong>
                     <small>
@@ -221,24 +237,25 @@ export default function EpisodeBrowser({
                         <span className="episode-status">
                           <Play size={12} />
                           {current
-                            ? "正在播放"
+                            ? t("library.playing")
                             : continuing?.Id === ep.Id
-                              ? "继续观看"
-                              : "下一集"}
+                              ? t("library.continue_watching")
+                              : t("library.next_episode")}
                         </span>
                       )}
                       {ep.UserData?.Played ? (
                         <span className="episode-watched">
-                          <Check size={12} />
-                          已看
+                          <Check size={12} /> {t("library.watched")}{" "}
                         </span>
                       ) : progress > 0 ? (
-                        `已看 ${Math.round(progress)}%`
+                        t("library.watched_2", { p0: Math.round(progress) })
                       ) : (
-                        "未看"
+                        t("library.unwatched")
                       )}
                       {ep.RunTimeTicks
-                        ? ` · ${Math.round(ep.RunTimeTicks / 600000000)} 分钟`
+                        ? t("library.min", {
+                            p0: Math.round(ep.RunTimeTicks / 600000000),
+                          })
                         : ""}
                     </small>
                     {ep.Overview && <p>{plainOverview(ep.Overview)}</p>}
@@ -257,8 +274,8 @@ export default function EpisodeBrowser({
         </div>
       ) : (
         <EmptyState
-          title="暂时没有可播放的剧集"
-          description="请选择其他季，或稍后刷新。"
+          title={t("library.no_playable_episodes_right_now")}
+          description={t("library.select_another_season_or_refresh_later")}
         />
       )}
       {(page > 0 || hasMore) && (
@@ -267,7 +284,7 @@ export default function EpisodeBrowser({
           pages={totalKnown ? Math.ceil(total / 50) : undefined}
           hasMore={hasMore}
           busy={busy}
-          label="剧集翻页"
+          label={t("library.episode_pagination")}
           onChange={(next) => {
             setPage(next);
             onPageChange?.(seasonId, next);

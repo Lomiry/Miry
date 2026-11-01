@@ -66,6 +66,7 @@ pub struct ReleaseInfo {
     published_at: Option<String>,
     pub(crate) newer: bool,
     pub(crate) assets: Vec<Asset>,
+    pub(crate) update_ready: bool,
 }
 pub(crate) fn parse_release(data: Value) -> Result<ReleaseInfo, String> {
     let tag = data["tag_name"].as_str().ok_or("缺少发布版本")?;
@@ -137,6 +138,7 @@ pub(crate) fn parse_release(data: Value) -> Result<ReleaseInfo, String> {
             .map(|v| v.chars().take(64).collect()),
         newer: version.cmp_precedence(&current).is_gt(),
         assets,
+        update_ready: false,
     })
 }
 

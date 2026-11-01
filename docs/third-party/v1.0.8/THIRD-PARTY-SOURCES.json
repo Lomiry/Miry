@@ -1,0 +1,261 @@
+{
+  "version": "1.0.8",
+  "sourceCommit": "acbb3df36a08c1482f7fc6d8c2b4e2cb94b8ae20",
+  "rc2InstallerSha256": "d164f3cc48cfb5d4528a043079158c8a53fcdde9ebf476abbc9ee431f3d4dc33",
+  "sourceMapping": "SOURCE-MAPPING.json",
+  "runtimeManifest": "../../../source/tools/mpv/source-manifest.json",
+  "exactRuntimeSourceIndex": "../../../source/tools/mpv/compliance/runtime/THIRD-PARTY-SOURCES.json",
+  "licenses": "../../../source/tools/mpv/licenses/",
+  "bundledNotice": "../../../source/tools/mpv/licenses/rust-v107/NOTICE.txt",
+  "originalLicenseIndex": "../../../source/tools/mpv/licenses/rust-v107/INDEX.json",
+  "runtimeSourceVolumes": [
+    {
+      "name": "Miry-v1.0.1-third-party-sources-1.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-1.zip",
+      "sha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "bytes": 1791428285,
+      "status": "PASS",
+      "anonymousStatus": 200,
+      "anonymousBytes": 1791428285,
+      "githubDigest": "sha256:91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "fullyRedownloaded": false,
+      "sha256Scope": "Current GitHub digest matches pinned historical content hash"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-2.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-2.zip",
+      "sha256": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "bytes": 1790458555,
+      "status": "PASS",
+      "anonymousStatus": 200,
+      "anonymousBytes": 1790458555,
+      "githubDigest": "sha256:ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "fullyRedownloaded": false,
+      "sha256Scope": "Current GitHub digest matches pinned historical content hash"
+    },
+    {
+      "name": "Miry-v1.0.1-third-party-sources-3.zip",
+      "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-3.zip",
+      "sha256": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+      "bytes": 490257003,
+      "status": "PASS",
+      "anonymousStatus": 200,
+      "anonymousBytes": 490257003,
+      "githubDigest": "sha256:727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+      "fullyRedownloaded": false,
+      "sha256Scope": "Current GitHub digest matches pinned historical content hash"
+    }
+  ],
+  "dependencyVersionsSameAs107": true,
+  "cargoPackageCount": 526,
+  "dependencyDelta": [],
+  "windowsArchiveSources": [
+    {
+      "name": "minisign-verify",
+      "version": "0.3.0",
+      "previous_versions": [],
+      "direct_in_manifest": false,
+      "license_expression": "MIT",
+      "repository": "https://github.com/jedisct1/rust-minisign-verify",
+      "archive_url": "https://static.crates.io/crates/minisign-verify/minisign-verify-0.3.0.crate",
+      "archive_bytes": 24140,
+      "archive_sha256": "871285dc19d8d0ebe0eef3d0e99a205f2a71363b122632cbbfa4a6c370a960ce",
+      "vcs": {
+        "git": {
+          "sha1": "96b921399b87b29e29cb5dc948b99b465ca58489"
+        },
+        "path_in_vcs": ""
+      },
+      "windows_normal_or_build": true,
+      "archive_sha256_matches_rc6_lock": true,
+      "archive_redistributed_in_windows_installer": false,
+      "copyright_and_license_evidence": [
+        {
+          "archive_member": "minisign-verify-0.3.0/LICENSE",
+          "bytes": 2312,
+          "sha256": "42c8695fbc468866d9756be99af0ba4e37d733f8daa3c8827c8d80b8bec1b2f9"
+        }
+      ],
+      "bundled_originals": [
+        {
+          "path": "originals/minisign-verify-0.3.0/LICENSE",
+          "archive_member": "minisign-verify-0.3.0/LICENSE",
+          "sha256": "42c8695fbc468866d9756be99af0ba4e37d733f8daa3c8827c8d80b8bec1b2f9",
+          "bytes": 2312
+        }
+      ],
+      "scope": "Windows normal/build delta: all seven original legal files and supplemental NOTICE/index/checksums verified against actual RC7 NSIS bytes.",
+      "file_level_exception": "Original LICENSE includes rust-crypto attribution, original ISC-labelled third-party paragraph and Graydon Hoare/Mozilla Foundation notices; full original is preserved, not normalized from package MIT metadata.",
+      "public_archive": "sources/minisign-verify-0.3.0.crate"
+    },
+    {
+      "name": "rustls-platform-verifier",
+      "version": "0.7.1",
+      "previous_versions": [],
+      "direct_in_manifest": false,
+      "license_expression": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rustls/rustls-platform-verifier",
+      "archive_url": "https://static.crates.io/crates/rustls-platform-verifier/rustls-platform-verifier-0.7.1.crate",
+      "archive_bytes": 60698,
+      "archive_sha256": "1167586491e2b18b8bfbb293e8180ec17c201c4f076d7cb3070ca964e7598f98",
+      "vcs": {
+        "git": {
+          "sha1": "252e25161a91af476cbea620e29d277592d27ec7"
+        },
+        "path_in_vcs": "rustls-platform-verifier"
+      },
+      "windows_normal_or_build": true,
+      "archive_sha256_matches_rc6_lock": true,
+      "archive_redistributed_in_windows_installer": false,
+      "copyright_and_license_evidence": [
+        {
+          "archive_member": "rustls-platform-verifier-0.7.1/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "archive_member": "rustls-platform-verifier-0.7.1/LICENSE-MIT",
+          "bytes": 1066,
+          "sha256": "1c7cf76689c837a68ed8d704994e52a0f2940c087958f860d17f3186afbdcc0c"
+        }
+      ],
+      "bundled_originals": [
+        {
+          "path": "originals/rustls-platform-verifier-0.7.1/LICENSE-APACHE",
+          "archive_member": "rustls-platform-verifier-0.7.1/LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357
+        },
+        {
+          "path": "originals/rustls-platform-verifier-0.7.1/LICENSE-MIT",
+          "archive_member": "rustls-platform-verifier-0.7.1/LICENSE-MIT",
+          "sha256": "1c7cf76689c837a68ed8d704994e52a0f2940c087958f860d17f3186afbdcc0c",
+          "bytes": 1066
+        }
+      ],
+      "scope": "Windows normal/build delta: all seven original legal files and supplemental NOTICE/index/checksums verified against actual RC7 NSIS bytes.",
+      "public_archive": "sources/rustls-platform-verifier-0.7.1.crate"
+    },
+    {
+      "name": "tauri-plugin-updater",
+      "version": "2.14.0",
+      "previous_versions": [],
+      "direct_in_manifest": true,
+      "license_expression": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/tauri-apps/plugins-workspace",
+      "archive_url": "https://static.crates.io/crates/tauri-plugin-updater/tauri-plugin-updater-2.14.0.crate",
+      "archive_bytes": 84843,
+      "archive_sha256": "7259989d4fe11b2bf51f7d671642249b1837c4ae2da1430dc713ae38f98ceeec",
+      "vcs": {
+        "git": {
+          "sha1": "44293a5722efcaf27060504e63b17aeba721b40f"
+        },
+        "path_in_vcs": "plugins/updater"
+      },
+      "windows_normal_or_build": true,
+      "archive_sha256_matches_rc6_lock": true,
+      "archive_redistributed_in_windows_installer": false,
+      "copyright_and_license_evidence": [
+        {
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE.spdx",
+          "bytes": 888,
+          "sha256": "eb8a6c84630461b352badcab1dbe5d0168c56d377358b2b8c86b51003272d5ef"
+        },
+        {
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0",
+          "bytes": 10173,
+          "sha256": "0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9"
+        },
+        {
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE_MIT",
+          "bytes": 1089,
+          "sha256": "89ff9689dcf9dd53968785d05a26f7898bb169dbfcada8d032b3e68cf0d55607"
+        }
+      ],
+      "bundled_originals": [
+        {
+          "path": "originals/tauri-plugin-updater-2.14.0/LICENSE.spdx",
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE.spdx",
+          "sha256": "eb8a6c84630461b352badcab1dbe5d0168c56d377358b2b8c86b51003272d5ef",
+          "bytes": 888
+        },
+        {
+          "path": "originals/tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0",
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE_APACHE-2.0",
+          "sha256": "0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9",
+          "bytes": 10173
+        },
+        {
+          "path": "originals/tauri-plugin-updater-2.14.0/LICENSE_MIT",
+          "archive_member": "tauri-plugin-updater-2.14.0/LICENSE_MIT",
+          "sha256": "89ff9689dcf9dd53968785d05a26f7898bb169dbfcada8d032b3e68cf0d55607",
+          "bytes": 1089
+        }
+      ],
+      "scope": "Windows normal/build delta: all seven original legal files and supplemental NOTICE/index/checksums verified against actual RC7 NSIS bytes.",
+      "public_archive": "sources/tauri-plugin-updater-2.14.0.crate"
+    },
+    {
+      "name": "zip",
+      "version": "4.6.1",
+      "previous_versions": [],
+      "direct_in_manifest": false,
+      "license_expression": "MIT",
+      "repository": "https://github.com/zip-rs/zip2.git",
+      "archive_url": "https://static.crates.io/crates/zip/zip-4.6.1.crate",
+      "archive_bytes": 115842,
+      "archive_sha256": "caa8cd6af31c3b31c6631b8f483848b91589021b28fffe50adada48d4f4d2ed1",
+      "vcs": {
+        "git": {
+          "sha1": "56fa5f6e1f3e29d747e5875867e7a647aa612b8c"
+        },
+        "path_in_vcs": ""
+      },
+      "windows_normal_or_build": true,
+      "archive_sha256_matches_rc6_lock": true,
+      "archive_redistributed_in_windows_installer": false,
+      "copyright_and_license_evidence": [
+        {
+          "archive_member": "zip-4.6.1/LICENSE",
+          "bytes": 1217,
+          "sha256": "04dc52136d82400b11df5f474949863a70a5d05d2278dec45b99c479494450a6"
+        }
+      ],
+      "bundled_originals": [
+        {
+          "path": "originals/zip-4.6.1/LICENSE",
+          "archive_member": "zip-4.6.1/LICENSE",
+          "sha256": "04dc52136d82400b11df5f474949863a70a5d05d2278dec45b99c479494450a6",
+          "bytes": 1217
+        }
+      ],
+      "scope": "Windows normal/build delta: all seven original legal files and supplemental NOTICE/index/checksums verified against actual RC7 NSIS bytes.",
+      "public_archive": "sources/zip-4.6.1.crate"
+    }
+  ],
+  "previousSupply": "../v1.0.7/THIRD-PARTY-SOURCES.json",
+  "scope": "Windows x64; no blanket license election or application-wide MIT clearance; preserves originals and historical exceptions",
+  "distributionArtifacts": [
+    {
+      "name": "Miry_1.0.8_x64-setup.exe",
+      "bytes": 69334406,
+      "sha256": "d164f3cc48cfb5d4528a043079158c8a53fcdde9ebf476abbc9ee431f3d4dc33"
+    },
+    {
+      "name": "Miry_1.0.8_x64-setup.exe.sig",
+      "bytes": 432,
+      "sha256": "814cfe86e0715bc2e92e90268c3ecf2a1a1015f59e4c9836ed89e13aa6f3c1cb"
+    },
+    {
+      "name": "Miry_1.0.8_x64-portable.zip",
+      "bytes": 100340653,
+      "sha256": "1cc6e94670687eada9bbad597e8941616e6b715a4bb78506ef1258660ff1de5c"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 741,
+      "sha256": "1a2d6f122fcd1e7ed9eeb386f2a00410f6b0a40b992708a247190e7ddb1e312b"
+    }
+  ],
+  "sourceSnapshot": "../../../source/SNAPSHOT-MANIFEST.json"
+}

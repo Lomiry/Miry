@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
+import { StrictMode } from "react";
 import userEvent from "@testing-library/user-event";
 import Select from "./Select";
 import { placePopover } from "./Popover";
@@ -8,6 +15,7 @@ import SettingsPanel from "./SettingsPanel";
 import { defaults } from "../stores/settings";
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 it("selects with keyboard, skips disabled options and returns focus", async () => {
@@ -36,6 +44,8 @@ it("selects with keyboard, skips disabled options and returns focus", async () =
   expect(screen.queryByRole("listbox")).toBeNull();
 });
 it("uses the same menu for a long list and navigates to its last option", async () => {
+  // Keyboard input must work before the next animation frame.
+  vi.spyOn(window, "requestAnimationFrame").mockReturnValue(0);
   const user = userEvent.setup();
   render(
     <Select aria-label="题材">
@@ -51,10 +61,132 @@ it("uses the same menu for a long list and navigates to its last option", async 
   expect(screen.getByRole("listbox").classList.contains("ui-popover")).toBe(
     true,
   );
+  expect(document.activeElement).toBe(
+    screen.getByRole("option", { name: "题材 0" }),
+  );
   await user.keyboard("{End}");
+  expect(document.activeElement?.textContent).toContain("题材 39");
+  fireEvent.resize(window);
+  fireEvent.scroll(window);
   expect(document.activeElement?.textContent).toContain("题材 39");
   await user.keyboard("{Escape}");
   expect(document.activeElement).toBe(screen.getByRole("combobox"));
+});
+it("focuses an enabled option when the selected option is disabled", async () => {
+  const change = vi.fn(),
+    user = userEvent.setup();
+  render(
+    <Select aria-label="可用选项" value="unavailable" onChange={change}>
+      <option value="unavailable" disabled>
+        当前不可用
+      </option>
+      <option value="first">首个可用项</option>
+      <option value="disabled" disabled>
+        跳过此项
+      </option>
+      <option value="last">末个可用项</option>
+    </Select>,
+  );
+  const trigger = screen.getByRole("combobox");
+  trigger.focus();
+  await user.keyboard("{ArrowDown}");
+  await vi.waitFor(() =>
+    expect(document.activeElement).toBe(
+      screen.getByRole("option", { name: "首个可用项" }),
+    ),
+  );
+  expect(change).not.toHaveBeenCalled();
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect(change).toHaveBeenCalledOnce();
+  expect(change.mock.calls[0][0].target.value).toBe("last");
+  expect(document.activeElement).toBe(trigger);
+  expect(screen.queryByRole("listbox")).toBeNull();
+});
+it.each(["empty", "disabled"])(
+  "keeps the trigger usable when the list is %s",
+  async (kind) => {
+    const change = vi.fn(),
+      user = userEvent.setup();
+    render(
+      <Select aria-label="边界选项" onChange={change}>
+        {kind === "disabled" && (
+          <option value="disabled" disabled>
+            不可用
+          </option>
+        )}
+      </Select>,
+    );
+    const trigger = screen.getByRole("combobox");
+    await user.click(trigger);
+    expect(screen.getByRole("listbox")).toBeTruthy();
+    expect(document.activeElement).toBe(trigger);
+    await user.keyboard("{ArrowDown}{ArrowUp}{Home}{End}{Escape}");
+    expect(change).not.toHaveBeenCalled();
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(trigger);
+  },
+);
+it("handles rapid reopen before and after exit cleanup in StrictMode", () => {
+  vi.useFakeTimers();
+  vi.spyOn(window, "requestAnimationFrame").mockReturnValue(0);
+  render(
+    <StrictMode>
+      <Select aria-label="快速操作">
+        <option value="first">第一项</option>
+        <option value="disabled" disabled>
+          不可用
+        </option>
+        <option value="last">最后一项</option>
+      </Select>
+    </StrictMode>,
+  );
+  const trigger = screen.getByRole("combobox");
+  for (let i = 0; i < 3; i++) {
+    fireEvent.click(trigger);
+    const first = screen.getByRole("option", { name: "第一项" });
+    expect(document.activeElement).toBe(first);
+    fireEvent.keyDown(first, { key: "ArrowUp" });
+    const last = screen.getByRole("option", { name: "最后一项" });
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(last, { key: "Escape" });
+    expect(document.activeElement).toBe(trigger);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    act(() => vi.advanceTimersByTime(i === 2 ? 121 : 60));
+  }
+  fireEvent.click(trigger);
+  expect(document.activeElement).toBe(
+    screen.getByRole("option", { name: "第一项" }),
+  );
+  act(() => vi.advanceTimersByTime(200));
+  expect(screen.getByRole("listbox")).toBeTruthy();
+});
+it("does not steal outside focus on pointer dismissal or after unmount", () => {
+  vi.useFakeTimers();
+  const renderSelect = () => (
+    <Select aria-label="卸载选项">
+      <option value="first">可用项</option>
+    </Select>
+  );
+  const outside = document.createElement("button");
+  document.body.append(outside);
+  const view = render(renderSelect());
+  fireEvent.click(screen.getByRole("combobox"));
+  outside.focus();
+  fireEvent.pointerDown(outside);
+  expect(screen.queryByRole("listbox")).toBeNull();
+  expect(document.activeElement).toBe(outside);
+  fireEvent.click(screen.getByRole("combobox"));
+  view.unmount();
+  outside.focus();
+  act(() => vi.advanceTimersByTime(200));
+  expect(document.querySelector(".ui-popover")).toBeNull();
+  expect(document.activeElement).toBe(outside);
+  // A new owner's menu still responds after the previous layer was removed.
+  render(renderSelect());
+  fireEvent.click(screen.getByRole("combobox"));
+  fireEvent.pointerDown(outside);
+  expect(screen.queryByRole("listbox")).toBeNull();
+  outside.remove();
 });
 it("flips above near the bottom and clamps wide menus to the viewport", () => {
   const p = placePopover(
@@ -107,7 +239,8 @@ it("uses vertical settings navigation and keeps the content in its own panel", a
     "vertical",
   );
   const tabs = screen.getAllByRole("tab");
-  expect(tabs).toHaveLength(10);
+  // Account actions already live in the server menu; settings has nine sections.
+  expect(tabs).toHaveLength(9);
   tabs[0].focus();
   await user.keyboard("{ArrowDown}");
   expect(screen.getByRole("tabpanel").getAttribute("aria-labelledby")).toBe(

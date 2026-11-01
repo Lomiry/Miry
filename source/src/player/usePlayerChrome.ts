@@ -16,6 +16,7 @@ export function usePlayerChrome(
   revision: number,
   blocked = false,
   eventTarget = "main",
+  hideOnLeave = false,
 ) {
   const [phase, setPhase] = useState<"visible" | "fading" | "hidden">(
     "visible",
@@ -35,6 +36,7 @@ export function usePlayerChrome(
     pinned,
     phase,
     keyboard: false,
+    hovered: false,
   });
   Object.assign(current.current, {
     enabled,
@@ -48,6 +50,7 @@ export function usePlayerChrome(
   const suspended = useRef(false),
     restoreVisible = useRef(false);
   const [isSuspended, setSuspended] = useState(false);
+  const [pointerInside, setPointerInside] = useState(true);
   const restoreFrame = useRef(0),
     nextRestoreFrame = useRef(0),
     keyboardFrame = useRef(0);
@@ -72,6 +75,7 @@ export function usePlayerChrome(
       !current.current.enabled ||
       current.current.blocked ||
       current.current.keepVisible ||
+      current.current.hovered ||
       current.current.phase !== "visible"
     )
       return;
@@ -90,7 +94,7 @@ export function usePlayerChrome(
       setPhase("visible");
     }
     const s = current.current;
-    if (s.enabled && !s.keepVisible && !s.pinned && !s.keyboard)
+    if (s.enabled && !s.keepVisible && !s.pinned && !s.keyboard && !s.hovered)
       idle.current = setTimeout(hide, 2800);
   }, [clear, hide]);
   const toggle = useCallback(
@@ -124,9 +128,18 @@ export function usePlayerChrome(
   }, [reveal]);
   useEffect(() => {
     const visibility = () => (document.hidden ? suspend() : resume());
+    const focus = () => {
+      current.current.hovered = false;
+      resume();
+      reveal();
+    };
     document.addEventListener("visibilitychange", visibility);
-    return () => document.removeEventListener("visibilitychange", visibility);
-  }, [suspend, resume]);
+    window.addEventListener("focus", focus);
+    return () => {
+      document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("focus", focus);
+    };
+  }, [suspend, resume, reveal]);
   useEffect(() => {
     reveal();
     return clear;
@@ -167,6 +180,7 @@ export function usePlayerChrome(
           toggle();
           return;
         }
+        if (payload === "pointer") setPointerInside(true);
         current.current.keyboard = payload === "keyboard";
         reveal();
         if (payload === "keyboard")
@@ -186,6 +200,7 @@ export function usePlayerChrome(
     };
   }, [enabled, toggle, reveal, eventTarget, suspend, resume]);
   return {
+    cursorHidden: phase === "hidden" && pointerInside && !isSuspended,
     suspended: isSuspended,
     phase: enabled ? phase : "visible",
     pinned,
@@ -200,11 +215,22 @@ export function usePlayerChrome(
     reveal,
     hide,
     pointer: () => {
+      setPointerInside(true);
       current.current.keyboard = false;
       reveal();
     },
     hover: (value: boolean) => {
+      current.current.hovered = value;
       reveal();
+    },
+    leave: () => {
+      setPointerInside(false);
+      current.current.hovered = false;
+      if (hideOnLeave) hide();
+      else {
+        reveal();
+        clear();
+      }
     },
     pin: (value: boolean) => {
       setPinned(value);

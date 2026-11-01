@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useRef, useState } from "react";
 
 export default function SubtitleSlider({
@@ -17,6 +19,8 @@ export default function SubtitleSlider({
   send: (value: number, persist: boolean) => Promise<void>;
   disabled: boolean;
 }) {
+  useI18n();
+
   const [draft, setDraft] = useState(value);
   const editing = useRef(false),
     active = useRef(true),
@@ -100,7 +104,11 @@ export default function SubtitleSlider({
         onPointerCancel={finish}
       />
       <small>{Math.round(draft * (max <= 3 ? 100 : 1))}%</small>
-      {error && <small role="alert">调整未完成，请重试。</small>}
+      {error && (
+        <small role="alert">
+          {t("player.the_adjustment_could_not_be_completed_try")}
+        </small>
+      )}
     </label>
   );
 }

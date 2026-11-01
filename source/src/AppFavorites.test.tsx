@@ -114,7 +114,7 @@ it("refetches a saved empty Favorites page after a detail mutation and removes a
     UserData: { IsFavorite: favorite },
   });
   const fetch = vi.fn(
-    async (input: string | URL | Request, init?: RequestInit) => {
+    async (input: string | URL | Request, _init?: RequestInit) => {
       const url = new URL(String(input));
       let result: unknown = { Items: [], TotalRecordCount: 0 };
       if (url.pathname.includes("/FavoriteItems/")) {

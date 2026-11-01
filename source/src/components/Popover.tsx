@@ -67,6 +67,7 @@ export default function Popover({
 }) {
   const [present, setPresent] = useState(open);
   const [placement, setPlacement] = useState<ReturnType<typeof placePopover>>();
+  const positioned = placement !== undefined;
   const panel = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
@@ -105,8 +106,8 @@ export default function Popover({
       window.removeEventListener("scroll", place, true);
     };
   }, [present, width, anchor]);
-  useEffect(() => {
-    if (!open || !present) return;
+  useLayoutEffect(() => {
+    if (!open || !present || !positioned) return;
     const layer = Symbol("popover");
     layers.push(layer);
     const outside = (e: PointerEvent) => {
@@ -118,24 +119,22 @@ export default function Popover({
         return;
       close.current(false);
     };
-    const frame = requestAnimationFrame(() => {
-      const active =
-        panel.current?.querySelector<HTMLElement>(
-          '[aria-selected="true"],[aria-checked="true"]',
-        ) ||
-        panel.current?.querySelector<HTMLElement>(
-          "button:not(:disabled),input:not(:disabled)",
-        );
-      active?.focus();
-      active?.scrollIntoView?.({ block: "nearest" });
-    });
+    // Make keyboard navigation ready before the menu's first paint.
+    const active =
+      panel.current?.querySelector<HTMLElement>(
+        '[aria-selected="true"]:not(:disabled),[aria-checked="true"]:not(:disabled)',
+      ) ||
+      panel.current?.querySelector<HTMLElement>(
+        "button:not(:disabled),input:not(:disabled)",
+      );
+    active?.focus();
+    active?.scrollIntoView?.({ block: "nearest" });
     document.addEventListener("pointerdown", outside, true);
     return () => {
-      cancelAnimationFrame(frame);
       layers.splice(layers.indexOf(layer), 1);
       document.removeEventListener("pointerdown", outside, true);
     };
-  }, [open, present, anchor]);
+  }, [open, present, anchor, positioned]);
   if (!present) return null;
   return createPortal(
     <div

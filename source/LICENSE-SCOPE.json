@@ -1757,6 +1757,15 @@
       "reason": "R1.4 original-import/contribution/copied-material/artwork evidence not supplied"
     }
   ],
+  "new_third_party_exceptions": [
+    {
+      "path": "src/assets/emby.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/emby.svg",
+      "license": "CC0-1.0",
+      "notice": "docs/PROVIDER-ICONS.md",
+      "license_text": "docs/licenses/simple-icons-CC0.txt"
+    }
+  ],
   "excluded": "All third-party originals, dependency data/source, runtime, imported artwork and unresolved ownership paths",
   "application_wide_MIT_clearance": false,
   "historical_gates_closed": 0

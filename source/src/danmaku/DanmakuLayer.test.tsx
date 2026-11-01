@@ -4,11 +4,14 @@ import { afterEach, expect, it, vi } from "vitest";
 import DanmakuLayer from "./DanmakuLayer";
 import { danmakuDefaults as DEFAULT_DANMAKU } from "./types";
 import type { DanmakuClock, DanmakuDocument } from "./types";
+import { setLanguage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  setLanguage("zh-CN", false);
 });
 it("renders from the latest native anchor, freezes on pause, seeks and releases its single canvas", () => {
   let tick: FrameRequestCallback = () => {};
@@ -64,19 +67,45 @@ it("renders from the latest native anchor, freezes on pause, seeks and releases 
     loaded: true,
     buffering: false,
   };
-  const view = render(
-    <DanmakuLayer document={doc} settings={DEFAULT_DANMAKU} clock={clock} />,
-  );
+  const LocalizedLayer = ({
+    currentClock,
+    opacity = DEFAULT_DANMAKU.opacity,
+  }: {
+    currentClock: DanmakuClock;
+    opacity?: number;
+  }) => {
+    useI18n();
+    return (
+      <DanmakuLayer
+        document={doc}
+        settings={{ ...DEFAULT_DANMAKU, opacity }}
+        clock={currentClock}
+      />
+    );
+  };
+  const view = render(<LocalizedLayer currentClock={clock} />);
   act(() => tick(0));
   expect(view.container.querySelector("canvas")!.dataset.playbackTime).toBe(
     "1.000",
   );
+  const canvas = view.container.querySelector("canvas");
+  const processed = canvas!.dataset.processed;
+  act(() => setLanguage("en-US"));
+  act(() => tick(8));
+  expect(view.container.querySelector("canvas")).toBe(canvas);
+  expect(canvas!.dataset.processed).toBe(processed);
+  expect(context.setTransform).toHaveBeenCalledOnce();
+  expect(disconnect).not.toHaveBeenCalled();
+  expect(context.fillText).toHaveBeenCalledWith(
+    "同步",
+    expect.any(Number),
+    expect.any(Number),
+  );
+  act(() => setLanguage("zh-CN"));
+  expect(context.setTransform).toHaveBeenCalledOnce();
+  // Continue the existing pause/seek lifecycle on the same mounted layer.
   view.rerender(
-    <DanmakuLayer
-      document={doc}
-      settings={{ ...DEFAULT_DANMAKU }}
-      clock={{ ...clock, position: 1.2, paused: true }}
-    />,
+    <LocalizedLayer currentClock={{ ...clock, position: 1.2, paused: true }} />,
   );
   act(() => tick(16));
   expect(view.container.querySelector("canvas")!.dataset.playbackTime).toBe(
@@ -90,10 +119,9 @@ it("renders from the latest native anchor, freezes on pause, seeks and releases 
   const frozenX = context.fillText.mock.calls.at(-1)?.[1];
   for (const opacity of [0, 0.25, 0.5, 1]) {
     view.rerender(
-      <DanmakuLayer
-        document={doc}
-        settings={{ ...DEFAULT_DANMAKU, opacity }}
-        clock={{ ...clock, position: 1.2, paused: true }}
+      <LocalizedLayer
+        opacity={opacity}
+        currentClock={{ ...clock, position: 1.2, paused: true }}
       />,
     );
     act(() => tick(40));
@@ -105,10 +133,8 @@ it("renders from the latest native anchor, freezes on pause, seeks and releases 
     expect(disconnect).not.toHaveBeenCalled();
   }
   view.rerender(
-    <DanmakuLayer
-      document={doc}
-      settings={DEFAULT_DANMAKU}
-      clock={{ ...clock, position: 30, paused: true, session: "s:2" }}
+    <LocalizedLayer
+      currentClock={{ ...clock, position: 30, paused: true, session: "s:2" }}
     />,
   );
   act(() => tick(48));

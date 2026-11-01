@@ -1,11 +1,15 @@
+import { t } from "../i18n/core";
+import type { MessageKey } from "../i18n/zh-CN";
 import { EmbyClient } from "./client";
 import type { Item } from "../types/emby";
 import type { Connection } from "../stores/connections";
+import { favoriteScope } from "./favorites";
 export interface Recommendation {
   item: Item;
   connection: Connection;
   api: EmbyClient;
   category: string;
+  categoryKey?: MessageKey;
 }
 export function balanceRecommendations(
   groups: Recommendation[][],
@@ -17,7 +21,10 @@ export function balanceRecommendations(
     for (const group of groups) {
       const entry = group[row];
       if (!entry) continue;
-      const key = `${entry.connection.account.serverId || entry.connection.account.homeServer || entry.connection.account.server}:${entry.item.Id}`;
+      const key = JSON.stringify([
+        favoriteScope(entry.connection.account),
+        entry.item.Id,
+      ]);
       if (seen.has(key)) continue;
       seen.add(key);
       result.push(entry);
@@ -31,19 +38,27 @@ export async function homeRecommendations(
   signal: AbortSignal,
 ): Promise<Recommendation[]> {
   const categories = [
-    { name: "电影", type: "Movie" },
-    { name: "剧集", type: "Series" },
+    {
+      name: t("library.movies"),
+      type: "Movie",
+      key: "library.movies" as const,
+    },
+    {
+      name: t("library.tv_shows"),
+      type: "Series",
+      key: "library.tv_shows" as const,
+    },
     ...views
       .filter((v) => /动画|动漫|anime/i.test(v.Name))
       .slice(0, 2)
       .map((v) => ({ name: v.Name, type: "Movie,Series", parent: v.Id })),
   ];
   const byCategory: Recommendation[][][] = categories.map(() => []);
-  // At most two servers in flight and eight distinct server identities per visit.
+  // At most two accounts in flight and eight distinct server/user scopes per visit.
   const identities = new Set<string>();
   const unique = connections
     .filter((c) => {
-      const id = c.account.serverId || c.account.homeServer || c.account.server;
+      const id = favoriteScope(c.account);
       if (identities.has(id)) return false;
       identities.add(id);
       return true;
@@ -74,6 +89,7 @@ export async function homeRecommendations(
               connection,
               api,
               category: category.name,
+              categoryKey: "key" in category ? category.key : undefined,
             }));
           } catch (e) {
             if (signal.aborted) throw e;

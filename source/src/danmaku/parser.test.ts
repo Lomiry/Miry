@@ -96,16 +96,12 @@ it("filters duplicates within five seconds, colors, fixed types and long text in
   expect(
     filterDanmaku(entries, {
       ...danmakuDefaults,
+      deduplicate: true,
+      blockLong: true,
       blockTop: true,
       blockBottom: true,
       blockColor: true,
     }),
   ).toHaveLength(2);
-  expect(
-    filterDanmaku(entries, {
-      ...danmakuDefaults,
-      deduplicate: false,
-      blockLong: false,
-    }),
-  ).toHaveLength(7);
+  expect(filterDanmaku(entries, danmakuDefaults)).toHaveLength(7);
 });

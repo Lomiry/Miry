@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { memo, type ReactNode } from "react";
 import { Star } from "lucide-react";
 import { Artwork } from "./Artwork";
@@ -12,6 +14,8 @@ export function MediaCaption({
   item: Item;
   metadataOnly?: boolean;
 }) {
+  useI18n();
+
   if (metadataOnly) {
     const year = item.ProductionYear;
     const rating = item.CommunityRating;
@@ -48,15 +52,15 @@ export function MediaCaption({
   const kind =
     (
       {
-        Series: "剧集",
-        Episode: `第 ${item.IndexNumber ?? "?"} 集`,
-        Season: "季",
-        BoxSet: "合集",
-        Playlist: "播放列表",
-        Folder: "媒体库",
-        CollectionFolder: "媒体库",
+        Series: t("library.tv_shows"),
+        Episode: t("library.episode_2", { p0: item.IndexNumber ?? "?" }),
+        Season: t("library.season"),
+        BoxSet: t("library.collections"),
+        Playlist: t("library.playlists"),
+        Folder: t("library.libraries"),
+        CollectionFolder: t("library.libraries"),
       } as Record<string, string>
-    )[item.Type] || "电影";
+    )[item.Type] || t("library.movies");
   return (
     <>
       <strong title={item.Name}>{item.Name}</strong>
@@ -108,7 +112,7 @@ export const Poster = memo(function Poster({
         {onClick ? (
           <button
             className="poster-open"
-            aria-label={`查看详情 ${item.Name}`}
+            aria-label={t("library.view_details_for_2", { p0: item.Name })}
             onClick={onClick}
           >
             {image}
@@ -117,7 +121,7 @@ export const Poster = memo(function Poster({
           image
         )}
         {item.UserData?.Played && (
-          <span className="watched" aria-label="已看">
+          <span className="watched" aria-label={t("library.watched")}>
             ✓
           </span>
         )}

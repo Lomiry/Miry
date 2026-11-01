@@ -1,4 +1,4 @@
-/* Browser shell and native caption share one measured sidebar rail. */
+/* Native caption is a single surface, independent of the sidebar rail. */
 :root:has(.desktop-frame) {
   --caption-height: 40px;
 }
@@ -11,12 +11,13 @@
   border-color: var(--line-strong);
 }
 .window-caption {
-  background: var(--bg);
-  border-bottom: 0;
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--line);
+  gap: 0;
 }
 .window-brand {
-  flex-basis: var(--sidebar-width);
-  background: var(--sidebar-bg);
+  flex: 0 0 auto;
+  background: transparent;
   border: 0;
   padding-left: var(--space-5);
 }
@@ -107,52 +108,21 @@
   flex: none;
   margin-top: var(--space-2);
 }
-.account {
-  border-color: var(--line);
-  padding-top: var(--space-3);
-  gap: var(--space-2);
-}
-.account .avatar {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  background: var(--accent-soft);
-  font-size: var(--font-xs);
-}
-.account > div:nth-child(2) {
-  min-width: 0;
-}
-.account strong {
-  font-size: var(--font-xs);
-  font-weight: 500;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.account small {
-  max-width: 114px;
-  font-size: 11px;
-  margin-top: 2px;
-  color: var(--subtle);
-}
-.account > button {
-  width: 30px;
-  height: 32px;
-  flex: none;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-sm);
-}
-.account > button:hover {
-  background: var(--surface-raised);
-}
 .browse-main {
   margin-left: var(--sidebar-width);
   background: var(--bg);
+}
+/* The complete browsing surface joins the rail and caption with one curve;
+   cards remain inside the existing scroll owner and page gutters. */
+.shell:has(> .route-home):not(.theater-shell) {
+  background: var(--sidebar-bg);
+}
+.shell:not(.theater-shell) > .browse-main.route-home {
+  border-start-start-radius: var(--space-6);
+  border-end-start-radius: var(--space-6);
+}
+.route-home > .content {
+  padding-bottom: var(--space-8);
 }
 .topbar {
   position: sticky;
@@ -228,16 +198,22 @@
 }
 .search:focus-within {
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .search input {
   font-size: var(--font-sm);
+  color: var(--text);
+  caret-color: var(--accent);
+  min-width: 0;
+  width: 100%;
+  flex: 1;
 }
 .search input:focus-visible {
   outline: 0;
 }
 .search-shortcut {
   border-color: var(--line-strong);
-  color: var(--subtle);
+  color: var(--muted);
 }
 .search-scope {
   display: flex;
@@ -252,7 +228,7 @@
   border-radius: var(--radius-md);
 }
 .content {
-  max-width: 1840px;
+  max-width: var(--content-max);
   padding: var(--space-5) var(--page-gutter) var(--space-12);
   margin: 0 auto;
   animation: none;
@@ -404,6 +380,46 @@
 .home-view,
 .media-detail {
   animation: fade-enter var(--duration-enter) var(--ease);
+}
+.home-view {
+  --home-radius: calc(var(--radius-lg) + var(--space-2));
+  display: grid;
+  min-width: 0;
+  gap: var(--space-6);
+  padding-bottom: 0;
+}
+.home-view > .feature-banner,
+.home-view > .catalog-shortcuts,
+.home-view > .media-shelf {
+  margin: 0;
+  min-width: 0;
+}
+.home-view .feature-banner,
+.home-view .catalog-shortcuts,
+.home-view .poster {
+  border-radius: var(--home-radius);
+}
+.home-view .catalog-shortcuts {
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.home-view .catalog-shortcuts button {
+  min-height: var(--control-height-md);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+}
+.home-view .media-rail {
+  margin: 0;
+  padding: var(--space-1) 0 var(--space-3);
+  align-items: start;
+}
+.home-view .poster {
+  overflow: hidden;
+}
+.home-view .poster-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .skeleton-card > div::after {
   display: none;
@@ -681,8 +697,8 @@
 .media-list .overlay-play {
   min-width: 0;
 }
-.media-tile:hover .poster img,
-.media-tile:focus-within .poster img {
+.poster-open:hover img,
+.poster-open:focus-visible img {
   transform: scale(1.015);
 }
 .media-detail {
@@ -936,7 +952,8 @@
   align-items: center;
   min-height: var(--episode-row-height);
 }
-.episode-row:hover {
+.episode-open:hover:not(:disabled),
+.episode-open:focus-visible {
   background: var(--surface);
 }
 .season-selection {

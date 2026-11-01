@@ -1,3 +1,5 @@
+import { t, localizeMessage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import Select from "./Select";
 import { useEffect, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
@@ -20,10 +22,12 @@ export default function QualitySettings({
   settings: Settings;
   onChange: (value: Settings) => void;
 }) {
+  useI18n();
+
   const q = normalizeQuality(settings.quality, settings.hardwareDecode);
   const [devices, setDevices] = useState<
     { name: string; description: string }[]
-  >([{ name: "auto", description: "自动" }]);
+  >([{ name: "auto", description: t("player.auto") }]);
   const [files, setFiles] = useState<{
     directory: string;
     mpvConfig: boolean;
@@ -41,7 +45,7 @@ export default function QualitySettings({
         setFiles(await invoke("mpv_config_files"));
       setFeedback("");
     } catch {
-      setFeedback("无法读取本机资源，请稍后重试。");
+      setFeedback(t("player.could_not_read_local_resources_try_again"));
     }
   }
   useEffect(() => {
@@ -62,7 +66,8 @@ export default function QualitySettings({
             }
           })
           .catch(() => {
-            if (active) setFeedback("无法读取本机资源，请稍后重试。");
+            if (active)
+              setFeedback(t("player.could_not_read_local_resources_try_again"));
           });
     }
     return () => {
@@ -80,61 +85,65 @@ export default function QualitySettings({
     <section className="setting-section">
       {section === "video" && (
         <>
-          <h3>视频输出</h3>
+          <h3>{t("player.video_output")}</h3>
           <SettingRow
-            title="HDR 处理"
-            description="自动交给 mpv 与当前显示器协商；不会启用 SDR 反向 HDR。"
+            title={t("player.hdr_processing")}
+            description={t(
+              "player.mpv_negotiates_with_the_current_display_automatically",
+            )}
           >
             <Select
-              aria-label="HDR 处理"
+              aria-label={t("player.hdr_processing")}
               value={q.hdr}
               onChange={(e) => set({ hdr: e.target.value as Quality["hdr"] })}
             >
-              <option value="auto">自动</option>
-              <option value="source">原样输出</option>
+              <option value="auto">{t("player.auto")}</option>
+              <option value="source">{t("player.unmodified_output")}</option>
               <option value="sdr">HDR → SDR</option>
             </Select>
           </SettingRow>
           <p className="setting-note">
-            原样输出需要系统与显示器支持。Dolby Vision 识别不代表完整输出所有
-            Profile；实际输出以 mpv 协商为准。
+            {" "}
+            {t(
+              "player.unmodified_output_requires_system_and_display_support",
+            )}{" "}
           </p>
-          <SettingRow title="硬件解码" separator={false}>
+          <SettingRow title={t("player.hardware_decoding")} separator={false}>
             <Select
-              aria-label="硬件解码模式"
+              aria-label={t("player.hardware_decoding_mode")}
               value={q.hwdec}
               onChange={(e) =>
                 set({ hwdec: e.target.value as Quality["hwdec"] })
               }
             >
-              <option value="auto">自动</option>
-              <option value="auto-safe">安全自动</option>
-              <option value="no">关闭</option>
+              <option value="auto">{t("player.auto")}</option>
+              <option value="auto-safe">{t("player.auto_safe")}</option>
+              <option value="no">{t("player.off")}</option>
             </Select>
           </SettingRow>
         </>
       )}
       {section === "audio" && (
         <>
-          <h3>音频输出</h3>
+          <h3>{t("player.audio_output")}</h3>
           <SettingRow
-            title="音频直通"
-            description="自动在未验证设备能力时使用 PCM；开启后只请求勾选格式。"
+            title={t("player.audio_passthrough")}
+            description={t("player.auto_uses_pcm_when_device_capabilities_are")}
           >
             <Select
-              aria-label="音频直通"
+              aria-label={t("player.audio_passthrough")}
               value={q.passthrough}
               onChange={(e) =>
                 set({ passthrough: e.target.value as Quality["passthrough"] })
               }
             >
-              <option value="auto">自动</option>
-              <option value="on">开启</option>
-              <option value="off">关闭</option>
+              <option value="auto">{t("player.auto")}</option>
+              <option value="on">{t("player.on")}</option>
+              <option value="off">{t("player.off")}</option>
             </Select>
           </SettingRow>
           <fieldset>
-            <legend>允许直通的格式</legend>
+            <legend>{t("player.allowed_passthrough_formats")}</legend>
             {bitstreamCodecs.map((codec) => (
               <SwitchField
                 key={codec}
@@ -151,11 +160,11 @@ export default function QualitySettings({
             ))}
           </fieldset>
           <SettingRow
-            title="音频设备"
-            description="设备不可用时尝试自动设备与 PCM 回退。"
+            title={t("player.audio_device")}
+            description={t("player.if_the_device_is_unavailable_try_the")}
           >
             <Select
-              aria-label="音频设备"
+              aria-label={t("player.audio_device")}
               value={
                 devices.some((d) => d.name === q.audioDevice)
                   ? q.audioDevice
@@ -165,7 +174,7 @@ export default function QualitySettings({
             >
               {devices.map((d) => (
                 <option key={d.name} value={d.name}>
-                  {d.description}
+                  {d.name === "auto" ? t("player.auto") : d.description}
                 </option>
               ))}
             </Select>
@@ -173,22 +182,26 @@ export default function QualitySettings({
           {q.audioDevice !== "auto" &&
             !devices.some((d) => d.name === q.audioDevice) && (
               <p role="status">
-                已保存设备当前不可用，下次播放将尝试自动回退。
+                {" "}
+                {t("player.the_saved_device_is_unavailable_the_next")}{" "}
               </p>
             )}
           <ActionRow>
             <button className="secondary" onClick={scan}>
-              刷新音频设备
+              {" "}
+              {t("player.refresh_audio_devices")}{" "}
             </button>
           </ActionRow>
         </>
       )}
       {section === "advanced" && (
         <>
-          <h3>mpv 扩展</h3>
+          <h3>{t("player.mpv_extensions")}</h3>
           <p className="setting-note">
-            Miry 默认关闭外部配置。显式启用后，顺序为品质设置 → mpv.conf →
-            额外参数；会话、认证与窗口仍由 Miry 管理。
+            {" "}
+            {t(
+              "player.external_configuration_is_disabled_by_default_when",
+            )}{" "}
           </p>
           <ActionRow>
             <button
@@ -196,43 +209,47 @@ export default function QualitySettings({
               disabled={!isTauri()}
               onClick={() =>
                 void invoke("open_mpv_directory").catch(() =>
-                  setFeedback("无法打开配置目录。"),
+                  setFeedback(
+                    t("player.could_not_open_the_configuration_folder"),
+                  ),
                 )
               }
             >
-              打开 mpv 配置目录
+              {" "}
+              {t("player.open_mpv_configuration_folder")}{" "}
             </button>
             <button className="secondary" onClick={scan}>
-              刷新配置文件
+              {" "}
+              {t("player.refresh_configuration_files")}{" "}
             </button>
           </ActionRow>
           {files && <p className="setting-note">{files.directory}</p>}
           <SwitchField
-            title="使用自定义 mpv.conf"
+            title={t("player.use_custom_mpv_conf")}
             description={
               files?.mpvConfig
-                ? "已找到文件"
-                : "把 mpv.conf 放入配置目录；未找到时忽略"
+                ? t("player.file_found")
+                : t("player.place_mpv_conf_in_the_configuration_folder")
             }
             checked={q.mpvConfig}
             onChange={(value) => set({ mpvConfig: value })}
           />
           <SwitchField
-            title="使用自定义 input.conf"
+            title={t("player.use_custom_input_conf")}
             description={
               files?.inputConfig
-                ? "已找到文件"
-                : "把 input.conf 放入配置目录；Miry 已声明快捷键优先"
+                ? t("player.file_found")
+                : t("player.place_input_conf_in_the_configuration_folder")
             }
             checked={q.inputConfig}
             onChange={(value) => set({ inputConfig: value })}
           />
           <SettingRow
-            title="额外 mpv 参数"
-            description="每行一个 --名称=值；仅支持画质、音频和字幕调节，不能覆盖播放会话、认证、窗口或写出媒体。"
+            title={t("player.extra_mpv_arguments")}
+            description={t("player.one_name_value_per_line_only_video")}
           >
             <textarea
-              aria-label="额外 mpv 参数"
+              aria-label={t("player.extra_mpv_arguments")}
               value={q.extraArgs.join("\n")}
               rows={4}
               onChange={(e) =>
@@ -246,13 +263,13 @@ export default function QualitySettings({
             />
           </SettingRow>
           <SwitchField
-            title="启用自定义 Shader"
+            title={t("player.enable_custom_shaders")}
             checked={q.shadersEnabled}
             onChange={(value) => set({ shadersEnabled: value })}
           />
           <p className="setting-note">
-            将合法 .glsl 文件放入 shaders
-            子目录，按下面顺序应用；不内置第三方算法。
+            {" "}
+            {t("player.place_valid_glsl_files_in_the_shaders")}{" "}
           </p>
           {files?.shaders.map((name) => (
             <SwitchField
@@ -270,18 +287,18 @@ export default function QualitySettings({
           ))}
           {q.shaders.map((name, index) => (
             <SettingRow key={name} title={`${index + 1}. ${name}`}>
-              <Tooltip text={`上移 ${name}`}>
+              <Tooltip text={t("player.move_up", { p0: name })}>
                 <button
-                  aria-label={`上移 ${name}`}
+                  aria-label={t("player.move_up", { p0: name })}
                   disabled={index === 0}
                   onClick={() => move(index, -1)}
                 >
                   <ArrowUp size={16} />
                 </button>
               </Tooltip>
-              <Tooltip text={`下移 ${name}`}>
+              <Tooltip text={t("player.move_down", { p0: name })}>
                 <button
-                  aria-label={`下移 ${name}`}
+                  aria-label={t("player.move_down", { p0: name })}
                   disabled={index === q.shaders.length - 1}
                   onClick={() => move(index, 1)}
                 >
@@ -292,8 +309,10 @@ export default function QualitySettings({
           ))}
         </>
       )}
-      {feedback && <p role="status">{feedback}</p>}
-      <p className="setting-note">更改在下次播放生效。</p>
+      {feedback && <p role="status">{localizeMessage(feedback)}</p>}
+      <p className="setting-note">
+        {t("player.changes_apply_the_next_time_you_play")}
+      </p>
     </section>
   );
 }

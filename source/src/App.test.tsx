@@ -54,7 +54,8 @@ describe("Client interaction", () => {
     expect(
       await screen.findByRole("heading", { name: "第 2 集" }),
     ).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "退出登录" }));
+    await user.click(screen.getByRole("button", { name: "当前服务器" }));
+    await user.click(screen.getByRole("menuitem", { name: "退出登录" }));
     expect(
       await screen.findByRole("heading", { name: "连接你的媒体库" }),
     ).toBeTruthy();

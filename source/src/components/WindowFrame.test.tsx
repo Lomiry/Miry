@@ -46,6 +46,27 @@ beforeEach(() => {
   mocks.close.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
+it("keeps Miry branding and a single native toolbar separate from the drag targets", () => {
+  render(
+    <WindowFrame>
+      <p>媒体库</p>
+    </WindowFrame>,
+  );
+  const caption = screen.getByLabelText("Miry 窗口栏");
+  expect(screen.getByText("Miry").hasAttribute("data-tauri-drag-region")).toBe(
+    true,
+  );
+  expect(
+    caption
+      .querySelector(".window-drag-space")
+      ?.hasAttribute("data-tauri-drag-region"),
+  ).toBe(true);
+  expect(screen.getAllByRole("toolbar")).toHaveLength(1);
+  for (const button of screen.getAllByRole("button")) {
+    expect(button.hasAttribute("data-tauri-drag-region")).toBe(false);
+    expect(button.querySelector("[data-tauri-drag-region]")).toBeNull();
+  }
+});
 it("prevents browser menus and image dragging while preserving input editing menus", () => {
   render(
     <WindowFrame>

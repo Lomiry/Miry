@@ -814,3 +814,41 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.smart-import {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.smart-import textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.import-candidate {
+  display: grid;
+  gap: 8px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.certificate-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 8px;
+}
+.certificate-option small {
+  flex-basis: 100%;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.server-icon {
+  object-fit: contain;
+  flex-shrink: 0;
+}

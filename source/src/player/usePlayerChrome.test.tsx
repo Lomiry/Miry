@@ -23,6 +23,22 @@ const tick = async (ms: number) =>
   act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
   });
+it("restores on pointer entry, leaving video and window focus, without disabling later idle hiding", async () => {
+  const { result } = renderHook(() => usePlayerChrome(true, false, 1));
+  await tick(3080);
+  expect(result.current.phase).toBe("hidden");
+  act(() => result.current.pointer());
+  expect(result.current.phase).toBe("visible");
+  await tick(3080);
+  act(() => result.current.leave());
+  await tick(5000);
+  expect(result.current.phase).toBe("visible");
+  act(() => result.current.pointer());
+  await tick(3080);
+  expect(result.current.phase).toBe("hidden");
+  fireEvent.focus(window);
+  expect(result.current.phase).toBe("visible");
+});
 it("finishes fading before hiding and wakes from native video pointer activity", async () => {
   let native: (event: { payload: string }) => void = () => {};
   vi.mocked(listen).mockImplementation(async (_name, handler) => {
@@ -32,12 +48,17 @@ it("finishes fading before hiding and wakes from native video pointer activity",
   const { result } = renderHook(() => usePlayerChrome(true, false, 1));
   await tick(2800);
   expect(result.current.phase).toBe("fading");
+  expect(result.current.cursorHidden).toBe(false);
   await tick(280);
   expect(result.current.phase).toBe("hidden");
+  expect(result.current.cursorHidden).toBe(true);
   act(() => native({ payload: "pointer" }));
   expect(result.current.phase).toBe("visible");
+  expect(result.current.cursorHidden).toBe(false);
   await tick(3080);
   expect(result.current.phase).toBe("hidden");
+  act(() => result.current.leave());
+  expect(result.current.cursorHidden).toBe(false);
 });
 it("keeps paused playback visible, ignores manual hide while paused, and leaves typing alone", async () => {
   const { result } = renderHook(() => usePlayerChrome(true, true, 1));
@@ -54,7 +75,7 @@ it("keeps paused playback visible, ignores manual hide while paused, and leaves 
   fireEvent.keyDown(document.body, { key: "Tab" });
   expect(result.current.phase).toBe("visible");
 });
-it("holds settings, keyboard and pinned controls, but still hides under an idle pointer on the controls", async () => {
+it("holds settings, hovered, keyboard and pinned controls until the interaction ends", async () => {
   const { result, rerender } = renderHook(
     ({ blocked }) => usePlayerChrome(true, blocked, 1, blocked),
     { initialProps: { blocked: true } },
@@ -65,8 +86,10 @@ it("holds settings, keyboard and pinned controls, but still hides under an idle 
   rerender({ blocked: false });
   act(() => result.current.hover(true));
   await tick(5000);
-  expect(result.current.phase).toBe("hidden");
+  expect(result.current.phase).toBe("visible");
   act(() => result.current.hover(false));
+  await tick(3080);
+  expect(result.current.phase).toBe("hidden");
   fireEvent.keyDown(document.body, { key: "Tab" });
   await tick(5000);
   expect(result.current.phase).toBe("visible");

@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import type { UpdateCandidate } from "./automaticUpdates";
 
@@ -7,6 +8,8 @@ export type UpdatePhase =
   | "verifying"
   | "ready"
   | "installing"
+  | "cancelling"
+  | "cancelled"
   | "error";
 interface Progress {
   phase: "downloading" | "verifying";
@@ -43,16 +46,47 @@ export const subscribeUpdate = (fn: () => void) => {
   };
 };
 export function offerUpdate(release: UpdateCandidate) {
-  if (state.release && state.phase !== "available" && state.phase !== "error")
+  if (
+    busy ||
+    (state.release &&
+      !["available", "error", "cancelled"].includes(state.phase))
+  )
     return;
   patch({ release, phase: "available", error: undefined, minimized: false });
 }
 export const minimizeUpdate = (minimized: boolean) => patch({ minimized });
-export const clearUpdate = () => patch({ release: undefined });
+export const clearUpdate = () => {
+  if (!busy) patch({ release: undefined });
+};
 let busy = false;
+let downloadId: string | undefined;
+export async function cancelDownload() {
+  if (!downloadId || !["downloading", "verifying"].includes(state.phase))
+    return;
+  const id = downloadId;
+  patch({ phase: "cancelling" });
+  try {
+    await invoke("cancel_update_download", { requestId: id });
+  } catch {
+    // Keep ownership until the original native request settles; never permit install.
+    if (downloadId === id && state.phase === "cancelling")
+      patch({ error: t("updates.cancel_failed") });
+  }
+}
 export async function downloadUpdate() {
-  if (busy || !state.release) return;
+  if (
+    busy ||
+    !state.release ||
+    !["available", "error", "cancelled"].includes(state.phase)
+  )
+    return;
+  if (state.release.updateReady !== true) {
+    patch({ phase: "error", error: t("updates.signing_blocked") });
+    return;
+  }
   busy = true;
+  const id = crypto.randomUUID();
+  downloadId = id;
   patch({
     phase: "downloading",
     downloaded: 0,
@@ -62,20 +96,29 @@ export async function downloadUpdate() {
   });
   const progress = new Channel<Progress>();
   progress.onmessage = (value) => {
-    if (busy && state.phase !== "installing") patch(value);
+    if (downloadId === id && ["downloading", "verifying"].includes(state.phase))
+      patch(value);
   };
   try {
     await invoke("download_update", {
       version: state.release.version,
+      requestId: id,
       onProgress: progress,
     });
-    patch({ phase: "ready", bytesPerSecond: 0 });
-  } catch (error) {
     patch({
-      phase: "error",
-      error: typeof error === "string" ? error : "下载失败，重试",
+      phase: state.phase === "cancelling" ? "cancelled" : "ready",
+      bytesPerSecond: 0,
     });
+  } catch (error) {
+    if (state.phase === "cancelling")
+      patch({ phase: "cancelled", bytesPerSecond: 0 });
+    else
+      patch({
+        phase: "error",
+        error: typeof error === "string" ? error : t("updates.download_failed"),
+      });
   } finally {
+    downloadId = undefined;
     busy = false;
     progress.onmessage = () => {};
   }
@@ -84,7 +127,8 @@ export async function installUpdate(
   prepare: () => Promise<void>,
   restart: boolean,
 ) {
-  if (busy || state.phase !== "ready") return;
+  if (busy || state.phase !== "ready" || state.release?.updateReady !== true)
+    return;
   busy = true;
   patch({ phase: "installing", error: undefined });
   try {
@@ -93,7 +137,7 @@ export async function installUpdate(
     await invoke("install_update", { restart });
   } catch {
     await invoke("cancel_update_install").catch(() => {});
-    patch({ phase: "error", error: "安装准备或交接失败，请重新下载后重试。" });
+    patch({ phase: "error", error: t("updates.install_failed") });
   } finally {
     busy = false;
   }

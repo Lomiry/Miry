@@ -1,9 +1,11 @@
+import { t } from "../i18n/core";
 import { EmbyClient } from "./client";
 import { pageInfo } from "./pagination";
 import type { Connection } from "../stores/connections";
 import type { Item } from "../types/emby";
 import { favoriteScope } from "./favorites";
 import { normalizePageSize } from "../stores/browsePreferences";
+import { searchMedia } from "./search";
 export interface SearchGroup {
   connection: Connection;
   items: Item[];
@@ -11,6 +13,7 @@ export interface SearchGroup {
   totalKnown: boolean;
   hasMore: boolean;
   error: string;
+  suggestions?: Item[];
 }
 export async function aggregateSearch(
   connections: Connection[],
@@ -20,10 +23,19 @@ export async function aggregateSearch(
   options: Record<string, string | number | boolean | undefined> = {},
 ): Promise<SearchGroup[]> {
   const pageSize = normalizePageSize(options.Limit);
+  const unique = [
+    ...new Map(
+      connections.map((connection) => [
+        favoriteScope(connection.account),
+        connection,
+      ]),
+    ).values(),
+  ];
   return Promise.all(
-    connections.map(async (connection) => {
+    unique.map(async (connection) => {
       try {
-        const result = await new EmbyClient(connection.account).items(
+        const result = await searchMedia(
+          new EmbyClient(connection.account),
           {
             ...options,
             SearchTerm: query,
@@ -37,7 +49,10 @@ export async function aggregateSearch(
         );
         return {
           connection,
-          items: result.Items,
+          items: [
+            ...new Map(result.Items.map((item) => [item.Id, item])).values(),
+          ],
+          suggestions: result.suggestions,
           ...pageInfo(result, page * pageSize, pageSize),
           error: "",
         };
@@ -49,7 +64,8 @@ export async function aggregateSearch(
           total: 0,
           totalKnown: true,
           hasMore: false,
-          error: e instanceof Error ? e.message : "连接失败",
+          error:
+            e instanceof Error ? e.message : t("library.connection_failed"),
         };
       }
     }),
@@ -86,7 +102,8 @@ export async function aggregateFavorites(
           total: 0,
           totalKnown: true,
           hasMore: false,
-          error: e instanceof Error ? e.message : "连接失败",
+          error:
+            e instanceof Error ? e.message : t("library.connection_failed"),
         };
       }
     }),

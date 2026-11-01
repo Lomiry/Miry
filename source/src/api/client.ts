@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 import { isTauri } from "@tauri-apps/api/core";
 import { fetch as nativeFetch } from "@tauri-apps/plugin-http";
 import { MetadataCache } from "./cache";
@@ -41,7 +42,7 @@ export function normalizeServer(value: string) {
   try {
     url = new URL(value.trim());
   } catch {
-    throw new ApiError("请输入完整的服务器地址，例如 https://emby.example.com");
+    throw new ApiError(t("network.enter_the_full_server_address_for_example"));
   }
   if (
     !["http:", "https:"].includes(url.protocol) ||
@@ -50,12 +51,10 @@ export function normalizeServer(value: string) {
     url.search ||
     url.hash
   )
-    throw new ApiError("地址仅支持 HTTP 或 HTTPS，请去掉账号、参数和锚点。");
-  return (
-    url.origin +
-    url.pathname.replace(/\/+$/, "").replace(/\/emby$/i, "") +
-    "/emby"
-  );
+    throw new ApiError(t("network.use_an_http_or_https_address_without"));
+  // The supplied base path is authoritative, including an explicit /emby.
+  // Root-only reverse proxies must not receive an invented API prefix.
+  return url.origin + url.pathname.replace(/\/+$/, "");
 }
 export function getDeviceId() {
   let id = localStorage.getItem("miry-device");
@@ -74,14 +73,19 @@ export class EmbyClient {
     query: Record<string, string | number | boolean | undefined> = {},
     body?: unknown,
     signal?: AbortSignal,
+    forceRefresh = false,
   ): Promise<T> {
     const stamp = favoriteRevision(this.account);
     if (this.favoriteStamp && this.favoriteStamp !== stamp) this.cache.clear();
     this.favoriteStamp = stamp;
     if (/(?:^|\/)Download(?:\/|$|\?)/i.test(path))
-      throw new ApiError("此客户端禁止媒体下载。");
+      throw new ApiError(
+        t("network.media_downloads_are_unavailable_in_this_client"),
+      );
     if (body !== undefined && /^\/Playlists\/?(?:\?|$)/i.test(path))
-      throw new ApiError("此客户端禁止创建播放列表。");
+      throw new ApiError(
+        t("network.creating_server_playlists_is_unavailable_in_this"),
+      );
     const url = new URL(this.account.server + path);
     Object.entries(query).forEach(([k, v]) => {
       if (v !== undefined) url.searchParams.set(k, String(v));
@@ -100,6 +104,8 @@ export class EmbyClient {
     const cacheKey = url.toString();
     const cacheRevision = this.cache.revision;
     if (ttl) {
+      // Manual retry replaces only this URL's entry in this account client.
+      if (forceRefresh) this.cache.remove(cacheKey);
       const cached = this.cache.get<T>(cacheKey);
       if (cached !== undefined) return cached;
     }
@@ -146,9 +152,26 @@ export class EmbyClient {
       });
     try {
       const transport = isTauri() ? nativeFetch : globalThis.fetch;
+      if (this.account.ignoreCertificateErrors && !isTauri())
+        throw new ApiError(t("routeC.desktop_tls"), 0, "tls");
       const response = await transport(url.toString(), {
         method,
         signal: controller.signal,
+        // Each native request gets its own policy. Do not follow redirects with
+        // account credentials or carry a certificate exception to another host.
+        ...(isTauri()
+          ? {
+              maxRedirections: 0,
+              ...(this.account.ignoreCertificateErrors === true
+                ? {
+                    danger: {
+                      acceptInvalidCerts: true,
+                      acceptInvalidHostnames: false,
+                    },
+                  }
+                : {}),
+            }
+          : {}),
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -165,19 +188,24 @@ export class EmbyClient {
         response.redirected ||
         (!!response.url && response.url !== url.toString());
       const data = response.status === 204 ? "" : await response.text();
-      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      if (controller.signal.aborted)
+        throw new DOMException("Aborted", "AbortError");
       if (!response.ok) {
         bodyPreview = responsePreview(data);
         throw new ApiError(
           response.status === 401
-            ? "登录失效或用户名密码错误，请重新登录。"
+            ? t("network.your_session_has_expired_or_the_username")
             : response.status === 403
-              ? "服务器拒绝访问，请检查账号权限。"
+              ? t("network.access_denied_check_your_account_permissions")
               : response.status === 404
-                ? "服务器没有提供这个 API（HTTP 404），请检查服务器路径。"
+                ? t("network.the_server_does_not_provide_this_api")
                 : response.status >= 500
-                  ? `服务器暂时无法处理请求（HTTP ${response.status}），请稍后重试。`
-                  : `服务器返回 HTTP ${response.status}，请检查地址或稍后重试。`,
+                  ? t("network.the_server_cannot_process_the_request_right", {
+                      p0: response.status,
+                    })
+                  : t("network.the_server_returned_http_check_the_address", {
+                      p0: response.status,
+                    }),
           response.status,
           "http",
         );
@@ -193,7 +221,7 @@ export class EmbyClient {
       } catch {
         bodyPreview = `Non-JSON response (${data.length} characters; content omitted)`;
         throw new ApiError(
-          "服务器返回的内容不是有效的 Emby JSON 数据。",
+          t("network.the_server_response_is_not_valid_emby"),
           response.status,
           "format",
         );
@@ -221,7 +249,7 @@ export class EmbyClient {
       log(category, redactNetworkDetail(error, secrets));
       if (timedOut)
         throw new ApiError(
-          "请求超过 15 秒，请检查服务器连接后重试。",
+          t("network.the_request_exceeded_15_seconds_check_your"),
           0,
           "timeout",
         );
@@ -229,18 +257,17 @@ export class EmbyClient {
         throw new DOMException("Aborted", "AbortError");
       if (error instanceof ApiError) throw error;
       const messages: Partial<Record<NetworkCategory, string>> = {
-        permission:
-          "客户端网络权限拒绝了这个地址或端口，请使用更新后的桌面版本。",
-        dns: "无法解析服务器域名，请检查当前网络。",
-        tcp: "无法建立服务器连接，请检查端口与网络。",
-        tls: "服务器 TLS 连接或证书校验失败，请查看连接诊断。",
-        timeout: "服务器连接超时，请稍后重试。",
+        permission: t("network.the_client_cannot_access_this_address_or"),
+        dns: t("network.the_server_hostname_could_not_be_resolved"),
+        tcp: t("network.could_not_connect_to_the_server_check"),
+        tls: t("network.the_tls_connection_or_certificate_validation_failed"),
+        timeout: t("network.the_server_connection_timed_out_try_again"),
       };
       throw new ApiError(
         messages[category] ||
           (isTauri()
-            ? "无法连接服务器，请检查网络、地址和证书。"
-            : "无法连接服务器。浏览器预览需要服务器允许跨域访问；桌面版使用原生网络请求。"),
+            ? t("network.could_not_connect_to_the_server_check_2")
+            : t("network.could_not_connect_to_the_server_browser")),
         0,
         category,
       );
@@ -260,7 +287,11 @@ export class EmbyClient {
       signal,
     );
     if (!data?.User?.Id || !data?.AccessToken)
-      throw new ApiError("服务器没有返回有效的登录信息。", 200, "format");
+      throw new ApiError(
+        t("network.the_server_did_not_return_valid_sign"),
+        200,
+        "format",
+      );
     return {
       ...this.account,
       userId: data.User.Id,
@@ -279,6 +310,7 @@ export class EmbyClient {
   items(
     query: Record<string, string | number | boolean | undefined>,
     signal?: AbortSignal,
+    { forceRefresh = false }: { forceRefresh?: boolean } = {},
   ) {
     return this.request<ItemPage>(
       `/Users/${this.account.userId}/Items`,
@@ -294,6 +326,7 @@ export class EmbyClient {
       },
       undefined,
       signal,
+      forceRefresh,
     );
   }
   resume(signal?: AbortSignal) {
@@ -407,7 +440,7 @@ export class EmbyClient {
         elapsedMs: 0,
       });
       throw new ApiError(
-        "服务器探测失败：返回的数据不是有效的 Emby ServerInfo。",
+        t("network.server_check_failed_the_response_is_not"),
         200,
         "format",
       );
@@ -485,7 +518,7 @@ export class EmbyClient {
     const item = await this.item(id, signal);
     if (typeof item.UserData?.IsFavorite !== "boolean")
       throw new ApiError(
-        "服务器未确认收藏状态，请刷新后重试。",
+        t("network.the_server_did_not_confirm_the_favorite"),
         undefined,
         "format",
       );

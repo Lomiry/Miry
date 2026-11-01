@@ -1,10 +1,10 @@
 {
-  "version": "1.0.7",
-  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
+  "version": "1.0.8",
+  "cargo_lock_sha256": "310f37e89da02bcbdba393f4e693b5afc321d62b7456e6b533781e05a0821025",
   "scope": "Supplement for Windows normal/build dependency delta only",
   "sources": "SOURCES.json",
   "previous_notice": "../rust-v106/NOTICE.txt",
-  "notice_sha256": "7974f2404e15189e8352cfdc2a3c47b01c39e2b38d42436ac12a501c1f95b679",
+  "notice_sha256": "0ba13cfee4508c34fcfe697512c82af04715f90bd5eccb184325e65462d2562c",
   "offset_unit": "bytes; original bytes only, separators excluded",
   "originals": [
     {

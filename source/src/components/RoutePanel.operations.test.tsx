@@ -110,7 +110,10 @@ it("uses the selected route and protects current/default routes while deleting a
   expect(within(currentRow).queryByRole("button", { name: /删除/ })).toBeNull();
   const backupRow = screen.getByText("备用").closest("article")!;
   await user.click(within(backupRow).getByRole("button", { name: "使用" }));
-  expect(switchRoute).toHaveBeenCalledWith(backup, expect.any(AbortSignal));
+  expect(switchRoute).toHaveBeenCalledWith(
+    readRoutes(account).find((r) => r.url === backup.url),
+    expect.any(AbortSignal),
+  );
   await waitFor(() =>
     expect(screen.getByRole("button", { name: "删除 备用" })).toHaveProperty(
       "disabled",
@@ -185,7 +188,7 @@ it("traps keyboard focus and aborts an outstanding verification on close", async
   );
   await user.keyboard("{Shift>}{Tab}{/Shift}");
   expect(document.activeElement).toBe(
-    screen.getByRole("button", { name: "验证并添加" }),
+    screen.getByRole("button", { name: "取消" }),
   );
   await user.click(screen.getByRole("button", { name: "检测 备用" }));
   expect(screen.getByRole("button", { name: "删除 备用" })).toHaveProperty(

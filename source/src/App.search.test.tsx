@@ -20,6 +20,60 @@ const page = (name?: string) => ({
   Items: name ? [{ Id: name, Name: name, Type: "Movie" }] : [],
   TotalRecordCount: name ? 1 : 0,
 });
+it("shows new fuzzy candidates separately from the primary server page and uses the existing details entry", async () => {
+  saveAccount(
+    {
+      server: "https://search.test/emby",
+      userId: "fixture",
+      name: "Fixture",
+      token: "synthetic",
+      deviceId: "fixture",
+    },
+    false,
+  );
+  const calls: URL[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (address: string) => {
+      const url = new URL(address);
+      calls.push(url);
+      if (url.pathname.endsWith("/Items/extra"))
+        return new Response(
+          JSON.stringify({ Id: "extra", Name: "Interstellar", Type: "Movie" }),
+        );
+      const isVariant =
+        url.searchParams.has("SearchTerm") &&
+        url.searchParams.get("SearchTerm") !== "interstllar";
+      return new Response(
+        JSON.stringify(
+          isVariant
+            ? {
+                Items: [{ Id: "extra", Name: "Interstellar", Type: "Movie" }],
+                TotalRecordCount: 1,
+              }
+            : page(),
+        ),
+      );
+    }),
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(
+    await screen.findByLabelText("搜索媒体"),
+    "interstllar{Enter}",
+  );
+  await screen.findByRole("heading", { name: "更多可能的匹配" });
+  expect(
+    calls.filter((url) => url.searchParams.has("SearchTerm")),
+  ).toHaveLength(3);
+  await user.click(
+    screen.getByRole("button", { name: "查看详情 Interstellar" }),
+  );
+  await screen.findByRole("heading", { name: "Interstellar" });
+  expect(calls.some((url) => url.pathname.includes("PlaybackInfo"))).toBe(
+    false,
+  );
+});
 it("submits media search through Items, rejects late responses, shows empty/error states, and clears back to browsing", async () => {
   saveAccount(
     {
@@ -69,8 +123,10 @@ it("submits media search through Items, rejects late responses, shows empty/erro
   });
   expect(screen.queryByText("旧结果")).toBeNull();
   const searchRequests = () =>
-    fetch.mock.calls.filter(([url]) =>
-      new URL(url).searchParams.has("SearchTerm"),
+    fetch.mock.calls.filter(
+      ([url]) =>
+        new URL(url).searchParams.has("SearchTerm") &&
+        new URL(url).searchParams.get("Limit") !== "120",
     );
   expect(searchRequests()).toHaveLength(2);
   const query = new URL(searchRequests()[1][0]);

@@ -55,9 +55,28 @@ it("ignores invalid data and still allows searches when storage is unavailable",
     "miry-search-history",
     JSON.stringify({ demo: [null, {}, "", "有效", "有效", "x".repeat(100)] }),
   );
-  expect(readSearchHistory("demo")).toEqual(["有效", "x".repeat(80)]);
+  expect(readSearchHistory("demo")).toEqual(["有效"]);
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
     throw new Error("quota");
   });
   expect(recordSearch("demo", "新关键词")[0]).toBe("新关键词");
+});
+it("rejects meaningless and recognizable credentials while preserving ordinary title search", () => {
+  for (const term of [
+    " ",
+    "！！！",
+    "\u200b\u200d",
+    "token=synthetic",
+    "password: synthetic",
+    "Bearer synthetic",
+    "https://media.example.test",
+    "a".repeat(40),
+    "Fixture User",
+    "synthetic-token-value",
+  ])
+    recordSearch("demo", term, ["Fixture User", "synthetic-token-value"]);
+  expect(readSearchHistory("demo")).toEqual([]);
+  recordSearch("demo", " Ｄｕｎｅ ");
+  recordSearch("demo", "dune");
+  expect(readSearchHistory("demo")).toEqual(["dune"]);
 });

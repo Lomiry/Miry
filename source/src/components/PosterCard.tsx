@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { Bookmark } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Item, UserData } from "../types/emby";
@@ -32,6 +34,8 @@ export function MediaTile({
   playable?: boolean;
   children?: ReactNode;
 }) {
+  useI18n();
+
   const artwork = api
     ? [
         ...api.artworkImages(
@@ -91,8 +95,12 @@ export function MediaTile({
                 ) && (
                   <button
                     className="tile-save"
-                    title={saved ? "移出待看" : "加入待看"}
-                    aria-label={`${saved ? "移出待看" : "加入待看"} ${item.Name}`}
+                    title={
+                      saved
+                        ? t("library.remove_from_watch_later")
+                        : t("library.add_to_watch_later")
+                    }
+                    aria-label={`${saved ? t("library.remove_from_watch_later") : t("library.add_to_watch_later")} ${item.Name}`}
                     aria-pressed={saved}
                     onClick={() => onLater(item)}
                   >
@@ -111,5 +119,7 @@ export function MediaTile({
 export default function PosterCard(
   props: React.ComponentProps<typeof MediaTile>,
 ) {
+  useI18n();
+
   return <MediaTile {...props} landscape={false} metadataOnly />;
 }

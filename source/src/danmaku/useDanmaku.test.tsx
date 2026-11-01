@@ -7,6 +7,7 @@ import { EmbyClient } from "../api/client";
 import { onlineProvider } from "./dandanplay";
 import { association, mediaContext, mappingIdentity } from "./online";
 import { danmakuIdentity } from "./useLocalDanmaku";
+import { setLanguage } from "../i18n/core";
 vi.mock("@tauri-apps/api/core", () => ({
   isTauri: () => true,
   invoke: vi.fn(),
@@ -62,7 +63,10 @@ beforeEach(() => {
   vi.mocked(onlineProvider.search).mockReset().mockResolvedValue([match]);
   vi.mocked(onlineProvider.getComments).mockReset().mockResolvedValue(document);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  setLanguage("zh-CN", false);
+});
 it("changes opacity during playback without searching, reloading comments or reinitializing mpv", async () => {
   const view = renderHook(() => useDanmaku(api, item, true, "opacity-session"));
   await waitFor(() => expect(view.result.current.document).toBe(document));
@@ -77,6 +81,24 @@ it("changes opacity during playback without searching, reloading comments or rei
   expect(vi.mocked(invoke).mock.calls.map(([name]) => name)).not.toContain(
     "player_start",
   );
+});
+it("retains the loaded document and media association without Provider or native requests on language changes", async () => {
+  const view = renderHook(() => useDanmaku(api, item, true));
+  await waitFor(() => expect(view.result.current.document).toBe(document));
+  const matchCalls = vi.mocked(onlineProvider.match).mock.calls.length;
+  const commentsCalls = vi.mocked(onlineProvider.getComments).mock.calls.length;
+  vi.mocked(invoke).mockClear();
+  act(() => setLanguage("en-US"));
+  expect(view.result.current.document).toBe(document);
+  expect(view.result.current.document?.entries[0].text).toBe("online");
+  expect(view.result.current.metadata.online?.candidates[0].title).toBe(
+    "Movie",
+  );
+  act(() => setLanguage("zh-CN"));
+  expect(view.result.current.document).toBe(document);
+  expect(onlineProvider.match).toHaveBeenCalledTimes(matchCalls);
+  expect(onlineProvider.getComments).toHaveBeenCalledTimes(commentsCalls);
+  expect(invoke).not.toHaveBeenCalled();
 });
 it.each([
   [{ kind: "network" }, "无法连接"],

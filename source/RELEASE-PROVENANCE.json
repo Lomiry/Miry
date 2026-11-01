@@ -1,21 +1,34 @@
 {
-  "version": "1.0.7",
-  "candidate": "RC7",
-  "build_source_commit": "956124c665478091dc9ed7e4429cefe09a25c2f4",
+  "version": "1.0.8",
+  "candidate": "OFFICIAL RC2",
+  "build_source_commit": "acbb3df36a08c1482f7fc6d8c2b4e2cb94b8ae20",
+  "prior_build_base": "06cbd015c0b1fb9ba1a12238f583b5c9995ccd45",
+  "rc2_source_inputs_identity": "76661f77fbb3ef051bff81f76a7beb2b18a68c0fd24d4996588180520b85ebfd",
+  "rc2_full_inputs_identity": "448d5211ad553b1dbaddb3606bf6e266d7fd45bbab935d54d80bec44aec0b93d",
+  "rc2_production_input_files": 5056,
+  "publication_source": "Reviewed allowlist snapshot; no private Git history",
   "artifacts": [
     {
-      "name": "Miry_1.0.7_x64-setup.exe",
-      "bytes": 69062119,
-      "sha256": "0e05936d613f00bbc73f44aafe5454a0f35e7e8a5ef484b5a28476bd226bfaa2"
+      "name": "Miry_1.0.8_x64-setup.exe",
+      "bytes": 69334406,
+      "sha256": "d164f3cc48cfb5d4528a043079158c8a53fcdde9ebf476abbc9ee431f3d4dc33"
     },
     {
-      "name": "Miry_1.0.7_x64-setup.exe.sig",
+      "name": "Miry_1.0.8_x64-setup.exe.sig",
       "bytes": 432,
-      "sha256": "14b6454569be646ffe74f942973b3ad36be973ea4b3920c0ed619657d8cd43b0"
+      "sha256": "814cfe86e0715bc2e92e90268c3ecf2a1a1015f59e4c9836ed89e13aa6f3c1cb"
+    },
+    {
+      "name": "Miry_1.0.8_x64-portable.zip",
+      "bytes": 100340653,
+      "sha256": "1cc6e94670687eada9bbad597e8941616e6b715a4bb78506ef1258660ff1de5c"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 741,
+      "sha256": "1a2d6f122fcd1e7ed9eeb386f2a00410f6b0a40b992708a247190e7ddb1e312b"
     }
   ],
-  "cargo_lock_sha256": "0661f5c0d684cd144b3b642abead2f8ee8ba72159fd9e856ac105bfadcdd30ac",
-  "snapshot_manifest": "SNAPSHOT-MANIFEST.json",
   "private_git_history_included": false,
   "credentials_included": false,
   "qa_data_included": false,
@@ -25,8 +38,21 @@
     "src-tauri/testdata/updater/payload.sig",
     "src-tauri/testdata/updater/qa.pub"
   ],
-  "official_signature_and_version_binding": "PASS; 1.0.8 negative control rejected",
-  "bundled_licenses_verified": "PASS; 11 files, 4 Windows packages, 7 original license files",
+  "production_source_bytes": "Identical to frozen RC2 inputs for included paths; documentation/public restore adapters separately identified",
+  "provider_mode": "OFFICIAL for shipped RC2; PUBLIC default for source builds; values and generated modules excluded",
+  "public_only_adaptations": [
+    "README.md",
+    "BUILDING.md",
+    "RIGHTS-STATUS.md",
+    "RELEASE-PROVENANCE.json",
+    "SNAPSHOT-MANIFEST.json",
+    "scripts/bootstrap-runtime-public-v108.ps1",
+    "docs/runtime-supplemental-manifest-1.0.8.json"
+  ],
+  "updater_public_key_unchanged": true,
+  "signingReady": true,
+  "requireSignedVersion": true,
+  "installation_upgrade_uninstall_gui": "NOT VERIFIED; explicitly waived by owner for this release on 2026-11-01",
   "application_wide_MIT_clearance": false,
   "rights_status": "RIGHTS-STATUS.md",
   "runtime_source_volumes": [
@@ -35,37 +61,37 @@
       "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-1.zip",
       "sha256": "91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
       "bytes": 1791428285,
-      "status": "PASS"
+      "status": "PASS",
+      "anonymousStatus": 200,
+      "anonymousBytes": 1791428285,
+      "githubDigest": "sha256:91f3ca312a10a724aa8c52a2af46bb542378b9fd16b2b764ab8a6bbbe19aa1a3",
+      "fullyRedownloaded": false,
+      "sha256Scope": "Current GitHub digest matches pinned historical content hash"
     },
     {
       "name": "Miry-v1.0.1-third-party-sources-2.zip",
       "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-2.zip",
       "sha256": "ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
       "bytes": 1790458555,
-      "status": "PASS"
+      "status": "PASS",
+      "anonymousStatus": 200,
+      "anonymousBytes": 1790458555,
+      "githubDigest": "sha256:ab6a9010e6bbe2088b7f6dad254c31e56d538c60d3005de90fc44b6c52db1fc8",
+      "fullyRedownloaded": false,
+      "sha256Scope": "Current GitHub digest matches pinned historical content hash"
     },
     {
       "name": "Miry-v1.0.1-third-party-sources-3.zip",
       "url": "https://github.com/Lomiry/Miry/releases/download/v1.0.1/Miry-v1.0.1-third-party-sources-3.zip",
       "sha256": "727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
       "bytes": 490257003,
-      "status": "PASS"
+      "status": "PASS",
+      "anonymousStatus": 200,
+      "anonymousBytes": 490257003,
+      "githubDigest": "sha256:727f0fedde3475ce82bc0fc1463b816461bf3783d7e3cb5fa994f7f978c0c51e",
+      "fullyRedownloaded": false,
+      "sha256Scope": "Current GitHub digest matches pinned historical content hash"
     }
   ],
-  "rebuilt_for_publication": false,
-  "real_install_upgrade_uninstall_update_handoff_restart": "NOT TESTED",
-  "public_only_build_adaptation": [
-    {
-      "path": "scripts/bootstrap-runtime-public-v107.ps1",
-      "sha256": "394b62e44e26bee8a32b874d88a1fe5c583cbc6d74adc5b99c45df952b021985",
-      "bytes": 5772,
-      "used_for_RC7_build": false
-    },
-    {
-      "path": "docs/runtime-supplemental-manifest-1.0.7.json",
-      "sha256": "391c831e965ada4c37462bd27d85cae087288c65088b64c9612be8d59356cc8a",
-      "bytes": 645806,
-      "used_for_RC7_build": false
-    }
-  ]
+  "rebuilt_for_publication": false
 }

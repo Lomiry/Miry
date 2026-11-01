@@ -51,11 +51,21 @@ fn fetch_json(
     headers: Vec<[String; 2]>,
     body: Option<Value>,
 ) -> Result<(u16, Value), String> {
+    fetch_json_policy(window, method, address, headers, body, None)
+}
+fn fetch_json_policy(
+    window: &tauri::WebviewWindow<tauri::test::MockRuntime>,
+    method: &str,
+    address: String,
+    headers: Vec<[String; 2]>,
+    body: Option<Value>,
+    danger: Option<Value>,
+) -> Result<(u16, Value), String> {
     let data = body.map(|value| serde_json::to_vec(&value).unwrap());
     let rid = ipc(
         window,
         "plugin:http|fetch",
-        json!({"clientConfig":{"method":method, "url":address, "headers":headers, "data":data, "maxRedirections":10, "connectTimeout":10000}}),
+        json!({"clientConfig":{"method":method, "url":address, "headers":headers, "data":data, "maxRedirections":0, "connectTimeout":10000, "danger":danger}}),
     )?;
     let response = ipc(window, "plugin:http|fetch_send", json!({"rid":rid}))?;
     let status = response["status"]
@@ -92,6 +102,37 @@ fn fetch_json(
         }
     }
     Err("too many body packets".into())
+}
+#[test]
+#[ignore = "requires local self-signed HTTPS fixture via MIRY_TLS_TEST_URL"]
+fn actual_plugin_ipc_certificate_policy_is_isolated() {
+    let address = std::env::var("MIRY_TLS_TEST_URL").expect("local TLS fixture");
+    let parsed = tauri_plugin_http::reqwest::Url::parse(&address).unwrap();
+    assert_eq!(parsed.scheme(), "https");
+    assert_eq!(parsed.host_str(), Some("127.0.0.1"));
+    let app = app();
+    let window = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    for enabled in [false, true, false] {
+        let result = fetch_json_policy(
+            &window,
+            "GET",
+            address.clone(),
+            vec![],
+            None,
+            if enabled {
+                Some(json!({"acceptInvalidCerts":true,"acceptInvalidHostnames":false}))
+            } else {
+                None
+            },
+        );
+        if enabled {
+            assert_eq!(result.unwrap().0, 200);
+        } else {
+            assert!(result.is_err());
+        }
+    }
 }
 #[test]
 fn actual_plugin_ipc_accepts_a_nonstandard_port_and_reads_server_info() {

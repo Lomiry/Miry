@@ -4,6 +4,75 @@ use tauri::Manager;
 
 #[derive(Default)]
 pub struct Surface(AtomicUsize);
+#[cfg(windows)]
+mod pointer_input {
+    use std::{cell::Cell, rc::Rc};
+    use tauri::Emitter;
+    use windows_sys::Win32::{
+        Foundation::*,
+        Graphics::Gdi::ClientToScreen,
+        UI::{Shell::*, WindowsAndMessaging::*},
+    };
+    const ID: usize = 0x4d495259;
+    struct Owner {
+        window: tauri::WebviewWindow,
+        last: Cell<Option<(i32, i32)>>,
+    }
+    pub fn install(handle: usize, window: &tauri::WebviewWindow) -> Result<(), String> {
+        let owner = Box::into_raw(Box::new(Rc::new(Owner {
+            window: window.clone(),
+            last: Cell::new(None),
+        })));
+        unsafe {
+            if SetWindowSubclass(handle as _, Some(proc), ID, owner as usize) == 0 {
+                drop(Box::from_raw(owner));
+                return Err("Surface pointer bridge unavailable".into());
+            }
+        }
+        Ok(())
+    }
+    unsafe extern "system" fn proc(
+        hwnd: HWND,
+        msg: u32,
+        wp: WPARAM,
+        lp: LPARAM,
+        id: usize,
+        data: usize,
+    ) -> LRESULT {
+        let owner = Rc::clone(&*(data as *const Rc<Owner>));
+        if msg == WM_NCDESTROY {
+            RemoveWindowSubclass(hwnd, Some(proc), id);
+            drop(Box::from_raw(data as *mut Rc<Owner>));
+            return DefSubclassProc(hwnd, msg, wp, lp);
+        }
+        if (msg == WM_MOUSEMOVE || msg == WM_SETCURSOR) && IsWindowVisible(hwnd) != 0 {
+            let mut point = POINT { x: 0, y: 0 };
+            let valid = if msg == WM_MOUSEMOVE {
+                point.x = lp as i16 as i32;
+                point.y = (lp >> 16) as i16 as i32;
+                ClientToScreen(hwnd, &mut point) != 0
+            } else {
+                GetCursorPos(&mut point) != 0
+            };
+            let mut rect: RECT = std::mem::zeroed();
+            if valid && GetWindowRect(hwnd, &mut rect) != 0 {
+                let point = (point.x, point.y);
+                if owner.last.replace(Some(point)) != Some(point)
+                    && point.0 >= rect.left
+                    && point.0 < rect.right
+                    && point.1 >= rect.top
+                    && point.1 < rect.bottom
+                {
+                    // Reuse the existing main → owned-overlay activity bridge.
+                    // Compare coordinates: a stationary WM_SETCURSOR must not
+                    // wake Chrome when the current Hide updates the cursor.
+                    let _ = owner.window.emit("player-controls", "pointer");
+                }
+            }
+        }
+        DefSubclassProc(hwnd, msg, wp, lp)
+    }
+}
 impl Surface {
     pub(crate) fn handle(&self) -> usize {
         self.0.load(Ordering::Acquire)
@@ -19,7 +88,11 @@ fn pointer_sample(window: &tauri::WebviewWindow) -> Option<((i32, i32), bool)> {
     if surface == 0 {
         return None;
     }
-    let parent = window.hwnd().ok()?.0;
+    let parent = crate::mini_window::host(window.app_handle())
+        .filter(|_| crate::mini_window::active(window.app_handle()))
+        .and_then(|w| w.hwnd().ok())
+        .or_else(|| window.hwnd().ok())?
+        .0;
     unsafe {
         // mpv disables mouse input on its renderer when embedded with --wid.
         // Check only our visible video and foreground owner, never global activity.
@@ -116,53 +189,76 @@ pub async fn player_surface(window: tauri::WebviewWindow, rect: Rect) -> Result<
     if !rect.valid() {
         return Err("视频区域参数无效".into());
     }
+    window
+        .state::<crate::mini_window::MiniWindow>()
+        .0
+        .lock()
+        .unwrap()
+        .surface = rect.clone();
     let (send, receive) = tokio::sync::oneshot::channel();
     let owner = window.clone();
     window
         .run_on_main_thread(move || {
-            #[cfg(windows)]
-            let result = (|| {
-                use windows_sys::Win32::UI::WindowsAndMessaging::*;
-                let state = owner.state::<Surface>();
-                let mut handle = state.0.load(Ordering::Acquire);
-                if handle == 0 {
-                    if !rect.visible && rect.width == 0.0 {
-                        return Ok(0);
-                    }
-                    let parent = owner.hwnd().map_err(|e| e.to_string())?.0 as usize;
-                    handle = unsafe { create_child(parent)? };
-                    state.0.store(handle, Ordering::Release);
-                }
-                let scale = owner.scale_factor().map_err(|e| e.to_string())?;
-                unsafe {
-                    if rect.visible && rect.width > 0.0 && rect.height > 0.0 {
-                        if SetWindowPos(
-                            handle as _,
-                            HWND_TOP,
-                            (rect.x * scale).round() as i32,
-                            (rect.y * scale).round() as i32,
-                            (rect.width * scale).round() as i32,
-                            (rect.height * scale).round() as i32,
-                            SWP_NOACTIVATE | SWP_SHOWWINDOW,
-                        ) == 0
-                        {
-                            return Err("无法调整视频区域".into());
-                        }
-                    } else {
-                        ShowWindow(handle as _, SW_HIDE);
-                    }
-                }
-                Ok(handle as u32)
-            })();
-            #[cfg(not(windows))]
-            let result: Result<u32, String> = Err("当前平台尚未支持嵌入播放".into());
+            let result = update_surface(&owner, rect);
             let _ = send.send(result);
         })
         .map_err(|e| e.to_string())?;
     receive.await.map_err(|_| "无法连接视频窗口".to_string())?
 }
 
+pub(crate) fn update_surface(window: &tauri::WebviewWindow, rect: Rect) -> Result<u32, String> {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::WindowsAndMessaging::*;
+        let (target, rect) = crate::mini_window::target(window, &rect)?;
+        let state = window.state::<Surface>();
+        let mut handle = state.0.load(Ordering::Acquire);
+        if handle == 0 {
+            if !rect.visible && rect.width == 0.0 {
+                return Ok(0);
+            }
+            let parent = target.hwnd().map_err(|e| e.to_string())?.0 as usize;
+            handle = unsafe { create_child(parent)? };
+            if let Err(error) = pointer_input::install(handle, window) {
+                unsafe {
+                    DestroyWindow(handle as _);
+                }
+                return Err(error);
+            }
+            state.0.store(handle, Ordering::Release);
+        }
+        let scale = target.scale_factor().map_err(|e| e.to_string())?;
+        unsafe {
+            if rect.visible && rect.width > 0.0 && rect.height > 0.0 {
+                if SetWindowPos(
+                    handle as _,
+                    HWND_TOP,
+                    (rect.x * scale).round() as i32,
+                    (rect.y * scale).round() as i32,
+                    (rect.width * scale).round() as i32,
+                    (rect.height * scale).round() as i32,
+                    SWP_NOACTIVATE | SWP_SHOWWINDOW,
+                ) == 0
+                {
+                    return Err("无法调整视频区域".into());
+                }
+            } else {
+                ShowWindow(handle as _, SW_HIDE);
+            }
+        }
+        Ok(handle as u32)
+    }
+    #[cfg(not(windows))]
+    {
+        Err("当前平台尚未支持嵌入播放".into())
+    }
+}
+
 pub async fn ensure(window: tauri::WebviewWindow) -> Result<u32, String> {
+    let existing = window.state::<Surface>().handle();
+    if existing != 0 {
+        return Ok(existing as u32);
+    }
     // The UI places and shows this surface after mpv has loaded the video.
     player_surface(
         window,

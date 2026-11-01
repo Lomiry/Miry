@@ -1,4 +1,4 @@
-Miry v1.0.7 supplemental Windows Rust notices
+Miry v1.0.8 supplemental Windows Rust notices
 Read together with ../rust-v106/NOTICE.txt and the original files.
 Upstream original bytes and file-level exceptions are preserved below.
 This supplement does not grant rights over other Miry materials.

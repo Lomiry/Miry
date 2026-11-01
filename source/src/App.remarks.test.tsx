@@ -55,7 +55,7 @@ it("prefills an existing remark and allows clearing it through a saved connectio
   await user.clear(remark);
   await user.click(screen.getByRole("button", { name: "连接 旧备注" }));
   expect(
-    await screen.findByRole("combobox", { name: "当前服务器" }),
+    await screen.findByRole("button", { name: "当前服务器" }),
   ).toBeTruthy();
   expect(readAccount()?.remark).toBe("");
 });
@@ -73,7 +73,7 @@ it("adds a server with a local remark and preserves it when switching away and b
   await user.type(form.getByLabelText("服务器备注"), " 家庭影院 ");
   await user.type(form.getByLabelText("用户名"), "second");
   await user.click(form.getByRole("button", { name: "连接服务器" }));
-  await screen.findByRole("combobox", { name: "当前服务器" });
+  await screen.findByRole("button", { name: "当前服务器" });
   expect(readAccount()?.remark).toBe("家庭影院");
   expect(screen.queryByRole("dialog")).toBeNull();
   const login = fetch.mock.calls.find(([url]) =>
@@ -85,13 +85,17 @@ it("adds a server with a local remark and preserves it when switching away and b
   await pickSelect(user, screen.getByLabelText("当前服务器"), {
     name: "first.test",
   });
-  await screen.findByText("first.test", { selector: ".account strong" });
+  await screen.findByText("first.test", {
+    selector: ".server-menu-trigger > span",
+  });
   await pickSelect(user, screen.getByLabelText("当前服务器"), {
     name: "家庭影院",
   });
   expect(readAccount()?.remark).toBe("家庭影院");
   expect(
-    await screen.findByText("家庭影院", { selector: ".account strong" }),
+    await screen.findByText("家庭影院", {
+      selector: ".server-menu-trigger > span",
+    }),
   ).toBeTruthy();
 });
 
@@ -104,6 +108,6 @@ it("also offers an optional remark on initial login and accepts a blank one", as
   await user.type(screen.getByLabelText("用户名"), "second");
   await user.click(screen.getByRole("button", { name: "连接服务器" }));
   expect(
-    await screen.findByRole("combobox", { name: "当前服务器" }),
+    await screen.findByRole("button", { name: "当前服务器" }),
   ).toBeTruthy();
 });

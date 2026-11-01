@@ -1,17 +1,21 @@
+import { displayError } from "../privacy";
+import type { PlaybackSelection } from "../player/sourcePreference";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { Play, X, LoaderCircle } from "lucide-react";
 import type { EmbyClient } from "../api/client";
 import type { Item } from "../types/emby";
 import { episodeLabel, resolveQuickPlay } from "../player/quickPlay";
-import { formatTime } from "./PlayerPanel";
-import { privateText } from "../privacy";
+import { formatTime } from "../player/formatTime";
 
 export type StartPlayback = (
   item: Item,
   fromStart: boolean,
   sourceId?: string,
   signal?: AbortSignal,
+  selection?: PlaybackSelection,
 ) => Promise<void>;
 export default function QuickPlay({
   api,
@@ -28,6 +32,8 @@ export default function QuickPlay({
   resumeLabel?: boolean;
   overlay?: boolean;
 }) {
+  useI18n();
+
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [target, setTarget] = useState<Item | null>(null);
@@ -37,11 +43,11 @@ export default function QuickPlay({
     if (pending.current) return;
     setError("");
     if (!api) {
-      setError("演示内容没有视频文件，请连接自己的 Emby 服务器后播放。");
+      setError(t("player.demo_titles_have_no_video_files_connect"));
       return;
     }
     if (!isTauri()) {
-      setError("请在桌面客户端中播放。");
+      setError(t("library.open_the_desktop_app_to_play_media"));
       return;
     }
     const controller = new AbortController();
@@ -65,15 +71,19 @@ export default function QuickPlay({
       }
     }
   }
-  const position = (target || item).UserData?.PlaybackPositionTicks || 0;
+  const position =
+    (target?.Id === item.Id ? item : target || item).UserData
+      ?.PlaybackPositionTicks || 0;
   const label =
     position > 0
-      ? `继续观看 · ${formatTime(position / 10000000)}`
+      ? t("library.continue_watching_2", {
+          p0: formatTime(position / 10000000),
+        })
       : target
-        ? "立即播放"
+        ? t("library.play_now")
         : ["Series", "Season"].includes(item.Type)
-          ? "立即播放"
-          : "播放";
+          ? t("library.play_now")
+          : t("library.play");
   return (
     <div
       className={`${compact ? "quick-play compact-play" : "quick-play"}${overlay ? " overlay-play" : ""}${busy ? " is-busy" : ""}${error ? " has-error" : ""}`}
@@ -81,7 +91,9 @@ export default function QuickPlay({
       <div className="quick-buttons">
         <button
           className={compact ? "quick-card-button" : "primary"}
-          aria-label={compact ? `快速播放 ${item.Name}` : label}
+          aria-label={
+            compact ? t("library.quick_play", { p0: item.Name }) : label
+          }
           disabled={busy}
           onClick={() => void start()}
         >
@@ -92,11 +104,13 @@ export default function QuickPlay({
           )}
           <span className={overlay ? "visually-hidden" : undefined}>
             {busy
-              ? "准备播放…"
+              ? t("player.preparing_playback")
               : compact
                 ? resumeLabel && position > 0
-                  ? `继续播放 · ${formatTime(position / 10000000)}`
-                  : "快速播放"
+                  ? t("player.resume_2", {
+                      p0: formatTime(position / 10000000),
+                    })
+                  : t("library.quick_play_2")
                 : label}
           </span>
         </button>
@@ -106,12 +120,13 @@ export default function QuickPlay({
             disabled={busy}
             onClick={() => void start(true)}
           >
-            本集从头播放
+            {" "}
+            {t("library.play_episode_from_beginning")}{" "}
           </button>
         )}
         {busy && (
           <button
-            aria-label="取消快速播放"
+            aria-label={t("library.cancel_quick_play")}
             onClick={() => pending.current?.abort()}
           >
             <X size={16} />
@@ -123,7 +138,7 @@ export default function QuickPlay({
       )}
       {error && (
         <p className="play-error" role="alert">
-          {privateText(error)}
+          {displayError(error)}
         </p>
       )}
     </div>

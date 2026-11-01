@@ -6,6 +6,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from "@testing-library/react";
 import PlayerChrome, { contextPlacement } from "./PlayerChrome";
 import type { PlayerAction, PlayerUiModel } from "../player/uiModel";
@@ -67,6 +68,423 @@ const tick = async (ms: number) =>
   act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
   });
+it("uses separate subtitle and danmaku icons in both the toolbar and More fallback", async () => {
+  model.controlLayout = { preset: "full" } as PlayerUiModel["controlLayout"];
+  model.danmaku = {
+    name: "",
+    count: 0,
+    skipped: 0,
+    status: "",
+    settings: danmakuDefaults,
+    offset: 0,
+    bound: false,
+  };
+  const dispatch = vi.fn().mockResolvedValue(undefined);
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  expect(
+    screen
+      .getByRole("button", { name: "字幕" })
+      .querySelector(".lucide-captions"),
+  ).toBeTruthy();
+  expect(
+    screen
+      .getByRole("button", { name: "弹幕" })
+      .querySelector(".lucide-message-square-text"),
+  ).toBeTruthy();
+  model.controlLayout = { preset: "minimal" } as PlayerUiModel["controlLayout"];
+  view.rerender(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "更多播放操作" }));
+  expect(
+    screen
+      .getByRole("menuitem", { name: /弹幕/ })
+      .querySelector(".lucide-message-square-text"),
+  ).toBeTruthy();
+  expect(
+    screen
+      .getByRole("menuitem", { name: "字幕" })
+      .querySelector(".lucide-captions"),
+  ).toBeTruthy();
+});
+
+it.each([true, false])(
+  "keeps internal/external tracks, Off, and subtitle settings under one entry (external=%s)",
+  async (external) => {
+    model.state.tracks.push({
+      id: 3,
+      type: "sub",
+      title: "外挂测试",
+      external,
+    });
+    const dispatch = vi.fn().mockResolvedValue(undefined);
+    render(<PlayerChrome model={model} dispatch={dispatch} />);
+    fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+    const menu = screen.getByRole("menu", { name: "字幕" });
+    const item = within(menu).getByRole("menuitemradio", { name: "外挂测试" });
+    expect(item.closest(".player-menu-group")?.textContent).toContain(
+      external ? "外挂字幕" : "内嵌字幕",
+    );
+    fireEvent.click(item);
+    await act(async () => {});
+    expect(dispatch).toHaveBeenLastCalledWith({
+      kind: "control",
+      action: "subtitle",
+      value: 3,
+      playSessionId: undefined,
+    });
+    await tick(180);
+    fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "关闭字幕" }));
+    await act(async () => {});
+    expect(dispatch).toHaveBeenLastCalledWith({
+      kind: "control",
+      action: "subtitle",
+      value: -1,
+      playSessionId: undefined,
+    });
+    await tick(180);
+    fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "字幕大小、位置与延迟" }),
+    );
+    expect(screen.getByRole("slider", { name: "字幕大小" })).toBeTruthy();
+    expect(screen.getByRole("spinbutton", { name: "字幕延迟" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "次字幕" })).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "字幕" })
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "返回字幕" }));
+    expect(
+      screen.getByRole("menuitemradio", { name: "外挂测试" }),
+    ).toBeTruthy();
+  },
+);
+
+it("keeps subtitle controls out of general picture/audio settings, with no label hover delegation", async () => {
+  model.state.playSessionId = "fixture";
+  const dispatch = vi
+    .fn()
+    .mockRejectedValue(new Error("controlled fit failure"));
+  render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "更多播放操作" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "播放设置" }));
+  const fit = screen.getByRole("combobox", { name: "画面模式" });
+  expect(fit.closest("label")).toBeNull();
+  expect(screen.queryByRole("slider", { name: "字幕大小" })).toBeNull();
+  expect(screen.getByRole("spinbutton", { name: "音频延迟" })).toBeTruthy();
+  fireEvent.click(fit);
+  fireEvent.click(screen.getByRole("option", { name: "填充屏幕" }));
+  await act(async () => {});
+  expect(dispatch).toHaveBeenCalledWith(
+    expect.objectContaining({ kind: "video-fit", playSessionId: "fixture" }),
+  );
+  expect(screen.getByRole("alert").textContent).toContain("操作未完成");
+});
+
+it("offers a clear empty subtitle state while keeping all subtitle settings reachable", () => {
+  model.state.tracks = [];
+  render(
+    <PlayerChrome
+      model={model}
+      dispatch={vi.fn().mockResolvedValue(undefined)}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+  expect(screen.getByText("此视频没有可用字幕")).toBeTruthy();
+  expect(screen.getByText(/当前播放器未提供本地字幕文件导入/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "字幕大小、位置与延迟" }));
+  expect(screen.getByRole("slider", { name: "字幕大小" })).toBeTruthy();
+});
+it("keeps pending feedback scoped to the clicked play button instead of every control", async () => {
+  let finish!: () => void;
+  const dispatch = vi.fn(
+    () =>
+      new Promise<void>((r) => {
+        finish = r;
+      }),
+  );
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "暂停" }));
+  expect(
+    view.container.querySelectorAll('button[aria-busy="true"]'),
+  ).toHaveLength(1);
+  expect(
+    screen.getByRole("button", { name: "暂停" }).getAttribute("aria-busy"),
+  ).toBe("true");
+  await act(async () => finish());
+  expect(
+    view.container.querySelectorAll('button[aria-busy="true"]'),
+  ).toHaveLength(0);
+});
+it("keeps track loading and an enabled danmaku preference from highlighting unrelated controls", async () => {
+  model.danmaku = {
+    name: "",
+    count: 0,
+    skipped: 0,
+    status: "",
+    settings: { ...danmakuDefaults, enabled: true },
+    offset: 0,
+    bound: false,
+  };
+  let finish!: () => void;
+  const dispatch = vi.fn(
+    () =>
+      new Promise<void>((r) => {
+        finish = r;
+      }),
+  );
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  expect(
+    view.container.querySelectorAll(
+      '.transport-tools button[data-active="true"]',
+    ),
+  ).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "简体中文" }));
+  expect(
+    screen.getByRole("button", { name: "字幕" }).getAttribute("aria-busy"),
+  ).toBe("true");
+  expect(
+    screen.getByRole("button", { name: "音量" }).getAttribute("aria-busy"),
+  ).toBe("false");
+  expect(
+    screen
+      .getByRole("button", { name: "更多播放操作" })
+      .getAttribute("aria-busy"),
+  ).toBe("false");
+  expect(
+    view.container.querySelectorAll('button[aria-busy="true"]'),
+  ).toHaveLength(1);
+  await act(async () => finish());
+});
+it("Mini uses independent 32px button backgrounds and fits its speed menu inside 320×180", async () => {
+  model.mini = true;
+  model.state.playSessionId = "one";
+  model.state.speed = 1;
+  const fs = await vi.importActual<{
+    readFileSync(path: string, encoding: "utf8"): string;
+  }>("node:fs");
+  const styles = document.createElement("style");
+  styles.textContent = fs.readFileSync("src/design/player.css", "utf8");
+  document.head.append(styles);
+  const bounds = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 320,
+      bottom: 180,
+      width: 320,
+      height: 180,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+  try {
+    const dispatch = vi.fn(async () => {});
+    const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+    const console = view.container.querySelector(".player-console")!;
+    expect(getComputedStyle(console).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(parseFloat(getComputedStyle(console).padding)).toBe(0);
+    expect(
+      getComputedStyle(screen.getByRole("button", { name: "暂停" })).height,
+    ).toBe("32px");
+    fireEvent.click(screen.getByRole("button", { name: "倍速" }));
+    await tick(40);
+    const menu = screen.getByRole("menu", { name: "播放速度" });
+    expect(
+      parseFloat(menu.style.left) + parseFloat(menu.style.width),
+    ).toBeLessThanOrEqual(320);
+    expect(
+      parseFloat(menu.style.bottom) + parseFloat(menu.style.maxHeight),
+    ).toBeLessThanOrEqual(180);
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "2×" }));
+    await tick(200);
+    expect(dispatch).toHaveBeenCalledWith({
+      kind: "control",
+      action: "speed",
+      value: 2,
+    });
+  } finally {
+    bounds.mockRestore();
+    styles.remove();
+  }
+});
+it.each([1, 1.25, 1.5, 2])(
+  "Mini shows the actual %s rate beside an independent play button",
+  (speed) => {
+    model.mini = true;
+    model.state.playSessionId = "one";
+    model.state.speed = speed;
+    const view = render(
+      <PlayerChrome model={model} dispatch={vi.fn(async () => {})} />,
+    );
+    const rate = screen.getByRole("button", { name: "倍速" });
+    expect(rate.textContent).toBe(
+      `${Number.isInteger(speed) ? speed.toFixed(1) : speed}×`,
+    );
+    expect(
+      view.container.querySelector(".player-mini-controls")?.children,
+    ).toHaveLength(2);
+    expect(screen.getAllByRole("button")).toHaveLength(3);
+    view.rerender(
+      <PlayerChrome
+        model={{ ...model, state: { ...model.state, speed: 1.5 } }}
+        dispatch={vi.fn(async () => {})}
+      />,
+    );
+    expect(rate.textContent).toBe("1.5×");
+  },
+);
+it("Mini reveals controls on movement and hides/restores both the buttons and embedded X without changing subtitles", async () => {
+  model.mini = true;
+  model.canHide = true;
+  model.state.playSessionId = "one";
+  const dispatch = vi.fn(async () => {});
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  const root = view.container.querySelector(".player-chrome")!;
+  await tick(2800 + playerMotion.chrome.out);
+  expect(root.classList.contains("chrome-hidden")).toBe(true);
+  expect(
+    view.container.querySelector(".mini-exit")?.hasAttribute("inert"),
+  ).toBe(true);
+  fireEvent.pointerMove(root);
+  expect(root.classList.contains("chrome-visible")).toBe(true);
+  expect(screen.getByRole("button", { name: "退出小窗" })).toHaveProperty(
+    "disabled",
+    false,
+  );
+  fireEvent.pointerLeave(root);
+  await tick(playerMotion.chrome.out);
+  expect(root.classList.contains("chrome-hidden")).toBe(true);
+  fireEvent.pointerEnter(root);
+  expect(root.classList.contains("chrome-visible")).toBe(true);
+  expect(model.state.tracks[0].selected).toBe(true);
+  expect(dispatch).not.toHaveBeenCalled();
+});
+it("offers only play, speed and an embedded X in Mini, preserving subtitle tracks and deduplicating exit", async () => {
+  model.mini = true;
+  model.state.playSessionId = "one";
+  model.danmaku = {
+    settings: danmakuDefaults,
+    name: "QA",
+    count: 1,
+    skipped: 0,
+    status: "",
+    offset: 0,
+    bound: false,
+    density: { bins: [1], duration: 100 },
+  };
+  let fail!: (error: Error) => void;
+  const dispatch = vi.fn(
+    () =>
+      new Promise<void>((_, reject) => {
+        fail = reject;
+      }),
+  );
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  const exit = screen.getByRole("button", { name: "退出小窗" });
+  expect(exit.parentElement).toBe(
+    view.container.querySelector(".player-chrome"),
+  );
+  expect(exit.closest(".transport-tools")).toBeNull();
+  expect(exit.querySelector("svg")).toBeTruthy();
+  expect(exit.querySelector("span")).toBeNull();
+  expect(view.container.querySelector(".player-heading")).toBeNull();
+  expect(view.container.querySelector(".player-timeline")).toBeNull();
+  expect(screen.queryByRole("button", { name: "字幕" })).toBeNull();
+  expect(screen.getByRole("button", { name: "倍速" })).toBeTruthy();
+  expect(screen.getAllByRole("button")).toHaveLength(3);
+  expect(model.state.tracks[0]).toMatchObject({ type: "sub", selected: true });
+  expect(screen.queryByRole("button", { name: "弹幕" })).toBeNull();
+  expect(view.container.querySelector(".danmaku-heatmap")).toBeNull();
+  fireEvent.click(exit);
+  fireEvent.click(exit);
+  expect(dispatch).toHaveBeenCalledTimes(1);
+  expect(exit).toHaveProperty("disabled", true);
+  expect(screen.getByRole("status").textContent).toBe("正在处理…");
+  await act(async () => fail(new Error("controlled failure")));
+  expect(exit).toHaveProperty("disabled", false);
+  expect(screen.getByRole("alert")).toBeTruthy();
+  expect(dispatch).toHaveBeenCalledWith({
+    kind: "mini",
+    command: "leave",
+    playSessionId: "one",
+  });
+});
+it("Mini exit bypasses global busy and an unresolved control while sync reports failure", async () => {
+  model.mini = true;
+  model.state.playSessionId = "one";
+  model.state.syncError = "播放进度暂时无法同步";
+  const dispatch = vi.fn((action: PlayerAction) =>
+    action.kind === "control" ? new Promise<void>(() => {}) : Promise.resolve(),
+  );
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "暂停" }));
+  view.rerender(
+    <PlayerChrome model={{ ...model, busy: true }} dispatch={dispatch} />,
+  );
+  const exit = screen.getByRole("button", { name: "退出小窗" });
+  expect(exit).toHaveProperty("disabled", false);
+  fireEvent.click(exit);
+  await tick(0);
+  expect(dispatch).toHaveBeenCalledWith({
+    kind: "mini",
+    command: "leave",
+    playSessionId: "one",
+  });
+});
+it("returns from mini with Escape through its session-scoped action", async () => {
+  model.mini = true;
+  model.state.playSessionId = "one";
+  const dispatch = vi.fn(async () => {});
+  render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.keyDown(document, { key: "Escape" });
+  await tick(0);
+  expect(dispatch).toHaveBeenCalledWith({
+    kind: "mini",
+    command: "leave",
+    playSessionId: "one",
+  });
+});
+it.each(["minimal", "standard", "full", "custom"] as const)(
+  "keeps playback, seek, return, heatmap slot and More in %s",
+  async (preset) => {
+    model.controlLayout = { preset, buttons: [] };
+    const dispatch = vi.fn(async () => {});
+    const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+    expect(screen.getByRole("button", { name: "暂停" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "退出播放" })).toBeTruthy();
+    expect(view.container.querySelector(".player-timeline input")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "更多播放操作" }));
+    await tick(40);
+    expect(screen.getByRole("menuitem", { name: /控制栏布局/ })).toBeTruthy();
+    if (preset === "custom") {
+      fireEvent.click(screen.getByRole("menuitem", { name: /音量/ }));
+      await tick(40);
+      expect(screen.getByRole("slider", { name: "音量" })).toBeTruthy();
+    }
+  },
+);
+it("orders custom tools and dispatches the same speed action as the More menu", async () => {
+  model.controlLayout = { preset: "custom", buttons: ["speed", "volume"] };
+  const dispatch = vi.fn(async () => {});
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  const names = Array.from(
+    view.container.querySelectorAll(".transport-tools button"),
+  ).map((node) => node.getAttribute("aria-label"));
+  expect(names).toEqual(["倍速", "音量", "更多播放操作"]);
+  fireEvent.click(screen.getByRole("button", { name: "倍速" }));
+  await tick(40);
+  fireEvent.click(screen.getByRole("menuitemradio", { name: /1.5/ }));
+  await tick(200);
+  expect(dispatch).toHaveBeenCalledWith({
+    kind: "control",
+    action: "speed",
+    value: 1.5,
+  });
+});
 it.each([
   [1280, 520],
   [850, 520],
@@ -178,10 +596,8 @@ it.each([
     expect(screen.getByLabelText("当前播放清晰度").textContent).toContain(
       "1080p",
     );
-    fireEvent.click(screen.getByRole("button", { name: "字幕" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "字幕大小、位置与延迟" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "更多播放操作" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "播放设置" }));
     expect(screen.getByText(`播放方式：${label}`)).toBeTruthy();
     if (method === "Transcode")
       expect(screen.queryByText(/媒体：HDR10/)).toBeNull();
@@ -417,7 +833,60 @@ it("uses delayed single click, double click fullscreen, and right click without 
   fireEvent.contextMenu(root);
   expect(screen.getByRole("menu", { name: "更多" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "暂停" }));
-  expect(dispatch).not.toHaveBeenCalled();
+  await tick(200);
+  expect(dispatch).toHaveBeenCalledExactlyOnceWith({
+    kind: "control",
+    action: "pause",
+    value: undefined,
+  });
+});
+it("honors Escape and fullscreen shortcuts throughout a busy media loading gap", async () => {
+  model.state = {
+    ...model.state,
+    active: false,
+    loaded: false,
+    fullscreen: true,
+  };
+  model.busy = true;
+  const dispatch = vi.fn().mockResolvedValue(undefined);
+  const view = render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.keyDown(document.body, { key: "Escape", code: "Escape" });
+  expect(dispatch).toHaveBeenLastCalledWith({
+    kind: "control",
+    action: "fullscreen",
+    value: 0,
+  });
+  model = { ...model, state: { ...model.state, fullscreen: false } };
+  view.rerender(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.keyDown(document.body, { key: "f", code: "KeyF" });
+  expect(dispatch).toHaveBeenLastCalledWith({
+    kind: "control",
+    action: "fullscreen",
+    value: 1,
+  });
+  expect(dispatch).toHaveBeenCalledTimes(2);
+});
+it("permits pause after dismissing a menu while its track request is pending", async () => {
+  let finish!: () => void;
+  const dispatch = vi.fn((action: PlayerAction) =>
+    action.kind === "control" && action.action === "subtitle"
+      ? new Promise<void>((r) => {
+          finish = r;
+        })
+      : Promise.resolve(),
+  );
+  render(<PlayerChrome model={model} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole("button", { name: "字幕" }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "简体中文" }));
+  fireEvent.keyDown(document.body, { key: "Escape", code: "Escape" });
+  await tick(150);
+  fireEvent.click(screen.getByRole("button", { name: "暂停" }));
+  expect(
+    dispatch.mock.calls.some(
+      ([action]) => action.kind === "control" && action.action === "pause",
+    ),
+  ).toBe(true);
+  await act(async () => finish());
 });
 it("shares the requested asymmetric chrome and restrained popover motion tokens", () => {
   expect(playerMotion).toEqual({

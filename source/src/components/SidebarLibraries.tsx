@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, Film, LibraryBig, Tv } from "lucide-react";
 import type { Item } from "../types/emby";
@@ -13,6 +15,8 @@ export default function SidebarLibraries({
   activeId?: string;
   onNavigate: (library: Item) => void;
 }) {
+  useI18n();
+
   const collapsed = useSidebarCollapsed();
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
@@ -29,7 +33,7 @@ export default function SidebarLibraries({
     <>
       <nav
         className="library-nav library-nav-expanded"
-        aria-label="媒体库"
+        aria-label={t("library.libraries")}
         hidden={collapsed}
       >
         {libraries.map((library) => (
@@ -48,16 +52,24 @@ export default function SidebarLibraries({
         ref={anchor}
         hidden={!collapsed}
         className={`nav library-rail-trigger${current ? " active" : ""}`}
-        aria-label="媒体库"
+        aria-label={t("library.libraries")}
         aria-current={current ? "page" : undefined}
         aria-haspopup="menu"
         aria-expanded={collapsed && open}
         aria-controls={collapsed && open ? id : undefined}
-        data-tooltip={current ? `媒体库 · ${current.Name}` : "媒体库"}
+        data-tooltip={
+          current
+            ? t("library.library", { p0: current.Name })
+            : t("library.libraries")
+        }
         onClick={() => setOpen((value) => !value)}
       >
         <LibraryBig size={19} />
-        <span>{current ? `媒体库 · ${current.Name}` : "媒体库"}</span>
+        <span>
+          {current
+            ? t("library.library", { p0: current.Name })
+            : t("library.libraries")}
+        </span>
       </button>
       {collapsed && open && (
         <Popover
@@ -65,11 +77,11 @@ export default function SidebarLibraries({
           anchor={anchor}
           onClose={close}
           id={id}
-          label="选择媒体库"
+          label={t("library.select_library")}
           width={280}
           className="library-rail-flyout"
         >
-          {libraries.length === 0 && <p>暂无媒体库</p>}
+          {libraries.length === 0 && <p>{t("library.no_libraries")}</p>}
           {libraries.map((library) => (
             <button
               key={library.Id}

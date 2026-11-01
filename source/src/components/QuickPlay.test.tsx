@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, it, expect, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import QuickPlay from "./QuickPlay";
 import { EmbyClient } from "../api/client";
@@ -76,8 +76,86 @@ it("shows server errors and allows retry", async () => {
   await user.click(screen.getByRole("button", { name: "立即播放" }));
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
-    "服务器暂不可用",
+    "操作未完成。服务器暂不可用",
   );
   await user.click(screen.getByRole("button", { name: "立即播放" }));
   await waitFor(() => expect(onPlay).toHaveBeenCalled());
+});
+it("shows current card progress after playing the same media and after completion", async () => {
+  const item = { ...episode, UserData: { PlaybackPositionTicks: 50000000 } };
+  vi.mocked(resolveQuickPlay).mockResolvedValue(item);
+  const onPlay = vi.fn().mockResolvedValue(undefined);
+  const view = render(
+    <QuickPlay api={api} item={item} onPlay={onPlay} compact resumeLabel />,
+  );
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "快速播放 Episode" }));
+  await waitFor(() => expect(onPlay).toHaveBeenCalledTimes(1));
+  view.rerender(
+    <QuickPlay
+      api={api}
+      item={{ ...item, UserData: { PlaybackPositionTicks: 170000000 } }}
+      onPlay={onPlay}
+      compact
+      resumeLabel
+    />,
+  );
+  expect(
+    screen.getByRole("button", { name: "快速播放 Episode" }).textContent,
+  ).toBe("继续播放 · 00:17");
+  view.rerender(
+    <QuickPlay
+      api={api}
+      item={{ ...item, UserData: { Played: true, PlaybackPositionTicks: 0 } }}
+      onPlay={onPlay}
+      compact
+      resumeLabel
+    />,
+  );
+  expect(
+    screen.getByRole("button", { name: "快速播放 Episode" }).textContent,
+  ).toBe("快速播放");
+  expect(resolveQuickPlay).toHaveBeenCalledTimes(1);
+});
+it("keeps a resolved episode's position when the card represents its series", async () => {
+  vi.mocked(resolveQuickPlay).mockResolvedValue(episode);
+  const onPlay = vi.fn().mockResolvedValue(undefined);
+  const view = render(<QuickPlay api={api} item={show} onPlay={onPlay} />);
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "立即播放" }));
+  await screen.findByRole("button", { name: "继续观看 · 02:00" });
+  view.rerender(<QuickPlay api={api} item={{ ...show }} onPlay={onPlay} />);
+  expect(screen.getByRole("button", { name: "继续观看 · 02:00" })).toBeTruthy();
+});
+it("does not restore old progress when a pending lookup completes after the card updates", async () => {
+  const item = { ...episode, UserData: { PlaybackPositionTicks: 50000000 } };
+  let finish!: (value: typeof item) => void;
+  vi.mocked(resolveQuickPlay).mockReturnValue(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
+  );
+  const onPlay = vi.fn().mockResolvedValue(undefined);
+  const view = render(
+    <QuickPlay api={api} item={item} onPlay={onPlay} compact resumeLabel />,
+  );
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "快速播放 Episode" }));
+  view.rerender(
+    <QuickPlay
+      api={api}
+      item={{ ...item, UserData: { PlaybackPositionTicks: 170000000 } }}
+      onPlay={onPlay}
+      compact
+      resumeLabel
+    />,
+  );
+  await act(async () => finish(item));
+  await waitFor(() => expect(onPlay).toHaveBeenCalledTimes(1));
+  expect(
+    screen.getByRole("button", { name: "快速播放 Episode" }).textContent,
+  ).toBe("继续播放 · 00:17");
+  expect(resolveQuickPlay).toHaveBeenCalledTimes(1);
 });

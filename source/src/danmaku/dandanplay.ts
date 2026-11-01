@@ -78,7 +78,7 @@ function payload(value: unknown) {
   if (v.success !== true || !Array.isArray(v.animes)) throw Error("format");
   return v.animes.slice(0, 100);
 }
-function candidates(value: unknown) {
+export function candidates(value: unknown) {
   const result: DanmakuMatch[] = [];
   for (const raw of payload(value)) {
     const a = object(raw),

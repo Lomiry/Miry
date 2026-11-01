@@ -9,7 +9,7 @@
   --muted: #bac3c0;
   --subtle: #9ba8a3;
   --line: #ffffff21;
-  --line-strong: #ffffff38;
+  --line-strong: #77837d;
   --accent: #96e2bd;
   --accent-hover: #b5f0d1;
   --accent-soft: #96e2bd14;
@@ -49,6 +49,9 @@
   --progress-height: 3px;
   --episode-row-height: 116px;
   --control-height: 36px;
+  --dialog-width: 640px;
+  --dialog-gutter: var(--space-6);
+  --content-max: 1840px;
   --shadow-menu: 0 8px 28px #0007;
   --shadow-dialog: 0 16px 64px #0009;
   --duration-fast: 120ms;

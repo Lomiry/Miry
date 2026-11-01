@@ -1,3 +1,5 @@
+import { t, localizeMessage } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { Film, AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 export function EmptyState({
@@ -11,6 +13,8 @@ export function EmptyState({
   icon?: ReactNode;
   action?: ReactNode;
 }) {
+  useI18n();
+
   return (
     <div className="empty content-state">
       {icon}
@@ -22,21 +26,23 @@ export function EmptyState({
 }
 export function ErrorState({
   message,
-  title = "媒体内容暂时无法加载",
+  title = t("library.media_is_unavailable_right_now"),
   onRetry,
 }: {
   message: string;
   title?: string;
   onRetry?: () => void;
 }) {
+  useI18n();
+
   return (
     <div className="error content-error" role="alert">
       <AlertCircle size={20} />
       <div>
         <strong>{title}</strong>
-        <p>{message}</p>
+        <p>{localizeMessage(message)}</p>
       </div>
-      {onRetry && <button onClick={onRetry}>重试</button>}
+      {onRetry && <button onClick={onRetry}>{t("library.retry")}</button>}
     </div>
   );
 }

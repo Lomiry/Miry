@@ -1,9 +1,14 @@
+import { t } from "../i18n/core";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { Account, Item } from "../types/emby";
 import {
   activeRoutes,
   readRoutes,
   verifyRoute,
+  captureRoute,
+  currentRoute,
+  routeVersion,
+  routeConnectionVersion,
   type ServerRoute,
 } from "../stores/routes";
 export interface RouteMetrics {
@@ -30,6 +35,7 @@ export interface RouteTest {
   label: string;
   reasons: string[];
   bitrate?: number;
+  connection?: string;
 }
 export interface RouteQuality {
   mode: "auto" | "manual";
@@ -37,6 +43,7 @@ export interface RouteQuality {
   recommended?: string;
   automatic?: string;
   tests: Record<string, RouteTest>;
+  intent?: string;
 }
 const key = (a: Account) =>
   `miry-route-quality:${a.serverId || a.homeServer || a.server}|${a.userId}`;
@@ -87,29 +94,48 @@ export function routeScore(m: RouteMetrics, bitrate?: number) {
   if (!m.identityValid || m.apiTtfbMs === null || m.failureRate >= 0.25)
     return {
       score: 0,
-      label: "不稳定",
-      reasons: ["API 或服务器身份验证未稳定通过"],
+      label: t("player.unstable"),
+      reasons: [t("player.api_or_server_identity_checks_are_not")],
     };
   score -= Math.min(45, Math.max(0, (m.apiTtfbMs - 150) / 40));
-  reasons.push(`API 首字节 ${Math.round(m.apiTtfbMs)} ms`);
+  reasons.push(
+    t("player.api_time_to_first_byte_ms", { p0: Math.round(m.apiTtfbMs) }),
+  );
   score -= m.failureRate * 60;
   if (m.failureRate > 0)
-    reasons.push(`小样本失败率 ${Math.round(m.failureRate * 100)}%`);
+    reasons.push(
+      t("player.sample_failure_rate", { p0: Math.round(m.failureRate * 100) }),
+    );
   if (m.jitterMs !== null) {
     score -= Math.min(20, m.jitterMs / 15);
-    reasons.push(`延迟波动 ${Math.round(m.jitterMs)} ms`);
+    reasons.push(
+      t("player.latency_variation_ms", { p0: Math.round(m.jitterMs) }),
+    );
   }
   if (m.throughputMbps !== null) {
     const target = bitrate && bitrate > 0 ? (bitrate / 1e6) * 1.2 : 5;
     score -= Math.min(35, Math.max(0, 1 - m.throughputMbps / target) * 35);
     reasons.push(
-      `短样本吞吐 ${m.throughputMbps.toFixed(1)} Mbps${bitrate ? "，含当前码率余量" : ""}`,
+      t("player.sample_throughput_mbps", {
+        p0: m.throughputMbps.toFixed(1),
+        p1: bitrate
+          ? t("player.including_headroom_for_the_current_bitrate")
+          : "",
+      }),
     );
-  } else reasons.push("媒体吞吐未测或样本不可靠，仅按 API 推荐");
+  } else
+    reasons.push(
+      t("player.media_throughput_is_untested_or_unreliable_recommendation"),
+    );
   score = Math.max(0, Math.round(score));
   return {
     score,
-    label: score >= 80 ? "良好" : score >= 55 ? "一般" : "不稳定",
+    label:
+      score >= 80
+        ? t("player.good")
+        : score >= 55
+          ? t("player.fair")
+          : t("player.unstable"),
     reasons,
   };
 }
@@ -122,12 +148,25 @@ export function readRouteQuality(account: Account): RouteQuality {
   try {
     const raw = JSON.parse(localStorage.getItem(key(account)) || "null");
     if (!raw || typeof raw !== "object") return fallback;
-    const urls = new Set(readRoutes(account).map((r) => r.url)),
+    const routes = readRoutes(account);
+    const eligible = routes.filter(
+      (r) =>
+        r.enabled !== false &&
+        r.status !== "pending" &&
+        r.serverId === account.serverId &&
+        r.userId === account.userId,
+    );
+    const urls = new Set(eligible.map((r) => r.url)),
       tests: RouteQuality["tests"] = {};
     for (const [url, test] of Object.entries(raw.tests || {}).slice(-20)) {
       const t = test as Partial<RouteTest>;
+      const route = eligible.find((r) => r.url === url);
       if (
         urls.has(url) &&
+        route &&
+        (t.connection
+          ? t.connection === routeConnectionVersion(route)
+          : !route.revision) &&
         typeof t.at === "number" &&
         Number.isFinite(t.at) &&
         t.at <= Date.now() + 60000 &&
@@ -144,30 +183,62 @@ export function readRouteQuality(account: Account): RouteQuality {
           at: t.at,
           metrics,
           bitrate,
+          connection: t.connection,
           ...routeScore(metrics, bitrate),
         };
       }
     }
     return {
       mode: raw.mode === "auto" ? "auto" : "manual",
+      intent: typeof raw.intent === "string" ? raw.intent : undefined,
       pinned: urls.has(raw.pinned)
         ? raw.pinned
         : raw.mode === "auto"
           ? undefined
           : account.server,
-      recommended:
-        urls.has(raw.recommended) &&
-        tests[raw.recommended] &&
-        tests[raw.recommended].score >= 55 &&
-        Date.now() - tests[raw.recommended].at < 864e5
-          ? raw.recommended
-          : undefined,
+      recommended: recommendation(tests, eligible),
       automatic: urls.has(raw.automatic) ? raw.automatic : undefined,
       tests,
     };
   } catch {
     return fallback;
   }
+}
+function recommendation(tests: RouteQuality["tests"], routes: ServerRoute[]) {
+  const priorities = new Map(
+    routes
+      .filter((r) => r.enabled !== false && r.status !== "pending")
+      .map((r) => [r.url, r.priority ?? 100]),
+  );
+  return Object.entries(tests)
+    .filter(
+      ([url, test]) =>
+        priorities.has(url) &&
+        test.metrics.identityValid &&
+        test.score >= 55 &&
+        Date.now() - test.at < 864e5,
+    )
+    .sort(
+      (a, b) =>
+        priorities.get(a[0])! - priorities.get(b[0])! ||
+        b[1].score - a[1].score ||
+        (a[1].metrics.apiTtfbMs ?? Infinity) -
+          (b[1].metrics.apiTtfbMs ?? Infinity),
+    )[0]?.[0];
+}
+/** User intent plus existing route generations; no second configuration store. */
+export function autoRouteVersion(account: Account) {
+  const quality = readRouteQuality(account);
+  return JSON.stringify([
+    account.server,
+    key(account),
+    quality.mode,
+    quality.pinned,
+    quality.intent,
+    readRoutes(account)
+      .map((route) => routeVersion(account, route))
+      .sort(),
+  ]);
 }
 function write(account: Account, value: RouteQuality) {
   localStorage.setItem(key(account), JSON.stringify(value));
@@ -179,10 +250,13 @@ export function setRouteMode(
   pinned = account.server,
 ) {
   const q = readRouteQuality(account);
+  if (q.mode === mode && q.pinned === (mode === "manual" ? pinned : undefined))
+    return;
   write(account, {
     ...q,
     mode,
     pinned: mode === "manual" ? pinned : undefined,
+    intent: crypto.randomUUID(),
   });
 }
 export function noteRouteChoice(
@@ -190,11 +264,11 @@ export function noteRouteChoice(
   url: string,
   manual: boolean,
 ) {
-  const q = readRouteQuality(account);
-  write(
-    account,
-    manual ? { ...q, mode: "manual", pinned: url } : { ...q, automatic: url },
-  );
+  if (manual) {
+    setRouteMode(account, "manual", url);
+    return;
+  }
+  write(account, { ...readRouteQuality(account), automatic: url });
 }
 export function saveRouteTest(
   account: Account,
@@ -207,21 +281,11 @@ export function saveRouteTest(
       at: Date.now(),
       metrics,
       bitrate,
+      connection: routeConnectionVersion(route),
       ...routeScore(metrics, bitrate),
     };
   q.tests[route.url] = test;
-  const winner = Object.entries(q.tests)
-    .filter(
-      ([, t]) =>
-        t.metrics.identityValid && t.score >= 55 && Date.now() - t.at < 864e5,
-    )
-    .sort(
-      (a, b) =>
-        b[1].score - a[1].score ||
-        (a[1].metrics.apiTtfbMs ?? Infinity) -
-          (b[1].metrics.apiTtfbMs ?? Infinity),
-    )[0];
-  q.recommended = winner?.[0];
+  q.recommended = recommendation(q.tests, readRoutes(account));
   write(account, q);
   return test;
 }
@@ -238,24 +302,38 @@ export async function testRoute(
   media?: { item: Item; sourceId: string },
 ) {
   if (!activeRoutes(account).some((r) => r.url === route.url))
-    throw Error("Smart Route 需要至少两条同服务器、同账号的已验证线路。");
-  if (!isTauri()) throw Error("线路品质评估需要 Windows 桌面版。");
+    throw Error(t("player.smart_route_requires_at_least_two_verified"));
+  if (!isTauri())
+    throw Error(t("player.route_quality_checks_require_the_windows_desktop"));
   const probeKey = `${key(account)}|${route.url}`;
   if (Date.now() - (recentProbes.get(probeKey) ?? 0) < 60000)
-    throw Error("请至少间隔 60 秒再测试这条线路。");
+    throw Error(t("player.wait_at_least_60_seconds_before_testing"));
   recentProbes.set(probeKey, Date.now());
   if (recentProbes.size > 200)
     recentProbes.delete(recentProbes.keys().next().value!);
+  const lease = captureRoute(account, route);
+  route = currentRoute(account, lease)!;
+  const measurementVersion = () => {
+    const test = readRouteQuality(account).tests[route.url];
+    return test
+      ? JSON.stringify([test.at, test.metrics, test.bitrate, test.connection])
+      : "";
+  };
+  const previousMeasurement = measurementVersion();
   const checked = await verifyRoute(account, route.url, signal);
+  if (signal.aborted || !currentRoute(account, lease))
+    throw new DOMException("Aborted", "AbortError");
   const id = crypto.randomUUID(),
     cancel = () => void invoke("cancel_route_probe", { id }).catch(() => {});
   signal.addEventListener("abort", cancel, { once: true });
   try {
-    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    if (signal.aborted || !currentRoute(account, lease))
+      throw new DOMException("Aborted", "AbortError");
     const raw = await invoke<unknown>("route_probe", {
       id,
       server: checked.url,
       expected: checked.serverId,
+      ignoreCertificateErrors: route.ignoreCertificateErrors === true,
       media: media
         ? {
             itemId: media.item.Id,
@@ -267,7 +345,12 @@ export async function testRoute(
           }
         : null,
     });
-    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    if (
+      signal.aborted ||
+      !currentRoute(account, lease) ||
+      measurementVersion() !== previousMeasurement
+    )
+      throw new DOMException("Aborted", "AbortError");
     return saveRouteTest(
       account,
       route,
@@ -279,5 +362,8 @@ export async function testRoute(
   }
 }
 export function routeDetail(test: RouteTest) {
-  return `${test.score}/100 · ${test.reasons.join("；")} · DNS/TCP/TLS 独立阶段未暴露，显示 Unknown`;
+  return t("player.100_individual_dns_tcp_tls_stages_are", {
+    p0: test.score,
+    p1: test.reasons.join("；"),
+  });
 }

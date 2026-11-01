@@ -1,6 +1,9 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import Select from "./Select";
 import type { VideoFit } from "../player/videoFit";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Play, X, MonitorPlay } from "lucide-react";
@@ -27,91 +30,163 @@ import {
   redactNetworkDetail,
 } from "../api/diagnostics";
 import { APP_VERSION } from "../version";
+import { useMiniWindow } from "../player/useMiniWindow";
+import { normalizeControlLayout } from "../player/controlLayout";
+import PlaybackChoices from "./PlaybackChoices";
+import {
+  rankSources,
+  type PlaybackSelection,
+} from "../player/sourcePreference";
 export function PlayButton({
   api,
   item,
   onStarted,
   onPlay,
   concise = false,
+  showSelections = false,
 }: {
   api: EmbyClient | null;
   item: Item;
   onStarted: () => void;
   concise?: boolean;
+  showSelections?: boolean;
   onPlay?: (
     item: Item,
     fromStart: boolean,
     sourceId?: string,
     signal?: AbortSignal,
+    selection?: PlaybackSelection,
   ) => Promise<void>;
 }) {
+  useI18n();
+
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const controller = useRef<AbortController | null>(null);
-  const [sourceId, setSourceId] = useState(item.MediaSources?.[0]?.Id || "");
-  useEffect(() => () => controller.current?.abort(), []);
+  const [sourceId, setSourceId] = useState("");
+  const [audio, setAudio] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const preferences = readSettings();
+  const sources = item.MediaSources || [];
+  const effectiveSourceId = sources.some((s) => s.Id === sourceId)
+    ? sourceId
+    : "";
+  const preview =
+    sources.find((s) => s.Id === effectiveSourceId) ||
+    rankSources(sources, preferences.sourcePreference)[0];
+  useEffect(() => {
+    setAudio("");
+    setSubtitle("");
+  }, [preview?.Id]);
+  useEffect(() => {
+    setSourceId("");
+    setAudio("");
+    setSubtitle("");
+    setError("");
+    setBusy(false);
+    return () => {
+      controller.current?.abort();
+      controller.current = null;
+    };
+  }, [item.Id, api?.account.server, api?.account.userId]);
   async function start(fromStart: boolean) {
+    if (controller.current) return;
     setError("");
     if (!api) {
-      setError("演示内容没有视频文件，请连接自己的 Emby 服务器后播放。");
+      setError(t("player.demo_titles_have_no_video_files_connect"));
       return;
     }
     if (!isTauri()) {
-      setError("mpv 播放需要桌面版，请打开 Miry.exe。");
+      setError(t("player.mpv_playback_requires_the_desktop_app_open"));
       return;
     }
     setBusy(true);
     const pending = new AbortController();
     controller.current = pending;
     try {
+      const selection: PlaybackSelection | undefined =
+        preview && (audio !== "" || subtitle !== "")
+          ? {
+              sourceId: preview.Id,
+              ...(audio !== "" ? { audioIndex: Number(audio) } : {}),
+              ...(subtitle !== "" ? { subtitleIndex: Number(subtitle) } : {}),
+            }
+          : undefined;
+      const selectedId = effectiveSourceId || selection?.sourceId;
       if (onPlay) {
-        await onPlay(item, fromStart, sourceId || undefined, pending.signal);
-        onStarted();
+        if (selection)
+          await onPlay(item, fromStart, selectedId, pending.signal, selection);
+        else await onPlay(item, fromStart, selectedId, pending.signal);
+        if (!pending.signal.aborted) onStarted();
       } else {
         const launch = await preparePlayback(
           api,
           item,
           fromStart,
           pending.signal,
-          sourceId || undefined,
+          selectedId,
+          preferences,
+          selection,
         );
         if (pending.signal.aborted) return;
         await invoke("player_start", { launch });
         if (pending.signal.aborted) {
           await invoke("player_stop");
-          setError("已取消播放。");
+          setError(t("player.playback_cancelled"));
         } else {
           onStarted();
         }
       }
     } catch (e) {
+      if (pending.signal.aborted) return;
       setError(
         (e as Error).name === "AbortError"
-          ? "已取消准备播放。"
+          ? t("player.playback_preparation_cancelled")
           : e instanceof Error
             ? e.message
             : String(e),
       );
     } finally {
-      setBusy(false);
-      controller.current = null;
+      if (controller.current === pending) {
+        setBusy(false);
+        controller.current = null;
+      }
     }
   }
   const position = item.UserData?.PlaybackPositionTicks || 0;
   return (
     <div className="play-actions">
-      {(item.MediaSources?.length || 0) > 1 && (
+      {showSelections && (
+        <PlaybackChoices
+          sources={sources}
+          source={preview}
+          sourceId={effectiveSourceId}
+          audio={audio}
+          subtitle={subtitle}
+          busy={busy}
+          onSource={(id) => {
+            setSourceId(id);
+            setAudio("");
+            setSubtitle("");
+          }}
+          onAudio={setAudio}
+          onSubtitle={setSubtitle}
+        />
+      )}
+      {!showSelections && (item.MediaSources?.length || 0) > 1 && (
         <label className="version-picker">
-          播放版本
+          {" "}
+          {t("player.media_version")}{" "}
           <Select
-            aria-label="播放版本"
+            aria-label={t("player.media_version")}
             disabled={busy}
             value={sourceId}
             onChange={(e) => setSourceId(e.target.value)}
           >
+            <option value="">{t("detail.auto_source")}</option>
             {item.MediaSources!.map((s) => (
               <option value={s.Id} key={s.Id}>
-                {privateText(s.Name || "视频版本")} ·{" "}
+                {privateText(s.Name || t("player.video_version"))} ·{" "}
                 {s.Container?.toUpperCase()}{" "}
                 {s.MediaStreams?.find((t) => t.Type === "Video")?.Height
                   ? `${s.MediaStreams.find((t) => t.Type === "Video")!.Height}p`
@@ -125,18 +200,20 @@ export function PlayButton({
         className="primary"
         disabled={busy}
         title={
-          concise ? `${position ? "继续播放" : "播放"} ${item.Name}` : undefined
+          concise
+            ? `${position ? t("player.resume") : t("library.play")} ${item.Name}`
+            : undefined
         }
         onClick={() => start(false)}
       >
         <Play size={17} />
         {busy
-          ? "准备播放…"
+          ? t("player.preparing_playback")
           : position
             ? concise
-              ? "继续播放"
-              : `继续播放 · ${formatTime(position / 10000000)}`
-            : "播放"}
+              ? t("player.resume")
+              : t("player.resume_2", { p0: formatTime(position / 10000000) })
+            : t("library.play")}
       </button>
       {position > 0 && (
         <button
@@ -144,12 +221,13 @@ export function PlayButton({
           className="secondary compact"
           onClick={() => start(true)}
         >
-          从头播放
+          {" "}
+          {t("player.play_from_beginning")}{" "}
         </button>
       )}
       {busy && (
         <button
-          aria-label="取消准备播放"
+          aria-label={t("player.cancel_playback_preparation")}
           onClick={() => controller.current?.abort()}
         >
           <X size={16} />
@@ -157,7 +235,7 @@ export function PlayButton({
       )}
       {error && (
         <p role="alert" className="play-error">
-          {privateText(error)}
+          {displayError(error)}
         </p>
       )}
     </div>
@@ -168,6 +246,7 @@ export default function PlayerPanel({
   onStopped,
   onSnapshot,
   onFullscreenChange,
+  onMiniChange,
   onStop,
   dock = false,
   onPrevious,
@@ -200,6 +279,7 @@ export default function PlayerPanel({
   onStopped: () => void;
   onSnapshot?: (s: PlayerSnapshot) => void;
   onFullscreenChange?: (fullscreen: boolean) => void;
+  onMiniChange?: (active: boolean) => void;
   onStop?: () => Promise<void>;
   dock?: boolean;
   onPrevious?: () => Promise<void>;
@@ -228,6 +308,8 @@ export default function PlayerPanel({
   onRouteDismiss?: (session?: boolean) => void;
   onRouteProbe?: (index: number, media: boolean) => Promise<void>;
 }) {
+  useI18n();
+
   const [state, setState] = useState<PlayerSnapshot | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -235,6 +317,7 @@ export default function PlayerPanel({
   const fitOwner = useRef({ mounted: true, revision, state });
   fitOwner.current = { mounted: true, revision, state };
   const fitPending = useRef(false);
+  const trackRevision = useRef({ subtitle: 0, audio: 0 });
   useEffect(() => {
     fitOwner.current.mounted = true;
     return () => {
@@ -242,21 +325,43 @@ export default function PlayerPanel({
     };
   }, []);
   const [diagnosticFeedback, setDiagnosticFeedback] = useState("");
+  const miniWindow = useMiniWindow(
+    state?.playSessionId,
+    state?.miniPresentation,
+  );
+  const presentation = useRef({ theater, mini: miniWindow.active });
+  presentation.current = { theater, mini: miniWindow.active };
+  const miniCallback = useRef(onMiniChange);
+  miniCallback.current = onMiniChange;
+  const previousMini = useRef(false);
+  useEffect(() => {
+    if (previousMini.current === miniWindow.active) return;
+    previousMini.current = miniWindow.active;
+    miniCallback.current?.(miniWindow.active);
+  }, [miniWindow.active]);
+  const presenting = theater || miniWindow.active;
+  const [controlLayout, setControlLayout] = useState(() =>
+    normalizeControlLayout(
+      settings?.controlLayout ?? readSettings().controlLayout,
+    ),
+  );
   const danmaku = useDanmaku(
     api || null,
     item,
     !!(state?.active && state.loaded),
     state?.playSessionId,
+    state?.duration,
   );
   const danmakuClock = useDanmakuClock(
     !!(
       danmaku.document &&
+      !miniWindow.active &&
       danmaku.metadata.settings.enabled &&
       theater &&
       state?.active &&
       state.embedded &&
       state.loaded &&
-      !overlayOpen
+      (!overlayOpen || miniWindow.active)
     ),
     revision,
   );
@@ -300,15 +405,17 @@ export default function PlayerPanel({
           2,
         ),
       );
-      setDiagnosticFeedback("匿名播放诊断已复制。");
+      setDiagnosticFeedback(t("player.anonymous_playback_diagnostics_copied"));
     } catch {
-      setDiagnosticFeedback("诊断复制失败，请检查剪贴板权限。");
+      setDiagnosticFeedback(
+        t("library.could_not_copy_diagnostics_check_clipboard_permissions"),
+      );
     }
   }
   const previous = useRef(false),
     stopCallback = useRef(onStopped);
   const canHide = !!(
-    theater &&
+    presenting &&
     state?.embedded &&
     state.active &&
     state.loaded
@@ -340,13 +447,6 @@ export default function PlayerPanel({
     };
   }, []);
   useEffect(() => {
-    if (state?.embedded && state.fullscreen && !state.active) {
-      void invoke("player_control", { action: "fullscreen", value: 0 })
-        .then(() => setState((s) => (s ? { ...s, fullscreen: false } : s)))
-        .catch((e) => setError(String(e)));
-    }
-  }, [state?.embedded, state?.fullscreen, state?.active]);
-  useEffect(() => {
     setDismissed(false);
   }, [revision]);
   useEffect(() => {
@@ -358,7 +458,13 @@ export default function PlayerPanel({
       try {
         const next = await invoke<PlayerSnapshot>("player_status");
         if (!active) return;
-        setState(next);
+        setState((previous) =>
+          !next.playSessionId &&
+          previous?.embedded &&
+          (presentation.current.theater || presentation.current.mini)
+            ? { ...previous, active: false, loaded: false }
+            : next,
+        );
         snapshotCallback.current?.(next);
         if (previous.current && !next.active && next.syncComplete) {
           stopCallback.current();
@@ -384,6 +490,63 @@ export default function PlayerPanel({
     persist = true,
     playSessionId?: string,
   ) {
+    if (action === "fullscreen") {
+      const target = value === undefined ? !state?.fullscreen : value === 1;
+      await invoke("player_control", {
+        action,
+        value: target ? 1 : 0,
+        windowOnly: !!state?.embedded,
+      });
+      return;
+    }
+    const expected = playSessionId || state?.playSessionId;
+    const ownerRevision = revision;
+    const current = () =>
+      fitOwner.current.mounted &&
+      fitOwner.current.revision === ownerRevision &&
+      fitOwner.current.state?.playSessionId === expected;
+    if (action === "subtitle" || action === "audio") {
+      const operation = ++trackRevision.current[action];
+      if (!expected) throw Error("Playback session unavailable");
+      setError("");
+      try {
+        await invoke("player_control", {
+          action,
+          value,
+          expectedSessionId: expected,
+        });
+        if (!current() || operation !== trackRevision.current[action]) return;
+        setState((s) =>
+          s?.playSessionId === expected
+            ? {
+                ...s,
+                secondarySubtitle:
+                  action === "subtitle" && s.secondarySubtitle === value
+                    ? undefined
+                    : s.secondarySubtitle,
+                tracks: s.tracks.map((track) =>
+                  track.type === (action === "audio" ? "audio" : "sub")
+                    ? {
+                        ...track,
+                        selected:
+                          track.id === value ||
+                          (action === "subtitle" &&
+                            track.id === s.secondarySubtitle &&
+                            value !== s.secondarySubtitle),
+                        "main-selection": track.id === value ? 0 : undefined,
+                      }
+                    : track,
+                ),
+              }
+            : s,
+        );
+      } catch (e) {
+        if (current() && operation === trackRevision.current[action])
+          setError(String(e));
+        throw e;
+      }
+      return;
+    }
     if (
       [
         "subtitlePosition",
@@ -402,8 +565,6 @@ export default function PlayerPanel({
       return;
     }
     if (busy) return;
-    const fullscreenTarget =
-      value === undefined ? !state?.fullscreen : value === 1;
     setBusy(true);
     setError("");
     try {
@@ -416,18 +577,8 @@ export default function PlayerPanel({
             ? {}
             : {
                 action,
-                value:
-                  action === "fullscreen" && state?.embedded
-                    ? fullscreenTarget
-                      ? 1
-                      : 0
-                    : value,
+                value,
               },
-        );
-      }
-      if (action === "fullscreen") {
-        setState((s) =>
-          s?.embedded ? { ...s, fullscreen: fullscreenTarget } : s,
         );
       }
       if (action === "stop") {
@@ -495,47 +646,94 @@ export default function PlayerPanel({
     }
   }
   const nativeUi = !!(
-    theater &&
+    presenting &&
     state?.embedded &&
-    state.active &&
-    state.loaded &&
-    !overlayOpen &&
+    (state.active || miniWindow.active || queuePresentation?.busy) &&
+    (!overlayOpen || miniWindow.active) &&
     "__TAURI_INTERNALS__" in window
   );
-  const uiModel: PlayerUiModel | null = state
-    ? {
-        state,
-        revision,
-        theater,
-        canHide,
-        busy,
-        error,
-        diagnosticFeedback,
-        item,
-        sourceId,
-        introSeconds,
-        outroSeconds,
-        shortcuts: state.shortcuts || settings?.shortcuts,
-        inputConfig: settings?.quality?.inputConfig,
-        shortcutsBlocked: overlayOpen,
-        preview,
-        danmaku: danmaku.metadata,
-        routeHint,
-        previousDisabled,
-        nextDisabled,
-        capabilities: {
-          return: !!(onTheater || onReturn),
-          previous: !!onPrevious && (!item || item.Type === "Episode"),
-          next: !!onNext && (!item || item.Type === "Episode"),
-          restart: !!onRestart,
-          versions: !!onSourceChange && (item?.MediaSources?.length || 0) > 1,
-        },
-        routes: routes || [],
-        queue: queuePresentation,
-      }
-    : null;
+  // The 200 ms danmaku clock has its own Overlay channel. Only presentation
+  // changes should publish a full control model to the owned WebView.
+  const uiModel = useMemo<PlayerUiModel | null>(
+    () =>
+      state
+        ? {
+            state,
+            mini: miniWindow.active,
+            controlLayout,
+            revision,
+            theater: presenting,
+            canHide,
+            busy,
+            error,
+            diagnosticFeedback,
+            item,
+            sourceId,
+            introSeconds,
+            outroSeconds,
+            shortcuts: state.shortcuts || settings?.shortcuts,
+            inputConfig: settings?.quality?.inputConfig,
+            shortcutsBlocked: overlayOpen && !miniWindow.active,
+            preview,
+            danmaku: miniWindow.active ? undefined : danmaku.metadata,
+            routeHint,
+            previousDisabled,
+            nextDisabled,
+            capabilities: {
+              return: !!(onTheater || onReturn),
+              previous: !!onPrevious && (!item || item.Type === "Episode"),
+              next: !!onNext && (!item || item.Type === "Episode"),
+              restart: !!onRestart,
+              versions:
+                !!onSourceChange && (item?.MediaSources?.length || 0) > 1,
+            },
+            routes: routes || [],
+            queue: queuePresentation,
+          }
+        : null,
+    [
+      state,
+      miniWindow.active,
+      controlLayout,
+      revision,
+      presenting,
+      canHide,
+      busy,
+      error,
+      diagnosticFeedback,
+      item,
+      sourceId,
+      introSeconds,
+      outroSeconds,
+      settings?.shortcuts,
+      settings?.quality?.inputConfig,
+      overlayOpen,
+      preview,
+      danmaku.metadata,
+      routeHint,
+      previousDisabled,
+      nextDisabled,
+      onTheater,
+      onReturn,
+      onPrevious,
+      onNext,
+      onRestart,
+      onSourceChange,
+      routes,
+      queuePresentation,
+    ],
+  );
   async function dispatchUi(action: PlayerAction) {
     switch (action.kind) {
+      case "layout": {
+        const layout = normalizeControlLayout(action.layout);
+        saveSettings({ ...readSettings(), controlLayout: layout });
+        setControlLayout(layout);
+        break;
+      }
+      case "mini":
+        await miniWindow.action(action.command, action.playSessionId);
+        break;
       case "video-fit": {
         if (
           busy ||
@@ -574,14 +772,17 @@ export default function PlayerPanel({
         }
         break;
       }
-      case "danmaku":
+      case "danmaku": {
+        if (miniWindow.active) break;
         await danmaku.action(
           action.command,
           action.patch,
           action.query,
           action.matchId,
+          action.matchScope,
         );
         break;
+      }
       case "route-dismiss":
         onRouteDismiss?.();
         break;
@@ -645,33 +846,47 @@ export default function PlayerPanel({
         break;
     }
   }
-  const overlayReady = usePlayerOverlay(nativeUi, uiModel, dispatchUi, {
-    document: danmaku.document,
-    clock: danmakuClock,
-  });
+  const overlayReady = usePlayerOverlay(
+    nativeUi,
+    uiModel,
+    dispatchUi,
+    {
+      document: miniWindow.active ? null : danmaku.document,
+      clock: miniWindow.active ? null : danmakuClock,
+    },
+    !miniWindow.active,
+  );
   if (
     !state?.title ||
     (dismissed && !theater) ||
-    (dock && !theater && !state.active)
+    (dock && !theater && !state.active && !miniWindow.active)
   )
     return null;
   return (
     <section
-      className={`player-panel${theater ? " player-theater" : dock ? " player-dock" : ""}${state.embedded && state.fullscreen ? " player-fullscreen" : ""}`}
-      aria-label="播放器控制"
+      hidden={miniWindow.active && !theater}
+      className={
+        miniWindow.active && !theater
+          ? "player-native-owner"
+          : `player-panel${theater ? " player-theater" : dock ? " player-dock" : ""}${state.embedded && state.fullscreen ? " player-fullscreen" : ""}`
+      }
+      aria-label={t("player.player_controls")}
     >
-      {theater && (
-        <div className="playback-stage">
-          {state.embedded && state.active && (!nativeUi || !overlayReady) && (
-            <DanmakuLayer
-              document={danmaku.document}
-              clock={danmakuClock}
-              settings={{
-                ...danmaku.metadata.settings,
-                offset: danmaku.metadata.offset,
-              }}
-            />
-          )}
+      {presenting && (
+        <div className={theater ? "playback-stage" : undefined}>
+          {!miniWindow.active &&
+            state.embedded &&
+            state.active &&
+            (!nativeUi || !overlayReady) && (
+              <DanmakuLayer
+                document={danmaku.document}
+                clock={danmakuClock}
+                settings={{
+                  ...danmaku.metadata.settings,
+                  offset: danmaku.metadata.offset,
+                }}
+              />
+            )}
           {item &&
             (!state.embedded || !state.active) &&
             api?.image(item, true) && (
@@ -681,21 +896,32 @@ export default function PlayerPanel({
                 alt=""
               />
             )}
-          {state.embedded && state.active && (
-            <VideoViewport visible={!overlayOpen} controls={nativeUi} />
+          {state.embedded && (
+            // Viewport owns the presentation, not an individual media session.
+            <VideoViewport
+              visible={
+                !!(state.active || queuePresentation?.busy) && !overlayOpen
+              }
+              controls={nativeUi}
+              detached={miniWindow.active}
+            />
           )}
-          {(!state.embedded || !state.active || !state.loaded) && (
+        </div>
+      )}
+      {uiModel && !miniWindow.active && (!nativeUi || !overlayReady) && (
+        <PlayerChrome model={uiModel} dispatch={dispatchUi}>
+          {theater && (!state.embedded || !state.active || !state.loaded) && (
             <div className="playback-stage-content">
               <MonitorPlay size={38} />
               <h1>{privateText(state.title)}</h1>
               <p>
                 {state.active
                   ? state.loaded
-                    ? "视频在独立窗口播放"
-                    : "正在准备视频"
+                    ? t("player.video_is_playing_in_a_separate_window")
+                    : t("player.preparing_video")
                   : state.finished
-                    ? "已播放完毕"
-                    : "播放已停止"}
+                    ? t("player.playback_finished")
+                    : t("library.playback_stopped")}
               </p>
               <div>
                 {state.active && !state.embedded ? (
@@ -704,8 +930,8 @@ export default function PlayerPanel({
                     disabled={busy || !state.loaded}
                     onClick={() => void control("show")}
                   >
-                    <MonitorPlay size={17} />
-                    恢复视频窗口
+                    <MonitorPlay size={17} />{" "}
+                    {t("player.show_video_window")}{" "}
                   </button>
                 ) : !state.active && onRestart ? (
                   <button
@@ -713,21 +939,19 @@ export default function PlayerPanel({
                     disabled={busy}
                     onClick={() => void changeEpisode(onRestart)}
                   >
-                    重新播放
+                    {" "}
+                    {t("player.play_again")}{" "}
                   </button>
                 ) : null}
               </div>
             </div>
           )}
-        </div>
-      )}
-      {uiModel && (!nativeUi || !overlayReady) && (
-        <PlayerChrome model={uiModel} dispatch={dispatchUi} />
+        </PlayerChrome>
       )}
       {!state.active && !theater && (
         <button
           className="player-close"
-          aria-label="关闭播放器面板"
+          aria-label={t("player.close_player_panel")}
           onClick={() => setDismissed(true)}
         >
           <X size={18} />

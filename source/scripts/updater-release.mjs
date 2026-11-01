@@ -73,6 +73,13 @@ export function generate(
   signatureFile,
   outputFile,
 ) {
+  const policy = JSON.parse(
+    fs.readFileSync(path.join(root, "src-tauri/updater-policy.json"), "utf8"),
+  );
+  if (policy.signingReady !== true)
+    throw Error(
+      "Official update signing is unconfirmed; latest.json was not written",
+    );
   const release = JSON.parse(fs.readFileSync(releaseFile, "utf8"));
   const signatureBytes = fs.readFileSync(signatureFile);
   const manifest = createManifest(

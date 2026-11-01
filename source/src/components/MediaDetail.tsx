@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useMemo, useState } from "react";
 import { Bookmark, ChevronDown, ChevronUp, Play } from "lucide-react";
 import type { Item, UserData } from "../types/emby";
@@ -11,6 +13,7 @@ import { Cast, plainOverview } from "./People";
 import { PlayButton } from "./PlayerPanel";
 import QuickPlay, { type StartPlayback } from "./QuickPlay";
 import ItemActions from "./ItemActions";
+import PlaybackChoices from "./PlaybackChoices";
 
 export default function MediaDetail({
   item,
@@ -31,6 +34,8 @@ export default function MediaDetail({
   onPerson: (item: Item) => void;
   onCollection?: () => void;
 }) {
+  useI18n();
+
   const [expanded, setExpanded] = useState(false);
   const overview = useMemo(
     () => plainOverview(item.Overview || ""),
@@ -39,7 +44,7 @@ export default function MediaDetail({
   const playable = ["Movie", "Episode", "Series", "Season"].includes(item.Type);
   return (
     <>
-      <section className="media-detail" aria-label="影片详情">
+      <section className="media-detail" aria-label={t("library.media_details")}>
         <div className="detail-backdrop" aria-hidden="true">
           <Artwork
             eager
@@ -64,10 +69,23 @@ export default function MediaDetail({
             <MediaMeta item={item} />
             <div className="detail-primary">
               {["Series", "Season"].includes(item.Type) && (
+                <PlaybackChoices
+                  sources={[]}
+                  sourceId=""
+                  audio=""
+                  subtitle=""
+                  busy={false}
+                  onSource={() => {}}
+                  onAudio={() => {}}
+                  onSubtitle={() => {}}
+                />
+              )}
+              {["Series", "Season"].includes(item.Type) && (
                 <QuickPlay api={api} item={item} onPlay={onPlay} />
               )}
               {["Movie", "Episode"].includes(item.Type) && (
                 <PlayButton
+                  showSelections
                   api={api}
                   item={item}
                   onStarted={() => {}}
@@ -76,8 +94,8 @@ export default function MediaDetail({
               )}
               {onCollection && (
                 <button className="primary" onClick={onCollection}>
-                  <Play size={18} />
-                  播放本页片单
+                  <Play size={18} />{" "}
+                  {t("library.play_titles_on_this_page")}{" "}
                 </button>
               )}
             </div>
@@ -90,13 +108,15 @@ export default function MediaDetail({
                   onClick={onLater}
                 >
                   <Bookmark size={17} />
-                  {saved ? "移出待看" : "加入待看"}
+                  {saved
+                    ? t("library.remove_from_watch_later")
+                    : t("library.add_to_watch_later")}
                 </button>
               )}
             </div>
             <div className="detail-synopsis">
               <p className={expanded ? "synopsis expanded" : "synopsis"}>
-                {overview || "暂无简介"}
+                {overview || t("library.no_overview_available")}
               </p>
               {overview.length > 170 && (
                 <button
@@ -104,7 +124,7 @@ export default function MediaDetail({
                   aria-expanded={expanded}
                   onClick={() => setExpanded((v) => !v)}
                 >
-                  {expanded ? "收起简介" : "展开简介"}
+                  {expanded ? t("library.show_less") : t("library.show_more")}
                   {expanded ? (
                     <ChevronUp size={15} />
                   ) : (
@@ -121,12 +141,14 @@ export default function MediaDetail({
       )}
       {!!item.MediaSources?.length && (
         <details className="detail-media-info">
-          <summary>媒体信息</summary>
+          <summary>{t("library.media_information")}</summary>
           {item.MediaSources.map((source) => (
             <div key={source.Id}>
               <strong>
                 {privateText(
-                  source.Name || source.Container?.toUpperCase() || "视频",
+                  source.Name ||
+                    source.Container?.toUpperCase() ||
+                    t("library.video"),
                 )}
               </strong>
               <p>

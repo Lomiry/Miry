@@ -1,3 +1,6 @@
+import { displayError } from "../privacy";
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import type { EmbyClient } from "../api/client";
@@ -13,6 +16,8 @@ export default function FavoriteButton({
   item: Item;
   onChange: (data: UserData) => void;
 }) {
+  useI18n();
+
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const favorite = !!item.UserData?.IsFavorite;
@@ -36,8 +41,8 @@ export default function FavoriteButton({
       <button
         className="tile-favorite"
         disabled={busy}
-        title={favorite ? "取消收藏" : "收藏"}
-        aria-label={`${favorite ? "取消收藏" : "收藏"} ${item.Name}`}
+        title={favorite ? t("library.remove_favorite") : t("library.favorites")}
+        aria-label={`${favorite ? t("library.remove_favorite") : t("library.favorites")} ${item.Name}`}
         aria-pressed={favorite}
         onClick={() => void toggle()}
       >
@@ -45,7 +50,7 @@ export default function FavoriteButton({
       </button>
       {error && (
         <p className="card-feedback" role="alert">
-          {error}
+          {displayError(error)}
         </p>
       )}
     </>

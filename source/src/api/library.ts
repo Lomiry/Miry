@@ -1,15 +1,51 @@
+import { t } from "../i18n/core";
 import type { Item } from "../types/emby";
 import type { BrowseFilters } from "../components/LibraryFilters";
 
 export type SortOrder = "Ascending" | "Descending";
 export const librarySorts = [
-  { value: "SortName", label: "名称" },
-  { value: "DateCreated", label: "最近添加" },
-  { value: "ProductionYear", label: "上映年份" },
-  { value: "CommunityRating", label: "社区评分" },
-  { value: "Runtime", label: "播放时长" },
-  { value: "DatePlayed", label: "最近播放" },
-  { value: "PlayCount", label: "播放次数" },
+  {
+    value: "SortName",
+    get label() {
+      return t("library.name");
+    },
+  },
+  {
+    value: "DateCreated",
+    get label() {
+      return t("library.date_added");
+    },
+  },
+  {
+    value: "ProductionYear",
+    get label() {
+      return t("library.release_year");
+    },
+  },
+  {
+    value: "CommunityRating",
+    get label() {
+      return t("library.community_rating");
+    },
+  },
+  {
+    value: "Runtime",
+    get label() {
+      return t("library.duration");
+    },
+  },
+  {
+    value: "DatePlayed",
+    get label() {
+      return t("library.last_played");
+    },
+  },
+  {
+    value: "PlayCount",
+    get label() {
+      return t("library.play_count");
+    },
+  },
 ] as const;
 export function defaultSortOrder(sort: string): SortOrder {
   return sort === "SortName" ? "Ascending" : "Descending";

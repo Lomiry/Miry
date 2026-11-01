@@ -8,6 +8,7 @@ export default function PlayerSlider({
   commit,
   onEditing,
   className,
+  buffered = 0,
 }: {
   label: string;
   max: number;
@@ -16,6 +17,7 @@ export default function PlayerSlider({
   commit: (value: number) => void;
   onEditing?: (editing: boolean) => void;
   className?: string;
+  buffered?: number;
 }) {
   const [draft, setDraft] = useState(value),
     editing = useRef(false);
@@ -35,6 +37,7 @@ export default function PlayerSlider({
       style={
         {
           "--player-progress": `${(Math.min(max, draft) / Math.max(1, max)) * 100}%`,
+          "--player-buffer": `${(Math.min(max, Math.max(draft, value + buffered)) / Math.max(1, max)) * 100}%`,
         } as CSSProperties
       }
       aria-label={label}

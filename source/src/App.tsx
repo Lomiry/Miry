@@ -1,4 +1,11 @@
-import AppIcon from "./components/AppIcon";
+import { displayError } from "./privacy";
+import { t, formatNumber } from "./i18n/core";
+import { useI18n } from "./i18n/react";
+import ConnectionIntro from "./components/ConnectionIntro";
+import SmartImport from "./components/SmartImport";
+import CertificateOption from "./components/CertificateOption";
+import ServerSwitcher from "./components/ServerSwitcher";
+import { canFallback, findFallback } from "./player/routeFallback";
 import useDialogFocus from "./components/useDialogFocus";
 import Select from "./components/Select";
 import Tooltip from "./components/Tooltip";
@@ -8,6 +15,9 @@ import {
   validPageSize,
   readSortPreference,
   saveSortPreference,
+  readBrowseMode,
+  saveBrowseMode,
+  type BrowseMode,
 } from "./stores/browsePreferences";
 import {
   useCallback,
@@ -16,12 +26,18 @@ import {
   useMemo,
   useRef,
   useState,
+  Fragment,
 } from "react";
+import { rankSearchCandidates } from "./api/search";
+import InfiniteLoad from "./components/InfiniteLoad";
+import WindowedBrowse from "./components/WindowedBrowse";
+import BrowseBoundary from "./components/BrowseBoundary";
+import {
+  readBrowseLocation,
+  saveBrowseLocation,
+} from "./stores/browseLocation";
 import {
   Home,
-  Film,
-  Tv,
-  LogOut,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
@@ -32,12 +48,11 @@ import {
   Settings as SettingsIcon,
   Heart,
   History,
-  Plus,
   Network,
-  Play,
   Bookmark,
   Layers,
   ListVideo,
+  Search,
 } from "lucide-react";
 import {
   ApiError,
@@ -55,6 +70,9 @@ import SettingsPanel, {
   type SettingsSection,
 } from "./components/SettingsPanel";
 import SearchBar from "./components/SearchBar";
+import SearchOverview from "./components/SearchOverview";
+import SearchCounts from "./components/SearchCounts";
+import { searchPresentation } from "./api/searchPresentation";
 import PersonDetail from "./components/People";
 import { searchScope } from "./stores/searchHistory";
 import {
@@ -76,11 +94,16 @@ import { EmptyState, ErrorState } from "./components/ContentState";
 import Pagination from "./components/Pagination";
 import QueuePanel from "./components/QueuePanel";
 import EpisodeBrowser from "./components/EpisodeBrowser";
-import { readSettings, saveSettings, type Settings } from "./stores/settings";
+import {
+  readSettings,
+  applySettingsUpdate,
+  type SettingsUpdate,
+} from "./stores/settings";
+import { syncTrayBehavior } from "./stores/trayBehavior";
 import Sidebar from "./components/Sidebar";
 import SidebarLibraries from "./components/SidebarLibraries";
 import { PlaybackQueue, type QueueState } from "./player/queue";
-import { preparePlayback } from "./player/playback";
+import { preparePlayback, continuationSettings } from "./player/playback";
 import type { Account, Item, UserData } from "./types/emby";
 import {
   connectionId,
@@ -124,6 +147,8 @@ import type { PlayerSnapshot } from "./player/playback";
 import RoutePanel from "./components/RoutePanel";
 import {
   readRouteQuality,
+  autoRouteVersion,
+  setRouteMode,
   routeDetail,
   noteRouteChoice,
   testRoute,
@@ -137,7 +162,11 @@ import type { PlayerUiModel } from "./player/uiModel";
 import {
   verifyRoute,
   readRoutes,
+  saveRoute,
+  captureRoute,
+  currentRoute,
   activeRoutes,
+  routeDisplayName,
   type ServerRoute,
 } from "./stores/routes";
 import {
@@ -148,7 +177,7 @@ import {
 } from "./stores/watchLater";
 import Skeleton from "./components/Skeleton";
 import { readLoginHint, saveLoginHint } from "./stores/loginHints";
-import { privateError, privateText, routeLabel } from "./privacy";
+import { privateError } from "./privacy";
 import { fetchPreviewImage } from "./player/preview";
 import {
   withConnectionRemark,
@@ -157,12 +186,21 @@ import {
 
 // New browsing copy stays together for the future translation catalog.
 const browseCopy = {
-  ascending: "升序，切换为降序",
-  descending: "降序，切换为升序",
-  ascendingHint: "当前升序，切换为降序",
-  descendingHint: "当前降序，切换为升序",
-  searchSortHint:
-    "搜索排序仅在服务器支持时生效；若顺序不变，可在媒体库中筛选并排序。",
+  get ascending() {
+    return t("library.ascending_switch_to_descending");
+  },
+  get descending() {
+    return t("library.descending_switch_to_ascending");
+  },
+  get ascendingHint() {
+    return t("library.currently_ascending_switch_to_descending");
+  },
+  get descendingHint() {
+    return t("library.currently_descending_switch_to_ascending");
+  },
+  get searchSortHint() {
+    return t("library.search_sorting_depends_on_server_support_if");
+  },
 };
 
 type Route =
@@ -179,6 +217,7 @@ type Route =
   | { kind: "detail"; item: Item };
 interface PageData {
   items: Item[];
+  searchMatches: Item[];
   detail: Item | null;
   resume: Item[];
   nextUp: Item[];
@@ -195,6 +234,7 @@ interface BrowseState {
   sort: string;
   sortOrder: SortOrder;
   pageSize: number;
+  browseMode: BrowseMode;
   filter: string;
   browseFilters: BrowseFilters;
   listMode: boolean;
@@ -204,6 +244,8 @@ interface BrowseState {
   dataKey: string;
 }
 export default function App() {
+  const language = useI18n();
+
   const [playerRevision, setPlayerRevision] = useState(0);
   const [playerFullscreen, setPlayerFullscreen] = useState(false);
   const [playerOwner, setPlayerOwner] = useState("");
@@ -271,13 +313,37 @@ export default function App() {
   const [demoSavedItems, setDemoSavedItems] = useState<Record<string, Item>>(
     {},
   );
-  const [account, setAccount] = useState<Account | null>(readAccount);
-  const [sort, setSort] = useState(() => readSortPreference(account).sort),
-    [filter, setFilter] = useState("all");
+  const [account, updateAccount] = useState<Account | null>(readAccount);
+  const [restoredBrowse] = useState(() => readBrowseLocation(account));
+  const routeOperation = useRef<{
+    controller: AbortController;
+    valid: () => boolean;
+    done: Promise<void>;
+  } | null>(null);
+  const accountOwner = useRef(account);
+  function setAccount(next: Account | null) {
+    // Change ownership synchronously, before React commits a replacement login.
+    if (next !== accountOwner.current)
+      routeOperation.current?.controller.abort();
+    accountOwner.current = next;
+    updateAccount(next);
+  }
+  const [sort, setSort] = useState(
+      () => restoredBrowse?.sort || readSortPreference(account).sort,
+    ),
+    [filter, setFilter] = useState(restoredBrowse?.filter || "all");
   const [sortOrder, setSortOrder] = useState<SortOrder>(
-    () => readSortPreference(account).sortOrder,
+    () => restoredBrowse?.sortOrder || readSortPreference(account).sortOrder,
   );
   const [libraryPageSize, setLibraryPageSize] = useState(readPageSize);
+  const [browseMode, setBrowseMode] = useState(
+    () => restoredBrowse?.mode || readBrowseMode(),
+  );
+  const [searchMatches, setSearchMatches] = useState<Item[]>([]);
+  const batchCursor = useRef({ context: "", page: -1, reload: -1 });
+  const batchLock = useRef(false);
+  const retryBatch = useRef<{ context: string; page: number } | null>(null);
+  const [appending, setAppending] = useState(false);
   const [routeQualityRevision, setRouteQualityRevision] = useState(0);
   const [routeHint, setRouteHint] = useState<PlayerUiModel["routeHint"]>();
   const availableRoutes = useMemo(
@@ -294,9 +360,16 @@ export default function App() {
     ignoredRouteHint = useRef("");
   const lastRouteNotice = useRef(0);
   useEffect(() => {
-    const update = () => setRouteQualityRevision((n) => n + 1);
+    const update = () => {
+      const pending = routeOperation.current;
+      if (pending && !pending.valid()) pending.controller.abort();
+      setRouteQualityRevision((n) => n + 1);
+    };
     window.addEventListener("miry-route-quality", update);
-    return () => window.removeEventListener("miry-route-quality", update);
+    return () => {
+      window.removeEventListener("miry-route-quality", update);
+      routeOperation.current?.controller.abort();
+    };
   }, []);
   useEffect(() => {
     routeHealth.current = new RouteHealth();
@@ -343,11 +416,11 @@ export default function App() {
       setToastTone("success");
       setToast(
         entries.some((i) => i.Id === item.Id)
-          ? "已加入待看清单"
-          : "已移出待看清单",
+          ? t("library.added_to_watch_later")
+          : t("library.removed_from_watch_later"),
       );
     } catch {
-      setError("待看清单保存失败，请检查本机存储空间。");
+      setError(t("library.could_not_save_watch_later_check_your"));
     }
   };
   const [connections, setConnections] = useState(readConnections);
@@ -355,8 +428,9 @@ export default function App() {
     [switching, setSwitching] = useState(false);
   const [allServers, setAllServers] = useState(false),
     [searchGroups, setSearchGroups] = useState<SearchGroup[]>([]);
-  const [browseFilters, setBrowseFilters] =
-      useState<BrowseFilters>(emptyFilters),
+  const [browseFilters, setBrowseFilters] = useState<BrowseFilters>(
+      restoredBrowse?.filters || emptyFilters,
+    ),
     [genres, setGenres] = useState<string[]>([]);
   const [listMode, setListMode] = useState(
     () => localStorage.getItem("miry-layout") === "list",
@@ -373,8 +447,25 @@ export default function App() {
     session: string;
     updated: number;
   } | null>(null);
+  const lastPersistedSnapshot = useRef("");
   const [demo, setDemo] = useState(false);
-  const [route, setRoute] = useState<Route>({ kind: "home" });
+  const [route, setRoute] = useState<Route>(() =>
+    restoredBrowse
+      ? { kind: "library", item: restoredBrowse.item }
+      : { kind: "home" },
+  );
+  useEffect(() => {
+    if (account && route.kind === "library")
+      saveBrowseLocation(account, {
+        item: route.item,
+        filters: browseFilters,
+        sort,
+        sortOrder,
+        filter,
+        mode: browseMode,
+      });
+    else if (route.kind !== "detail") saveBrowseLocation(account);
+  }, [account, route, browseFilters, sort, sortOrder, filter, browseMode]);
   const pageSize =
     route.kind === "library" ||
     route.kind === "catalog" ||
@@ -387,7 +478,11 @@ export default function App() {
   const history = useRef<BrowseState[]>([]);
   const mainPanel = useRef<HTMLElement | null>(null);
   const browsing = route.kind === "library" || route.kind === "catalog";
+  const infinite =
+    browsing && browseMode === "infinite" && !browseFilters.resolution;
   const queryControls = browsing || route.kind === "search";
+  const groupedResults =
+    route.kind === "search" || (route.kind === "favorites" && allServers);
   const ordinaryBrowse =
     browsing && !(route.kind === "catalog" && route.recent);
   const changeSort = (nextSort: string, nextOrder: SortOrder) => {
@@ -422,12 +517,27 @@ export default function App() {
     filter,
     browseFilters,
     allServers,
+    browseMode,
   ]);
   const loadingPageContext = useRef("");
   const client = useMemo(
     () => (account ? new EmbyClient(account) : null),
-    [account],
+    [
+      account?.server,
+      account?.userId,
+      account?.token,
+      account?.deviceId,
+      account?.ignoreCertificateErrors,
+    ],
   );
+  const retryLoad = () => {
+    if (infinite) {
+      if (busy || batchLock.current || !error) return;
+      batchLock.current = true;
+      retryBatch.current = { context: paginationContext, page };
+    }
+    setReload((value) => value + 1);
+  };
   const currentAccount = useRef(account);
   currentAccount.current = account;
   useEffect(() => {
@@ -482,9 +592,9 @@ export default function App() {
       .catch(() => {});
     return () => controller.abort();
   }, [client, playedItem]);
-  const snapshotReceiver = useRef<(s: PlayerSnapshot) => void>(() => {});
+  const snapshotReceiver = useRef<(s: PlayerSnapshot) => boolean>(() => false);
   const capturePage = useRef<() => BrowseState>(() => {
-    throw new Error("页面尚未就绪");
+    throw new Error(t("library.the_page_is_not_ready_yet"));
   });
   capturePage.current = () => {
     const dataKey = String(++pageSequence.current);
@@ -493,6 +603,7 @@ export default function App() {
         dataKey,
         {
           items,
+          searchMatches,
           detail,
           resume,
           nextUp,
@@ -511,6 +622,7 @@ export default function App() {
       sort,
       sortOrder,
       pageSize: libraryPageSize,
+      browseMode,
       filter,
       browseFilters,
       listMode,
@@ -521,11 +633,25 @@ export default function App() {
     };
   };
   function restorePage(state: BrowseState) {
-    const data = pageCache.current.get<PageData>(state.dataKey);
+    const saved = pageCache.current.get<PageData>(state.dataKey);
+    const entries =
+      state.route.kind === "history" ? readHistory(account) : null;
+    const data =
+      saved && entries
+        ? {
+            ...saved,
+            items: entries.map((entry) => entry.item),
+            total: entries.length,
+          }
+        : saved;
+    if (entries) setWatched(entries);
     restoringPage.current = !!data;
-    pendingScroll.current = state.scrollTop;
+    pendingScroll.current =
+      !data && state.browseMode === "infinite" ? null : state.scrollTop;
     setRoute({ ...state.route });
-    setPage(state.page);
+    setPage(!data && state.browseMode === "infinite" ? 0 : state.page);
+    setBrowseMode(state.browseMode);
+    saveBrowseMode(state.browseMode);
     setSort(state.sort);
     setSortOrder(state.sortOrder);
     setLibraryPageSize(state.pageSize);
@@ -556,6 +682,7 @@ export default function App() {
           : item;
       };
       setItems(data.items.map(merge));
+      setSearchMatches(data.searchMatches.map(merge));
       setDetail(data.detail && merge(data.detail));
       setResume(data.resume.map(merge));
       setNextUp(data.nextUp.map(merge));
@@ -603,25 +730,36 @@ export default function App() {
       panel.removeEventListener("keydown", cancel);
     };
   }, [busy, theater, route]);
+  const playbackHandoff = useRef<PlayerSnapshot | null>(null);
+  const miniPresentation = useRef(false);
   const queue = useMemo(
     () =>
       new PlaybackQueue(
         {
-          stop: async () => {
+          stop: async (preservePresentation = false) => {
             if (isTauri()) {
               const state = await invoke<PlayerSnapshot | undefined>(
                 "player_stop",
+                preservePresentation
+                  ? { preservePresentation: true }
+                  : undefined,
               );
-              if (state) snapshotReceiver.current(state);
-              else {
+              if (!preservePresentation) playbackHandoff.current = null;
+              if (state) {
+                if (preservePresentation && state.playSessionId)
+                  playbackHandoff.current = state;
+                snapshotReceiver.current(state);
+              } else {
                 const final = await invoke<PlayerSnapshot>("player_status");
                 snapshotReceiver.current(final);
               }
             }
           },
-          launch: async (item, fromStart, signal, sourceId) => {
-            if (!isTauri()) throw new Error("请在桌面客户端中播放。");
-            if (!client) throw new Error("请先登录服务器。");
+          launch: async (item, fromStart, signal, sourceId, selection) => {
+            if (!isTauri())
+              throw new Error(t("library.open_the_desktop_app_to_play_media"));
+            if (!client)
+              throw new Error(t("library.sign_in_to_a_server_first"));
             const fresh = await client.item(item.Id, signal);
             const local = readHistory(client.account).find(
               (entry) => entry.item.Id === item.Id,
@@ -650,8 +788,22 @@ export default function App() {
               fromStart,
               signal,
               sourceId,
-              settingsRef.current,
+              continuationSettings(
+                settingsRef.current,
+                playbackHandoff.current,
+              ),
+              selection,
             );
+            const handoff = playbackHandoff.current;
+            launch.preservePresentation = !!handoff?.playSessionId;
+            if (handoff) {
+              launch.volume = handoff.volume;
+              launch.muted = handoff.muted;
+              launch.speed =
+                handoff.speed && handoff.speed >= 0.5 && handoff.speed <= 3
+                  ? handoff.speed
+                  : 1;
+            }
             const restore = recoveryOverride.current;
             if (
               restore?.itemId === fresh.Id &&
@@ -672,13 +824,14 @@ export default function App() {
             setPlayerOwner(connectionId(client.account));
             setPlayedItem(fresh);
             setPlayedSource(launch.sourceId);
-            setTheater(true);
+            if (!miniPresentation.current) setTheater(true);
             launched.current = {
               account: client.account,
               item: fresh,
               session: launch.playSessionId,
               updated: Date.now(),
             };
+            lastPersistedSnapshot.current = "";
             setWatched(
               recordHistory(client.account, fresh, launch.startSeconds),
             );
@@ -691,7 +844,9 @@ export default function App() {
               ? item
               : await client.item(item.Id, signal);
             if (!fresh.SeriesId)
-              throw new Error("服务器没有返回剧集所属系列。");
+              throw new Error(
+                t("library.the_server_did_not_return_the_series"),
+              );
             return (await client.episodes(fresh.SeriesId, item.Id, signal))
               .Items;
           },
@@ -724,15 +879,19 @@ export default function App() {
   useEffect(() => {
     if (queueState.error || queueState.warning) setShowQueue(true);
   }, [queueState.error, queueState.warning]);
-  const updateSettings = (next: Settings) => {
+  const updateSettings = (update: SettingsUpdate) => {
+    const next = applySettingsUpdate(update);
     setSettings(next);
-    saveSettings(next);
   };
   useEffect(() => {
     const update = () => setSettings(readSettings());
     window.addEventListener("miry-settings-changed", update);
     return () => window.removeEventListener("miry-settings-changed", update);
   }, []);
+  useEffect(() => {
+    if (!isTauri()) return;
+    void syncTrayBehavior(settings).catch(() => {});
+  }, [settings.closeToTray, settings.minimizeToTray, language]);
   const updateUserData = (item: Item, data: UserData, owner = account) => {
     if (
       owner &&
@@ -745,7 +904,11 @@ export default function App() {
       data.IsFavorite !== !!item.UserData?.IsFavorite
     ) {
       setToastTone("success");
-      setToast(data.IsFavorite ? "已加入收藏" : "已移出收藏");
+      setToast(
+        data.IsFavorite
+          ? t("library.added_to_favorites")
+          : t("library.removed_from_favorites"),
+      );
     }
     setDetail((d) =>
       d?.Id === item.Id ? { ...d, UserData: { ...d.UserData, ...data } } : d,
@@ -760,6 +923,7 @@ export default function App() {
     setResume((list) => list.map(merge));
     setNextUp((list) => list.map(merge));
     setRelated((list) => list.map(merge));
+    setSearchMatches((list) => list.map(merge));
     // Keep saved browsing pages consistent with actions taken on a detail page.
     const savedStates = [
       ...history.current,
@@ -793,6 +957,7 @@ export default function App() {
           {
             ...data,
             items: data.items.map(merge),
+            searchMatches: data.searchMatches.map(merge),
             detail: data.detail && merge(data.detail),
             resume: data.resume.map(merge),
             nextUp: data.nextUp.map(merge),
@@ -890,6 +1055,7 @@ export default function App() {
     connection: Connection,
     destination: Route = { kind: "home" },
   ) {
+    routeOperation.current?.controller.abort();
     if (switchingLock.current) return;
     switchingLock.current = true;
     setSwitching(true);
@@ -930,36 +1096,122 @@ export default function App() {
     }
   }
   const automaticAttempt = useRef("");
+  const routePlayback = useRef({ theater, playerActive });
+  routePlayback.current = { theater, playerActive };
+  function beginAutoRoute(owner: Account, parent?: AbortSignal) {
+    routeOperation.current?.controller.abort();
+    const controller = new AbortController(),
+      abort = () => controller.abort();
+    const version = autoRouteVersion(owner),
+      session = launched.current;
+    const playbackSession = lastSnapshot.current?.playSessionId;
+    let finish!: () => void;
+    const done = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const pending = {
+      controller,
+      done,
+      valid: () =>
+        !controller.signal.aborted &&
+        accountOwner.current === owner &&
+        readRouteQuality(owner).mode === "auto" &&
+        autoRouteVersion(owner) === version &&
+        launched.current === session &&
+        lastSnapshot.current?.playSessionId === playbackSession &&
+        !routePlayback.current.theater &&
+        !routePlayback.current.playerActive &&
+        !queue.state.busy,
+    };
+    parent?.addEventListener("abort", abort, { once: true });
+    if (parent?.aborted) abort();
+    routeOperation.current = pending;
+    return {
+      ...pending,
+      dispose: () => {
+        parent?.removeEventListener("abort", abort);
+        if (routeOperation.current === pending) routeOperation.current = null;
+        finish();
+      },
+    };
+  }
   async function switchLine(
     route: ServerRoute,
     signal: AbortSignal,
-    selection: "manual" | "auto" = "manual",
+    selection: "manual" | "auto" | "fallback" = "manual",
+    preverified?: Awaited<ReturnType<typeof verifyRoute>>,
+    automatic?: ReturnType<typeof beginAutoRoute>,
   ) {
+    if (!account || accountOwner.current !== account)
+      throw new DOMException("Aborted", "AbortError");
+    const lease = captureRoute(account, route);
+    let manualIntent: string | undefined;
+    if (account && selection === "manual") {
+      const previous = routeOperation.current;
+      previous?.controller.abort();
+      setRouteMode(account, "manual", route.url);
+      manualIntent = readRouteQuality(account).intent;
+      // Let the existing native operation settle before the explicit choice.
+      // This is cancellation/serialization, not a retry or a second route queue.
+      if (previous) await previous.done;
+      if (
+        signal.aborted ||
+        accountOwner.current !== account ||
+        !currentRoute(account, lease)
+      )
+        throw new DOMException("Aborted", "AbortError");
+    }
     if (!account || switchingLock.current)
-      throw new Error("连接正在切换，请稍后再试。");
+      throw new Error(t("library.switching_connections_try_again_shortly"));
     switchingLock.current = true;
     setSwitching(true);
-    try {
-      const checked = await verifyRoute(account, route.url, signal);
-      if (selection === "auto") {
-        const quality = readRouteQuality(account);
-        const status = isTauri()
-          ? await invoke<PlayerSnapshot>("player_status")
-          : null;
-        if (
-          quality.mode !== "auto" ||
-          quality.recommended !== checked.url ||
-          status?.active ||
-          queue.state.busy
-        )
-          throw new DOMException("Aborted", "AbortError");
+    const operation =
+      selection === "manual"
+        ? undefined
+        : automatic || beginAutoRoute(account, signal);
+    const requestSignal = operation?.controller.signal || signal;
+    const assertCurrent = () => {
+      const latest = readRouteQuality(account);
+      if (
+        signal.aborted ||
+        requestSignal.aborted ||
+        accountOwner.current !== account ||
+        !currentRoute(account, lease) ||
+        (selection === "manual" &&
+          (latest.mode !== "manual" || latest.intent !== manualIntent)) ||
+        (operation &&
+          (!operation.valid() ||
+            !activeRoutes(account).some((r) => r.url === route.url) ||
+            (selection === "auto" &&
+              readRouteQuality(account).recommended !== route.url)))
+      ) {
+        operation?.controller.abort();
+        throw new DOMException("Aborted", "AbortError");
       }
+    };
+    try {
+      assertCurrent();
+      const target = currentRoute(account, lease)!;
+      const checked =
+        preverified ||
+        (await verifyRoute(
+          account,
+          target.url,
+          requestSignal,
+          target.ignoreCertificateErrors,
+        ));
+      assertCurrent();
       const snapshot = isTauri()
         ? await invoke<PlayerSnapshot>("player_status")
         : null;
+      assertCurrent();
+      if (operation && snapshot?.active) {
+        operation.controller.abort();
+        throw new DOMException("Aborted", "AbortError");
+      }
       const current =
         launched.current ||
-        (theater &&
+        ((theater || miniPresentation.current) &&
         playedItem &&
         snapshot?.error &&
         snapshot.itemId === playedItem.Id
@@ -975,8 +1227,9 @@ export default function App() {
               sourceId: playedSource,
             }
           : null;
-      await queue.stop();
-      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      assertCurrent();
+      await queue.stop(!!resume);
+      assertCurrent();
       const finalPosition = lastSnapshot.current;
       if (
         resume &&
@@ -990,6 +1243,7 @@ export default function App() {
         homeServer: account.homeServer || account.server,
         server: checked.url,
         serverId: checked.serverId,
+        ignoreCertificateErrors: checked.ignoreCertificateErrors,
       };
       const remember =
         connections.find(
@@ -1020,6 +1274,7 @@ export default function App() {
         await wait;
       }
     } finally {
+      operation?.dispose();
       switchingLock.current = false;
       setSwitching(false);
     }
@@ -1049,7 +1304,7 @@ export default function App() {
       snapshot.playSessionId &&
       snapshot.playSessionId !== launched.current.session
     )
-      return;
+      return false;
     lastSnapshot.current = snapshot;
     const mediaKey = `${snapshot.playSessionId}:${snapshot.active}:${snapshot.loaded}:${snapshot.paused}:${queueState.index}:${queueState.items.length}:${settings.systemMedia}:${mediaCover?.length}`;
     if (isTauri() && mediaStateKey.current !== mediaKey) {
@@ -1092,7 +1347,7 @@ export default function App() {
             reason,
             index: index >= 0 ? index : undefined,
             name:
-              index >= 0 ? routeLabel(routes[index].name, index) : undefined,
+              index >= 0 ? routeDisplayName(routes[index], index) : undefined,
           });
         }
       } else {
@@ -1102,6 +1357,22 @@ export default function App() {
     }
     void queue.snapshot(snapshot);
     const current = launched.current;
+    const persistenceKey =
+      snapshot.playSessionId &&
+      snapshot.itemId &&
+      Number.isFinite(snapshot.position)
+        ? JSON.stringify([
+            snapshot.playSessionId,
+            snapshot.itemId,
+            snapshot.position,
+            snapshot.active,
+            snapshot.finished && !!snapshot.syncComplete,
+          ])
+        : "";
+    let persisted =
+      !snapshot.active &&
+      !!persistenceKey &&
+      lastPersistedSnapshot.current === persistenceKey;
     if (
       current &&
       snapshot.playSessionId === current.session &&
@@ -1109,19 +1380,31 @@ export default function App() {
       Number.isFinite(snapshot.position) &&
       (Date.now() - current.updated > 1000 || !snapshot.active)
     ) {
-      current.updated = Date.now();
-      const entries = recordHistory(
-        current.account,
-        current.item,
-        snapshot.position,
-        snapshot.finished && !!snapshot.syncComplete,
-      );
-      if (account && connectionId(current.account) === connectionId(account))
-        setWatched(entries);
-      if (!snapshot.active)
-        updateUserData(current.item, entries[0].item.UserData || {});
-      if (!snapshot.active && snapshot.syncComplete) launched.current = null;
+      try {
+        let entries;
+        if (!persisted) {
+          entries = recordHistory(
+            current.account,
+            current.item,
+            snapshot.position,
+            snapshot.finished && !!snapshot.syncComplete,
+            { requirePersistence: true },
+          );
+          lastPersistedSnapshot.current = persistenceKey;
+          persisted = true;
+        }
+        entries ??= readHistory(current.account);
+        if (account && connectionId(current.account) === connectionId(account))
+          setWatched(entries);
+        if (!snapshot.active)
+          updateUserData(current.item, entries[0]?.item.UserData || {});
+        current.updated = Date.now();
+        if (!snapshot.active && snapshot.syncComplete) launched.current = null;
+      } catch {
+        console.error("Playback history write failed");
+      }
     }
+    return persisted;
   };
   snapshotReceiver.current = receiveSnapshot;
   const systemAction = useRef<(action: string) => Promise<unknown>>(
@@ -1177,21 +1460,34 @@ export default function App() {
       (r) => r.url === q.recommended && r.serverId === account.serverId,
     );
     if (!route) return;
-    const attempt = `${account.server}|${q.recommended}|${q.tests[q.recommended]?.at}`;
+    const attempt = `${autoRouteVersion(account)}|${q.recommended}|${q.tests[q.recommended]?.at}`;
     if (automaticAttempt.current === attempt) return;
     automaticAttempt.current = attempt;
     const controller = new AbortController();
-    void switchLine(route, controller.signal, "auto").catch(() => {
-      if (!controller.signal.aborted)
-        setError("推荐线路暂时无法使用，请手动选择。");
+    void switchLine(route, controller.signal, "auto").catch((error) => {
+      if (!controller.signal.aborted && error?.name !== "AbortError")
+        setError(t("library.the_recommended_route_is_unavailable_select_a"));
     });
-  }, [account, routeQualityRevision, theater, playerActive, queueState.busy]);
+  }, [
+    account,
+    routeQualityRevision,
+    theater,
+    playerActive,
+    queueState.busy,
+    switching,
+  ]);
   useEffect(() => {
     if (!isTauri()) return;
     let disposed = false;
     let remove: (() => void) | undefined;
     void listen<PlayerSnapshot>("player-final-snapshot", (event) => {
-      if (!disposed) snapshotReceiver.current(event.payload);
+      if (disposed) return;
+      const persisted = snapshotReceiver.current(event.payload);
+      if (event.payload.persistenceId)
+        void invoke("player_final_saved", {
+          persistenceId: event.payload.persistenceId,
+          persisted,
+        }).catch(() => console.error("Final playback history receipt failed"));
     })
       .then((unlisten) => {
         if (disposed) unlisten();
@@ -1223,8 +1519,8 @@ export default function App() {
         if (state?.syncError) setToastTone("warning");
         setToast(
           state?.syncError
-            ? "播放位置已保存在本机，服务器同步失败"
-            : "播放已停止",
+            ? t("library.playback_position_saved_locally_server_sync_failed")
+            : t("library.playback_stopped"),
         );
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -1268,15 +1564,36 @@ export default function App() {
     if (!client && !demo) return;
     const samePageContext = loadingPageContext.current === paginationContext;
     loadingPageContext.current = paginationContext;
+    const forceBatch =
+      infinite &&
+      retryBatch.current?.context === paginationContext &&
+      retryBatch.current.page === page;
+    retryBatch.current = null;
     if (restoringPage.current) {
       restoringPage.current = false;
+      batchCursor.current = { context: paginationContext, page, reload };
+      batchLock.current = false;
+      setAppending(false);
       return;
     }
+    const append =
+      infinite &&
+      batchCursor.current.context === paginationContext &&
+      page === batchCursor.current.page + 1 &&
+      page > 0;
+    if (infinite && page > 0 && !append) {
+      setPage(0);
+      return;
+    }
+    batchLock.current = true;
     const controller = new AbortController();
     let active = true;
+    let invalidatingAccount = false;
     setBusy(true);
+    setAppending(append);
     setError("");
-    setItems([]);
+    if (!append) setItems([]);
+    setSearchMatches([]);
     if (route.kind === "home") setRecommendations([]);
     setDetail(null);
     setResume([]);
@@ -1296,6 +1613,7 @@ export default function App() {
     ) {
       // A library can shrink while the user is on its last page.
       if (
+        !infinite &&
         page > 0 &&
         !result.Items.length &&
         Number.isSafeInteger(result.TotalRecordCount) &&
@@ -1306,10 +1624,24 @@ export default function App() {
         return;
       }
       const info = pageInfo(result, page * limit, limit);
-      setItems(result.Items);
+      const loadedIds = new Set(append ? items.map((item) => item.Id) : []);
+      if (
+        append &&
+        result.Items.length &&
+        result.Items.every((item) => loadedIds.has(item.Id))
+      )
+        throw new Error(t("library.repeated_batch"));
+      setItems((previous) => [
+        ...new Map(
+          (append ? [...previous, ...result.Items] : result.Items).map(
+            (item) => [item.Id, item],
+          ),
+        ).values(),
+      ]);
+      batchCursor.current = { context: paginationContext, page, reload };
       setTotal(info.total);
       setTotalKnown(info.totalKnown);
-      setHasMore(info.hasMore);
+      setHasMore(info.hasMore && (!infinite || result.Items.length > 0));
     }
     async function load() {
       if (route.kind === "later") {
@@ -1326,8 +1658,10 @@ export default function App() {
         return;
       }
       if (route.kind === "history") {
-        setItems(watched.map((e) => e.item));
-        setTotal(watched.length);
+        const entries = readHistory(account);
+        setWatched(entries);
+        setItems(entries.map((e) => e.item));
+        setTotal(entries.length);
         if (client && account)
           void recoverHistoryArtwork(
             client,
@@ -1372,7 +1706,7 @@ export default function App() {
         if (route.kind === "favorites")
           list = demoList.filter((i) => i.UserData?.IsFavorite);
         if (route.kind === "search")
-          list = demoList.filter((i) => i.Name.includes(route.query));
+          list = rankSearchCandidates(demoList, route.query);
         if (route.kind === "person") {
           setDetail(
             demoPeople.find((person) => person.Id === route.item.Id) ||
@@ -1447,13 +1781,13 @@ export default function App() {
       }
       const api = client!;
       const signal = controller.signal;
-      const libraries = await api.views(signal);
+      const libraries =
+        route.kind === "search"
+          ? { Items: [] as Item[] }
+          : await api.views(signal);
       if (!active) return;
-      setViews(libraries.Items);
-      if (
-        (route.kind === "search" || route.kind === "favorites") &&
-        allServers
-      ) {
+      if (route.kind !== "search") setViews(libraries.Items);
+      if (groupedResults) {
         const groups =
           route.kind === "favorites"
             ? await aggregateFavorites(connections, page, signal)
@@ -1503,7 +1837,7 @@ export default function App() {
           .catch((e) => {
             if (e instanceof ApiError && e.status === 401) reportError(e);
             else if (active && e.name !== "AbortError")
-              setError("继续观看暂时无法加载。");
+              setError(t("library.continue_watching_is_unavailable_right_now"));
           });
         void api
           .nextUp(undefined, signal)
@@ -1539,7 +1873,7 @@ export default function App() {
           throw person.reason;
         setDetail(person.status === "fulfilled" ? person.value : route.item);
         if (person.status === "rejected")
-          setError("人物简介暂时无法加载，请重试。");
+          setError(t("library.could_not_load_the_biography_try_again"));
         if (works.status === "rejected") throw works.reason;
         updatePage(works.value);
       } else if (route.kind === "detail") {
@@ -1579,33 +1913,17 @@ export default function App() {
                   route.kind === "collections" ? "BoxSet" : "Playlist",
                 StartIndex: page * 30,
               }
-            : route.kind === "search"
-              ? {
-                  ...libraryQuery(
-                    undefined,
-                    browseFilters,
-                    sort,
-                    filter,
-                    sortOrder,
-                  ),
-                  SearchTerm: route.query,
-                  Recursive: true,
-                  IncludeItemTypes:
-                    browseFilters.type || "Movie,Series,Episode",
-                  StartIndex: page * pageSize,
-                  Limit: pageSize,
-                }
-              : {
-                  ...libraryQuery(
-                    route.kind === "library" ? route.item : undefined,
-                    browseFilters,
-                    sort,
-                    filter,
-                    sortOrder,
-                  ),
-                  StartIndex: page * pageSize,
-                  Limit: pageSize,
-                };
+            : {
+                ...libraryQuery(
+                  route.kind === "library" ? route.item : undefined,
+                  browseFilters,
+                  sort,
+                  filter,
+                  sortOrder,
+                ),
+                StartIndex: page * pageSize,
+                Limit: pageSize,
+              };
         const list =
           browseFilters.resolution &&
           (route.kind === "library" || route.kind === "catalog")
@@ -1619,19 +1937,49 @@ export default function App() {
               )
             : route.kind === "favorites"
               ? await api.favorites(page, signal)
-              : await api.items(query, signal);
+              : await api.items(query, signal, { forceRefresh: forceBatch });
         if (active) {
           updatePage(list);
+          if ("suggestions" in list)
+            setSearchMatches(list.suggestions as Item[]);
         }
       }
     }
     function reportError(e: Error) {
       if (!active || e.name === "AbortError") return;
+      if (
+        account &&
+        accountOwner.current === account &&
+        !theater &&
+        !playerActive &&
+        !queue.state.busy &&
+        canFallback(e)
+      ) {
+        const operation = beginAutoRoute(account, controller.signal);
+        void findFallback(account, operation.controller.signal, operation.valid)
+          .then(async (candidate) => {
+            if (candidate && active && accountOwner.current === account)
+              await switchLine(
+                candidate.route,
+                controller.signal,
+                "fallback",
+                candidate.checked,
+                operation,
+              );
+          })
+          .catch(() => {
+            /* Preserve the original connection failure. */
+          })
+          .finally(operation.dispose);
+      }
       if (e instanceof ApiError && e.status === 401) {
+        if (invalidatingAccount || accountOwner.current !== account) return;
+        invalidatingAccount = true;
         queue.cancelAuto();
         void queue
           .stop()
           .then(() => {
+            if (!active || accountOwner.current !== account) return;
             if (account) removeConnection(account);
             setConnections(
               readConnections().filter(
@@ -1648,14 +1996,20 @@ export default function App() {
             searchOrigin.current = null;
             pageCache.current.clear();
           })
-          .catch((error) => setError(String(error)));
+          .catch((error) => {
+            if (active && accountOwner.current === account)
+              setError(String(error));
+          });
       }
-      setError(e.message || "加载失败，请重试。");
+      setError(e.message || t("library.could_not_load_content_try_again"));
     }
     load()
       .catch(reportError)
       .finally(() => {
-        if (active) setBusy(false);
+        if (active) {
+          setBusy(false);
+          batchLock.current = false;
+        }
       });
     return () => {
       active = false;
@@ -1673,6 +2027,7 @@ export default function App() {
     filter,
     browseFilters,
     allServers,
+    browseMode,
     route.kind === "later" ? later : null,
   ]);
   async function logout() {
@@ -1691,7 +2046,10 @@ export default function App() {
         await client.logout();
       } catch (e) {
         if (!(e instanceof ApiError && e.status === 401)) {
-          setError((e as Error).message + " 退出未完成，请重试。");
+          setError(
+            (e as Error).message +
+              t("library.could_not_exit_playback_try_again"),
+          );
           setBusy(false);
           return;
         }
@@ -1738,7 +2096,7 @@ export default function App() {
     return (
       <>
         <Login
-          initialError={error}
+          initialError={displayError(error)}
           onLogin={(a, remember) => {
             saveAccount(a, remember);
             setAccount(a);
@@ -1754,107 +2112,123 @@ export default function App() {
         {updateNotice}
       </>
     );
-  const grid = (list: Item[], landscape = false) => (
-    <div
-      className={
-        listMode && route.kind !== "detail"
-          ? "grid media-list"
-          : landscape
-            ? "grid continue-grid"
-            : "grid"
-      }
-    >
-      {list.map((item) => {
-        const Card =
+  const grid = (
+    list: Item[],
+    landscape = false,
+    windowed = true,
+  ): React.ReactNode =>
+    infinite && windowed && list.length > 120 ? (
+      <BrowseBoundary resetKey={paginationContext}>
+        <WindowedBrowse
+          items={list}
+          root={mainPanel.current}
+          layout={listMode}
+          render={(visible) => grid(visible, landscape, false)}
+        />
+      </BrowseBoundary>
+    ) : (
+      <div
+        className={
           listMode && route.kind !== "detail"
-            ? MediaListRow
+            ? "grid media-list"
             : landscape
-              ? ContinueWatchingCard
-              : MediaCard;
-        return (
-          <Card
-            key={item.Id}
-            item={item}
-            api={client}
-            landscape={landscape}
-            saved={later.some((i) => i.Id === item.Id)}
-            onLater={changeLater}
-            onUserData={updateUserData}
-            playable={!(route.kind === "detail" && item.Id === detail?.Id)}
-            onDetail={(selected) =>
-              go(
-                selected.Type === "Folder" ||
-                  selected.Type === "CollectionFolder"
-                  ? { kind: "library", item: selected }
-                  : { kind: "detail", item: selected },
-              )
-            }
-            onPlay={async (selected, fromStart, sourceId, signal) => {
-              if (queue.state.busy)
-                return queue.play(selected, fromStart, sourceId, signal);
-              let override: { itemId: string; position: number } | null = null;
-              if (
-                route.kind === "history" &&
-                !fromStart &&
-                (item.UserData?.PlaybackPositionTicks || 0) > 0
-              )
-                resumeOverride.current = override = {
-                  itemId: selected.Id,
-                  position: item.UserData!.PlaybackPositionTicks! / 10000000,
-                };
-              try {
-                await queue.play(selected, fromStart, sourceId, signal);
-              } finally {
-                if (override && resumeOverride.current === override)
-                  resumeOverride.current = null;
+              ? "grid continue-grid"
+              : "grid"
+        }
+      >
+        {list.map((item) => {
+          const Card =
+            listMode && route.kind !== "detail"
+              ? MediaListRow
+              : landscape
+                ? ContinueWatchingCard
+                : MediaCard;
+          return (
+            <Card
+              key={item.Id}
+              item={item}
+              api={client}
+              landscape={landscape}
+              saved={later.some((i) => i.Id === item.Id)}
+              onLater={changeLater}
+              onUserData={updateUserData}
+              playable={!(route.kind === "detail" && item.Id === detail?.Id)}
+              onDetail={(selected) =>
+                go(
+                  selected.Type === "Folder" ||
+                    selected.Type === "CollectionFolder"
+                    ? { kind: "library", item: selected }
+                    : { kind: "detail", item: selected },
+                )
               }
-            }}
-          >
-            {route.kind === "history" && account && (
-              <button
-                className="history-remove"
-                aria-label={`删除观看记录 ${item.Name}`}
-                title="删除这条观看记录"
-                onClick={() => {
-                  const entries = removeHistory(account, item.Id);
-                  setWatched(entries);
-                  setItems(entries.map((e) => e.item));
-                  setTotal(entries.length);
-                }}
-              >
-                <X size={13} />
-                删除记录
-              </button>
-            )}
-          </Card>
-        );
-      })}
-    </div>
-  );
+              onPlay={async (selected, fromStart, sourceId, signal) => {
+                if (queue.state.busy)
+                  return queue.play(selected, fromStart, sourceId, signal);
+                let override: { itemId: string; position: number } | null =
+                  null;
+                if (
+                  route.kind === "history" &&
+                  !fromStart &&
+                  (item.UserData?.PlaybackPositionTicks || 0) > 0
+                )
+                  resumeOverride.current = override = {
+                    itemId: selected.Id,
+                    position: item.UserData!.PlaybackPositionTicks! / 10000000,
+                  };
+                try {
+                  await queue.play(selected, fromStart, sourceId, signal);
+                } finally {
+                  if (override && resumeOverride.current === override)
+                    resumeOverride.current = null;
+                }
+              }}
+            >
+              {route.kind === "history" && account && (
+                <button
+                  className="history-remove"
+                  aria-label={t("library.remove_viewing_history_for", {
+                    p0: item.Name,
+                  })}
+                  title={t("library.remove_this_viewing_history_entry")}
+                  onClick={() => {
+                    const entries = removeHistory(account, item.Id);
+                    setWatched(entries);
+                    setItems(entries.map((e) => e.item));
+                    setTotal(entries.length);
+                  }}
+                >
+                  <X size={13} /> {t("library.remove_entry")}{" "}
+                </button>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    );
   const title = theater
-    ? playedItem?.Name || "播放"
+    ? playedItem?.Name || t("library.play")
     : route.kind === "home"
-      ? "首页"
+      ? t("library.home")
       : route.kind === "later"
-        ? "待看清单"
+        ? t("library.watch_later")
         : route.kind === "collections"
-          ? "合集"
+          ? t("library.collections")
           : route.kind === "playlists"
-            ? "播放列表"
+            ? t("library.playlists")
             : route.kind === "history"
-              ? "观看记录"
+              ? t("library.viewing_history")
               : route.kind === "favorites"
-                ? "我的收藏"
+                ? t("library.my_favorites")
                 : route.kind === "library"
                   ? route.item.Name
                   : route.kind === "search"
-                    ? `“${route.query}”的搜索结果`
+                    ? t("library.search_results_for", { p0: route.query })
                     : route.kind === "catalog"
                       ? browseFilters.type === "Movie"
-                        ? "全部电影"
+                        ? t("library.all_movies")
                         : browseFilters.type === "Series"
-                          ? "全部剧集"
-                          : "全部影片"
+                          ? t("library.all_tv_shows")
+                          : t("library.all_media")
                       : detail?.Name || route.item.Name;
   const previousLibrary = [...history.current]
     .reverse()
@@ -1867,91 +2241,69 @@ export default function App() {
         : null;
   return (
     <div
-      className={`${playerActive ? "shell has-player" : "shell"}${theater ? " theater-shell" : ""}${playerFullscreen && theater ? " fullscreen-player" : ""}`}
+      className={`${playerActive && !miniPresentation.current ? "shell has-player" : "shell"}${theater ? " theater-shell" : ""}${playerFullscreen && theater ? " fullscreen-player" : ""}`}
     >
-      <Sidebar navigation={route}>
-        <button
-          className="brand"
-          aria-label="返回首页"
-          onClick={() => navigateSidebar({ kind: "home" })}
+      <Sidebar
+        navigation={route}
+        header={
+          route.kind === "search" ? (
+            <div className="search-sidebar-context">
+              <Search size={23} />
+              <strong>{t("search.page")}</strong>
+              <small>{t("search.all_connections")}</small>
+            </div>
+          ) : (
+            <ServerSwitcher
+              account={account}
+              connections={connections}
+              busy={busy || switching}
+              demo={demo}
+              onSwitch={(c) => void switchConnection(c).catch(() => {})}
+              onAdd={() => setAddingServer(true)}
+              onEdit={() => setShowRoutes(true)}
+              onLogout={() => void logout()}
+            />
+          )
+        }
+      >
+        <nav
+          className="sidebar-scroll"
+          aria-label={t("library.main_navigation")}
         >
-          <AppIcon /> miry
-        </button>
-        <div className="server-switcher">
-          <Select
-            aria-label="当前服务器"
-            title={account?.server}
-            disabled={switching || demo}
-            value={
-              account
-                ? String(
-                    connections.findIndex(
-                      (c) => connectionId(c.account) === connectionId(account),
-                    ),
-                  )
-                : ""
-            }
-            onChange={(e) => {
-              const c = connections[Number(e.target.value)];
-              if (c) void switchConnection(c).catch(() => {});
-            }}
-          >
-            {demo && <option value="">演示模式</option>}
-            {connections.map((c, index) => (
-              <option value={index} key={connectionId(c.account)}>
-                {connectionLabel(c.account)}
-              </option>
-            ))}
-          </Select>
-          <button
-            aria-label="添加服务器"
-            title="添加服务器"
-            onClick={() => setAddingServer(true)}
-          >
-            <Plus size={18} />
-          </button>
-        </div>
-        <nav className="sidebar-scroll" aria-label="主要导航">
+          {account && route.kind !== "search" && (
+            <button className="nav" onClick={() => setShowRoutes(true)}>
+              <Network size={19} />
+              <span>{t("routeC.edit")}</span>
+            </button>
+          )}
           <button
             className={route.kind === "home" ? "nav active" : "nav"}
             aria-current={route.kind === "home" ? "page" : undefined}
             onClick={() => navigateSidebar({ kind: "home" })}
           >
-            <Home size={19} /> <span>首页</span>
+            <Home size={19} /> <span>{t("library.home")}</span>
           </button>
           <button
             className={route.kind === "favorites" ? "nav active" : "nav"}
             aria-current={route.kind === "favorites" ? "page" : undefined}
             onClick={() => navigateSidebar({ kind: "favorites" })}
           >
-            <Heart size={19} /> <span>收藏</span>
+            <Heart size={19} /> <span>{t("library.favorites")}</span>
           </button>
-          <button
-            className="nav"
-            disabled={!playedItem}
-            onClick={() => setTheater(true)}
-          >
-            <Play size={19} /> <span>播放页面</span>
-          </button>
-          {availableRoutes.length > 1 && (
-            <button className="nav" onClick={() => setShowRoutes(true)}>
-              <Network size={19} /> <span>连接线路</span>
-            </button>
-          )}
-          <div className="nav-label">我的媒体库</div>
+          <div className="nav-label">{t("library.my_libraries")}</div>
           <button
             className={`nav sidebar-media-group-start${route.kind === "history" ? " active" : ""}`}
             aria-current={route.kind === "history" ? "page" : undefined}
             onClick={() => navigateSidebar({ kind: "history" })}
           >
-            <History size={19} /> <span>观看记录</span>
+            <History size={19} /> <span>{t("library.viewing_history")}</span>
           </button>
           <button
             className={route.kind === "later" ? "nav active" : "nav"}
             aria-current={route.kind === "later" ? "page" : undefined}
             onClick={() => navigateSidebar({ kind: "later" })}
           >
-            <Bookmark size={19} /> <span>待看清单</span>{" "}
+            <Bookmark size={19} /> <span>{t("library.watch_later")}</span>{" "}
             {later.length > 0 && <small>{later.length}</small>}
           </button>
           <button
@@ -1959,35 +2311,39 @@ export default function App() {
             aria-current={route.kind === "collections" ? "page" : undefined}
             onClick={() => navigateSidebar({ kind: "collections" })}
           >
-            <Layers size={19} /> <span>合集</span>
+            <Layers size={19} /> <span>{t("library.collections")}</span>
           </button>
           <button
             className={route.kind === "playlists" ? "nav active" : "nav"}
             aria-current={route.kind === "playlists" ? "page" : undefined}
             onClick={() => navigateSidebar({ kind: "playlists" })}
           >
-            <ListVideo size={19} /> <span>播放列表</span>
+            <ListVideo size={19} /> <span>{t("library.playlists")}</span>
           </button>
-          <div className="library-nav-heading">
-            <span>媒体库</span>
-            <button
-              aria-label="整理媒体库"
-              title="整理媒体库"
-              onClick={() => {
-                setSettingsSection("libraries");
-                setShowSettings(true);
-              }}
-            >
-              <SettingsIcon size={15} />
-            </button>
-          </div>
-          <SidebarLibraries
-            libraries={displayedViews}
-            activeId={activeLibrary?.Id}
-            onNavigate={(view) =>
-              navigateSidebar({ kind: "library", item: view })
-            }
-          />
+          {route.kind !== "search" && (
+            <>
+              <div className="library-nav-heading">
+                <span>{t("library.libraries")}</span>
+                <button
+                  aria-label={t("library.manage_libraries")}
+                  title={t("library.manage_libraries")}
+                  onClick={() => {
+                    setSettingsSection("libraries");
+                    setShowSettings(true);
+                  }}
+                >
+                  <SettingsIcon size={15} />
+                </button>
+              </div>
+              <SidebarLibraries
+                libraries={displayedViews}
+                activeId={activeLibrary?.Id}
+                onNavigate={(view) =>
+                  navigateSidebar({ kind: "library", item: view })
+                }
+              />
+            </>
+          )}
         </nav>
         <button
           className="nav settings-nav"
@@ -1996,40 +2352,18 @@ export default function App() {
             setShowSettings(true);
           }}
         >
-          <SettingsIcon size={19} /> <span>设置</span>
+          <SettingsIcon size={19} /> <span>{t("library.settings")}</span>
         </button>
-        <div className="account">
-          <div
-            className="avatar"
-            tabIndex={0}
-            data-tooltip={account ? connectionLabel(account) : "演示模式"}
-          >
-            {(account?.name || "演")[0]}
-          </div>
-          <div>
-            <strong title={account ? connectionLabel(account) : undefined}>
-              {account ? connectionLabel(account) : "演示模式"}
-            </strong>
-            <small title={account?.server}>
-              {demo ? "演示模式" : new URL(account!.server).hostname}
-            </small>
-          </div>
-          <button
-            title="退出登录"
-            aria-label="退出登录"
-            disabled={busy}
-            onClick={logout}
-          >
-            <LogOut size={17} />
-          </button>
-        </div>
       </Sidebar>
       <main ref={mainPanel} className={`browse-main route-${route.kind}`}>
-        <header className="topbar" aria-label="页面导航与搜索">
+        <header
+          className="topbar"
+          aria-label={t("library.page_navigation_and_search")}
+        >
           <div className="page-navigation">
             {theater && (
               <button
-                aria-label="退出播放"
+                aria-label={t("library.exit_playback")}
                 disabled={stoppingPlayer}
                 onClick={() => void exitPlayback().catch(() => {})}
               >
@@ -2037,13 +2371,17 @@ export default function App() {
               </button>
             )}
             {route.kind !== "home" && (
-              <button className="icon" aria-label="返回上一页" onClick={back}>
+              <button
+                className="icon"
+                aria-label={t("library.go_back")}
+                onClick={back}
+              >
                 <ArrowLeft size={18} />
               </button>
             )}
             <button
               className="nav-home"
-              aria-label="回到首页"
+              aria-label={t("library.go_to_home")}
               onClick={() => go({ kind: "home" })}
             >
               <Home size={17} />
@@ -2053,7 +2391,9 @@ export default function App() {
               <>
                 <button
                   className="parent-library"
-                  aria-label={`返回媒体库 ${activeLibrary.Name}`}
+                  aria-label={t("library.back_to_library", {
+                    p0: activeLibrary.Name,
+                  })}
                   onClick={() => go({ kind: "library", item: activeLibrary })}
                 >
                   {activeLibrary.Name}
@@ -2066,6 +2406,9 @@ export default function App() {
           <SearchBar
             key={scope}
             scope={scope}
+            sensitiveValues={
+              account ? [account.name, account.userId, account.token] : []
+            }
             value={searchInput}
             onChange={setSearchInput}
             disabled={
@@ -2089,22 +2432,25 @@ export default function App() {
               else go({ kind: "home" });
             }}
           />
-          <label className="search-scope">
-            <input
-              type="checkbox"
-              checked={allServers}
-              onChange={(e) => {
-                setAllServers(e.target.checked);
-                setPage(0);
-              }}
-            />
-            全部服务器
-          </label>
+          {route.kind === "favorites" && (
+            <label className="search-scope">
+              <input
+                type="checkbox"
+                checked={allServers}
+                onChange={(e) => {
+                  setAllServers(e.target.checked);
+                  setPage(0);
+                }}
+              />{" "}
+              {t("library.all_servers")}{" "}
+            </label>
+          )}
           <button
             className="icon"
-            aria-label="刷新"
+            aria-label={t("library.refresh")}
             onClick={() => {
               client?.cache.clear();
+              if (infinite) setPage(0);
               setReload((r) => r + 1);
             }}
           >
@@ -2113,10 +2459,7 @@ export default function App() {
         </header>
         <div className="content">
           {error && (
-            <ErrorState
-              message={privateText(error)}
-              onRetry={() => setReload((r) => r + 1)}
-            />
+            <ErrorState message={displayError(error)} onRetry={retryLoad} />
           )}
           {route.kind === "detail" && detail ? (
             <MediaDetail
@@ -2124,8 +2467,8 @@ export default function App() {
               item={detail}
               api={client}
               saved={later.some((i) => i.Id === detail.Id)}
-              onPlay={(item, fromStart, sourceId, signal) =>
-                queue.play(item, fromStart, sourceId, signal)
+              onPlay={(item, fromStart, sourceId, signal, selection) =>
+                queue.play(item, fromStart, sourceId, signal, selection)
               }
               onLater={() => changeLater(detail)}
               onChange={(data) => updateUserData(detail, data)}
@@ -2150,21 +2493,26 @@ export default function App() {
               />
               <div className="person-works-heading">
                 <h2>
-                  相关作品{" "}
+                  {" "}
+                  {t("library.related_titles")}{" "}
                   <small>
-                    {busy ? "加载中" : `${totalKnown ? "" : "至少 "}${total}`}
+                    {busy
+                      ? t("library.loading")
+                      : totalKnown
+                        ? formatNumber(total)
+                        : t("library.minimum_count", { count: total })}
                   </small>
                 </h2>
                 <div
                   className="person-work-filters"
                   role="group"
-                  aria-label="人物作品筛选"
+                  aria-label={t("library.filter_filmography")}
                 >
                   {(
                     [
-                      { name: "全部", type: undefined },
-                      { name: "电影", type: "Movie" },
-                      { name: "剧集", type: "Series" },
+                      { name: t("library.all"), type: undefined },
+                      { name: t("library.movies"), type: "Movie" },
+                      { name: t("library.tv_shows"), type: "Series" },
                     ] as const
                   ).map((tab) => (
                     <button
@@ -2182,13 +2530,19 @@ export default function App() {
               </div>
             </>
           ) : (
-            route.kind !== "home" && (
+            route.kind !== "home" &&
+            route.kind !== "search" && (
               <PageHeader
                 title={title}
                 count={
                   busy
-                    ? "加载中"
-                    : `${totalKnown ? "" : "至少 "}${total} 个内容`
+                    ? t("library.loading")
+                    : t(
+                        totalKnown
+                          ? "library.items_count"
+                          : "library.items_count_minimum",
+                        { count: total },
+                      )
                 }
                 actions={
                   <ViewToggle
@@ -2214,7 +2568,8 @@ export default function App() {
                   setLater([]);
                 }}
               >
-                清空待看清单
+                {" "}
+                {t("library.clear_watch_later")}{" "}
               </button>
             </div>
           )}
@@ -2229,7 +2584,8 @@ export default function App() {
                   setTotal(0);
                 }}
               >
-                清空观看记录
+                {" "}
+                {t("library.clear_viewing_history")}{" "}
               </button>
             </div>
           )}
@@ -2242,13 +2598,68 @@ export default function App() {
               }}
             />
           )}
+          {route.kind === "search" && (
+            <SearchOverview
+              query={route.query}
+              groups={searchGroups}
+              busy={busy}
+              demoTotal={demo ? items.length : undefined}
+              demoSupplemental={demo ? searchMatches.length : undefined}
+              filtered={
+                filter !== "all" || Object.values(browseFilters).some(Boolean)
+              }
+            />
+          )}
           {queryControls && (
-            <div className="library-controls">
+            <div
+              className={
+                route.kind === "search"
+                  ? "library-controls search-filters"
+                  : "library-controls"
+              }
+              aria-label={
+                route.kind === "search" ? t("search.filters") : undefined
+              }
+            >
+              {route.kind === "search" && (
+                <ViewToggle
+                  list={listMode}
+                  onChange={(list) => {
+                    setListMode(list);
+                    localStorage.setItem("miry-layout", list ? "list" : "grid");
+                  }}
+                />
+              )}
+              {browsing && (
+                <label>
+                  {t("library.browse_mode")}
+                  <Select
+                    aria-label={t("library.browse_mode")}
+                    value={browseMode}
+                    onChange={(event) => {
+                      const mode = event.target.value as BrowseMode;
+                      saveBrowseMode(mode);
+                      setBrowseMode(mode);
+                      setPage(0);
+                      if (mainPanel.current) mainPanel.current.scrollTop = 0;
+                    }}
+                  >
+                    <option value="pages">{t("library.browse_pages")}</option>
+                    <option
+                      value="infinite"
+                      disabled={!!browseFilters.resolution}
+                    >
+                      {t("library.browse_infinite")}
+                    </option>
+                  </Select>
+                </label>
+              )}
               <div className="library-sort-control">
                 <label>
-                  排序
+                  {" "}
+                  {t("library.sort")}{" "}
                   <Select
-                    aria-label="媒体排序"
+                    aria-label={t("library.sort_media")}
                     value={sort}
                     onChange={(e) => {
                       changeSort(
@@ -2296,18 +2707,19 @@ export default function App() {
                 </Tooltip>
               </div>
               <label>
-                观看状态
+                {" "}
+                {t("library.watch_status")}{" "}
                 <Select
-                  aria-label="观看状态"
+                  aria-label={t("library.watch_status")}
                   value={filter}
                   onChange={(e) => {
                     setFilter(e.target.value);
                     setPage(0);
                   }}
                 >
-                  <option value="all">全部</option>
-                  <option value="unplayed">未看</option>
-                  <option value="played">已看</option>
+                  <option value="all">{t("library.all")}</option>
+                  <option value="unplayed">{t("library.unwatched")}</option>
+                  <option value="played">{t("library.watched")}</option>
                 </Select>
               </label>
               <LibraryFilters
@@ -2322,6 +2734,14 @@ export default function App() {
                 }}
                 onChange={(value) => {
                   setBrowseFilters(value);
+                  if (
+                    browsing &&
+                    value.resolution &&
+                    browseMode === "infinite"
+                  ) {
+                    saveBrowseMode("pages");
+                    setBrowseMode("pages");
+                  }
                   setPage(0);
                 }}
               />
@@ -2330,9 +2750,14 @@ export default function App() {
           {route.kind === "search" && (
             <p className="search-sort-hint">{browseCopy.searchSortHint}</p>
           )}
-          {browsing && !error && (
+          {browsing && browseFilters.resolution && (
+            <p className="search-sort-hint">
+              {t("library.resolution_uses_pages")}
+            </p>
+          )}
+          {browsing && !infinite && !error && (
             <LibraryPagination
-              label="影片翻页"
+              label={t("library.media_pagination")}
               page={page}
               pageSize={pageSize}
               count={items.length}
@@ -2344,7 +2769,7 @@ export default function App() {
               contextKey={paginationContext}
             />
           )}
-          {busy ? (
+          {busy && !appending ? (
             <Skeleton variant={route.kind === "home" ? "home" : "grid"} />
           ) : (
             <>
@@ -2434,93 +2859,210 @@ export default function App() {
                     onDetail={(item) => go({ kind: "detail", item })}
                   />
                 )}
-              {(route.kind === "search" || route.kind === "favorites") &&
-                allServers &&
+              {groupedResults &&
                 !demo &&
-                searchGroups.map((group) => (
-                  <section
-                    key={connectionId(group.connection.account)}
-                    className="search-group"
-                  >
-                    <div className="section-heading">
-                      <h2>{connectionLabel(group.connection.account)}</h2>
-                      <small>
-                        {group.totalKnown ? "" : "至少 "}
-                        {group.total}{" "}
-                        {route.kind === "favorites" ? "个收藏" : "个结果"}
-                      </small>
-                    </div>
-                    {group.error ? (
-                      <ErrorState
-                        title={
-                          route.kind === "favorites"
-                            ? "此服务器收藏加载失败"
-                            : "此服务器搜索失败"
-                        }
-                        message={privateText(group.error)}
-                      />
-                    ) : group.items.length ? (
-                      <div className={listMode ? "grid media-list" : "grid"}>
-                        {group.items.map((item) => {
-                          const Card = listMode ? MediaListRow : MediaCard;
-                          return (
-                            <Card
-                              key={item.Id}
-                              item={item}
-                              api={new EmbyClient(group.connection.account)}
-                              playable={false}
-                              onUserData={(selected, data) => {
-                                if (
-                                  account &&
-                                  favoriteScope(account) ===
-                                    favoriteScope(group.connection.account)
-                                )
-                                  updateUserData(
-                                    selected,
-                                    data,
-                                    group.connection.account,
-                                  );
-                              }}
-                              onDetail={() => {
-                                if (
-                                  account &&
-                                  connectionId(account) ===
-                                    connectionId(group.connection.account)
-                                )
-                                  go({ kind: "detail", item });
-                                else
-                                  void switchConnection(group.connection, {
-                                    kind: "detail",
-                                    item,
-                                  }).catch(() => {});
-                              }}
+                searchGroups.map((rawGroup) => {
+                  const group =
+                    route.kind === "search"
+                      ? { ...rawGroup, ...searchPresentation(rawGroup) }
+                      : rawGroup;
+                  return (
+                    <section
+                      key={connectionId(group.connection.account)}
+                      className="search-group"
+                    >
+                      <div className="section-heading">
+                        <h2>{connectionLabel(group.connection.account)}</h2>
+                        <small>
+                          {route.kind === "search" ? (
+                            <SearchCounts
+                              primary={group.items.length}
+                              supplemental={group.suggestions?.length || 0}
                             />
-                          );
-                        })}
+                          ) : (
+                            t(
+                              route.kind === "favorites"
+                                ? group.totalKnown
+                                  ? "library.favorites_count"
+                                  : "library.favorites_count_minimum"
+                                : group.totalKnown
+                                  ? "library.results_count"
+                                  : "library.results_count_minimum",
+                              { count: group.total },
+                            )
+                          )}
+                        </small>
                       </div>
-                    ) : (
-                      <EmptyState
-                        title={
-                          route.kind === "favorites"
-                            ? "还没有收藏"
-                            : "没有搜索结果"
-                        }
-                        description={
-                          route.kind === "favorites"
-                            ? "收藏喜欢的电影和剧集后，它们会出现在这里。"
-                            : "试试其他关键词。"
-                        }
-                      />
-                    )}
-                  </section>
-                ))}
-              {!(
-                (route.kind === "search" || route.kind === "favorites") &&
-                allServers &&
-                !demo
-              ) &&
+                      {group.error ? (
+                        <ErrorState
+                          title={
+                            route.kind === "favorites"
+                              ? t(
+                                  "library.could_not_load_favorites_from_this_server",
+                                )
+                              : t("library.search_failed_on_this_server")
+                          }
+                          message={displayError(group.error)}
+                        />
+                      ) : group.items.length || group.suggestions?.length ? (
+                        <div className={listMode ? "grid media-list" : "grid"}>
+                          {[...group.items, ...(group.suggestions || [])].map(
+                            (item, index) => {
+                              const Card = listMode ? MediaListRow : MediaCard;
+                              return (
+                                <Fragment key={item.Id}>
+                                  {index === group.items.length && (
+                                    <h3 style={{ gridColumn: "1 / -1" }}>
+                                      {t("library.supplemental_matches")}
+                                    </h3>
+                                  )}
+                                  <Card
+                                    item={item}
+                                    api={
+                                      new EmbyClient(group.connection.account)
+                                    }
+                                    playable={
+                                      !!account &&
+                                      connectionId(account) ===
+                                        connectionId(group.connection.account)
+                                    }
+                                    onPlay={(
+                                      item,
+                                      fromStart,
+                                      sourceId,
+                                      signal,
+                                    ) =>
+                                      queue.play(
+                                        item,
+                                        fromStart,
+                                        sourceId,
+                                        signal,
+                                      )
+                                    }
+                                    onUserData={(selected, data) => {
+                                      const owner = favoriteScope(
+                                        group.connection.account,
+                                      );
+                                      const mergeGroups = (
+                                        groups: SearchGroup[],
+                                      ) =>
+                                        groups.map((g) =>
+                                          favoriteScope(
+                                            g.connection.account,
+                                          ) !== owner
+                                            ? g
+                                            : {
+                                                ...g,
+                                                items: g.items.map((i) =>
+                                                  i.Id === selected.Id
+                                                    ? {
+                                                        ...i,
+                                                        UserData: {
+                                                          ...i.UserData,
+                                                          ...data,
+                                                        },
+                                                      }
+                                                    : i,
+                                                ),
+                                                suggestions: g.suggestions?.map(
+                                                  (i) =>
+                                                    i.Id === selected.Id
+                                                      ? {
+                                                          ...i,
+                                                          UserData: {
+                                                            ...i.UserData,
+                                                            ...data,
+                                                          },
+                                                        }
+                                                      : i,
+                                                ),
+                                              },
+                                        );
+                                      setSearchGroups(mergeGroups);
+                                      for (const saved of [
+                                        ...history.current,
+                                        ...(searchOrigin.current
+                                          ? [searchOrigin.current]
+                                          : []),
+                                      ]) {
+                                        const cached =
+                                          pageCache.current.get<PageData>(
+                                            saved.dataKey,
+                                          );
+                                        if (
+                                          cached?.searchGroups.some(
+                                            (g) =>
+                                              favoriteScope(
+                                                g.connection.account,
+                                              ) === owner,
+                                          )
+                                        )
+                                          pageCache.current.set(
+                                            saved.dataKey,
+                                            {
+                                              ...cached,
+                                              searchGroups: mergeGroups(
+                                                cached.searchGroups,
+                                              ),
+                                            },
+                                            120000,
+                                          );
+                                      }
+                                      if (
+                                        account &&
+                                        favoriteScope(account) ===
+                                          favoriteScope(
+                                            group.connection.account,
+                                          )
+                                      )
+                                        updateUserData(
+                                          selected,
+                                          data,
+                                          group.connection.account,
+                                        );
+                                    }}
+                                    onDetail={() => {
+                                      if (
+                                        account &&
+                                        connectionId(account) ===
+                                          connectionId(group.connection.account)
+                                      )
+                                        go({ kind: "detail", item });
+                                      else
+                                        void switchConnection(
+                                          group.connection,
+                                          {
+                                            kind: "detail",
+                                            item,
+                                          },
+                                        ).catch(() => {});
+                                    }}
+                                  />
+                                </Fragment>
+                              );
+                            },
+                          )}
+                        </div>
+                      ) : (
+                        <EmptyState
+                          title={
+                            route.kind === "favorites"
+                              ? t("library.no_favorites_yet")
+                              : t("library.no_results_found")
+                          }
+                          description={
+                            route.kind === "favorites"
+                              ? t("library.favorite_movies_and_tv_shows_to_see")
+                              : t("library.try_different_search_terms")
+                          }
+                        />
+                      )}
+                    </section>
+                  );
+                })}
+              {!(groupedResults && !demo) &&
                 route.kind !== "home" &&
-                !error &&
+                (!error || appending) &&
                 (route.kind !== "detail" ||
                   ((items.length > 0 ||
                     ["BoxSet", "Playlist"].includes(detail?.Type || "")) &&
@@ -2532,35 +3074,43 @@ export default function App() {
                       <EmptyState
                         title={
                           route.kind === "favorites"
-                            ? "还没有收藏"
+                            ? t("library.no_favorites_yet")
                             : route.kind === "later"
-                              ? "待看清单为空"
+                              ? t("library.watch_later_is_empty")
                               : route.kind === "history"
-                                ? "还没有观看记录"
+                                ? t("library.no_viewing_history_yet")
                                 : route.kind === "search"
-                                  ? "没有搜索结果"
+                                  ? t("library.no_results_found")
                                   : route.kind === "collections"
-                                    ? "还没有合集"
+                                    ? t("library.no_collections_yet")
                                     : route.kind === "playlists"
-                                      ? "还没有播放列表"
+                                      ? t("library.no_playlists_yet")
                                       : detail?.Type === "BoxSet"
-                                        ? "此合集没有内容"
+                                        ? t("library.this_collection_is_empty")
                                         : detail?.Type === "Playlist"
-                                          ? "此播放列表没有内容"
-                                          : "这里还没有内容"
+                                          ? t("library.this_playlist_is_empty")
+                                          : t("library.no_content_here_yet")
                         }
                         description={
                           route.kind === "favorites"
-                            ? "在海报或详情页点击收藏，喜欢的内容会出现在这里。"
+                            ? t(
+                                "library.select_favorite_on_a_poster_or_details",
+                              )
                             : route.kind === "later"
-                              ? "将想看的电影或剧集加入待看，方便下次找到。"
+                              ? t("library.add_movies_or_tv_shows_to_watch")
                               : route.kind === "history"
-                                ? "开始播放后，本机观看记录会显示在这里。"
+                                ? t(
+                                    "library.your_local_viewing_history_appears_here_after",
+                                  )
                                 : route.kind === "search"
-                                  ? "试试其他关键词。"
+                                  ? t("library.try_different_search_terms")
                                   : route.kind === "person"
-                                    ? "服务器暂未提供这位演职员的作品。"
-                                    : "请选择其他媒体库，或稍后刷新。"
+                                    ? t(
+                                        "library.the_server_has_no_titles_listed_for",
+                                      )
+                                    : t(
+                                        "library.select_another_library_or_refresh_later",
+                                      )
                         }
                       />
                     )}
@@ -2569,14 +3119,43 @@ export default function App() {
               {route.kind === "detail" && related.length > 0 && (
                 <section className="related">
                   <div className="section-heading">
-                    <h2>相似影片</h2>
+                    <h2>{t("library.similar_titles")}</h2>
                   </div>
                   {grid(related)}
                 </section>
               )}
+              {route.kind === "search" && demo && searchMatches.length > 0 && (
+                <section className="related">
+                  <h2>{t("library.supplemental_matches")}</h2>
+                  <p className="search-sort-hint">
+                    {t("library.supplemental_hint")}
+                  </p>
+                  {grid(searchMatches)}
+                </section>
+              )}
             </>
           )}
-          {(browsing || route.kind === "search" || !busy) &&
+          {infinite && (
+            <>
+              <InfiniteLoad
+                root={mainPanel.current}
+                loading={busy}
+                error={!!error}
+                hasMore={hasMore}
+                count={items.length}
+                onLoad={() => {
+                  if (busy || batchLock.current || (!hasMore && !error)) return;
+                  if (error) retryLoad();
+                  else {
+                    batchLock.current = true;
+                    setPage((value) => value + 1);
+                  }
+                }}
+              />
+            </>
+          )}
+          {!infinite &&
+            (browsing || route.kind === "search" || !busy) &&
             route.kind !== "home" &&
             !error &&
             route.kind !== "history" &&
@@ -2585,12 +3164,16 @@ export default function App() {
             (queryControls || page > 0 || hasMore) &&
             (queryControls ? (
               <LibraryPagination
-                label="列表底部翻页"
+                label={t("library.pagination_at_the_end_of_the_list")}
                 page={page}
                 pageSize={pageSize}
                 onPageSizeChange={changePageSize}
-                showRange={route.kind !== "search" || !allServers}
-                count={items.length}
+                showRange={route.kind !== "search" || searchGroups.length === 1}
+                count={
+                  route.kind === "search" && !demo && searchGroups.length === 1
+                    ? searchGroups[0].items.length
+                    : items.length
+                }
                 total={total}
                 totalKnown={totalKnown}
                 hasMore={hasMore}
@@ -2642,6 +3225,28 @@ export default function App() {
                 onSourceChange={restartCurrent}
                 onRestart={() => restartCurrent()}
                 onTheater={() => setTheater(true)}
+                onMiniChange={(active) => {
+                  miniPresentation.current = active;
+                  if (active) {
+                    const origin = playbackOrigin.current;
+                    const originRoute = origin?.route;
+                    playbackOrigin.current = null;
+                    setTheater(false);
+                    setPlayerFullscreen(false);
+                    if (
+                      origin &&
+                      (originRoute?.kind !== "library" ||
+                        views.some((view) => view.Id === originRoute.item.Id))
+                    ) {
+                      restorePage(origin);
+                    } else go({ kind: "home" });
+                  } else {
+                    // Browsing B never changes A's session. Remember that page
+                    // for the next Mini entry before presenting the playing A.
+                    playbackOrigin.current = capturePage.current();
+                    setTheater(true);
+                  }
+                }}
                 onReturn={exitPlayback}
                 onFullscreenChange={(fullscreen) => {
                   setPlayerFullscreen(fullscreen);
@@ -2650,11 +3255,11 @@ export default function App() {
                 routes={
                   account
                     ? availableRoutes.map((r, index) => ({
-                        name: routeLabel(r.name, index),
+                        name: routeDisplayName(r, index),
                         selected: r.url === account.server,
                         quality: routeQuality?.tests[r.url]
                           ? routeQuality.recommended === r.url
-                            ? "推荐"
+                            ? t("library.recommended")
                             : routeQuality.tests[r.url].label
                           : undefined,
                         detail: routeQuality?.tests[r.url]
@@ -2713,7 +3318,7 @@ export default function App() {
             <div className="queue-drawer">
               <button
                 className="queue-close"
-                aria-label="关闭队列"
+                aria-label={t("library.close_queue")}
                 onClick={() => setShowQueue(false)}
               >
                 <X size={18} />
@@ -2734,11 +3339,15 @@ export default function App() {
         <RecoveryDialog
           record={recovery}
           busy={recoveryBusy}
-          error={recoveryError}
+          error={displayError(recoveryError)}
           onIgnore={() => {
             void invoke("recovery_clear")
               .then(() => setRecovery(undefined))
-              .catch(() => setRecoveryError("无法清除中断记录，请重试。"));
+              .catch(() =>
+                setRecoveryError(
+                  t("library.could_not_clear_the_interrupted_playback_record"),
+                ),
+              );
           }}
           onContinue={() => {
             if (!client || recoveryBusy) return;
@@ -2766,10 +3375,6 @@ export default function App() {
       )}
       {showSettings && (
         <SettingsPanel
-          onEndpoints={() => {
-            setShowSettings(false);
-            setShowRoutes(true);
-          }}
           snapshot={lastSnapshot.current || undefined}
           settings={settings}
           onChange={updateSettings}
@@ -2790,7 +3395,18 @@ export default function App() {
               : undefined
           }
           onClose={() => setShowRoutes(false)}
-          onSwitch={switchLine}
+          onSwitch={(route, signal, checked) =>
+            switchLine(route, signal, "manual", checked)
+          }
+          onUpdate={(next) => {
+            const remember =
+              connections.find(
+                (c) => connectionId(c.account) === connectionId(next),
+              )?.remember || false;
+            saveAccount(next, remember);
+            setAccount(next);
+            setConnections(readConnections());
+          }}
         />
       )}
       {updateNotice}
@@ -2810,12 +3426,12 @@ export default function App() {
           }}
           role="dialog"
           aria-modal="true"
-          aria-label="添加服务器"
+          aria-label={t("library.add_server")}
         >
           <div className="server-login-card" ref={addServerPanel}>
             <button
               className="server-login-close"
-              aria-label="取消添加服务器"
+              aria-label={t("library.cancel_adding_server")}
               onClick={closeServerDialog}
             >
               <X size={20} />
@@ -2854,6 +3470,8 @@ function Login({
   initialError: string;
   allowDemo?: boolean;
 }) {
+  useI18n();
+
   const [server, setServer] = useState(
       localStorage.getItem("miry-server") || "",
     ),
@@ -2865,6 +3483,8 @@ function Login({
     [remember, setRemember] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(initialError);
+  const [ignoreCertificateErrors, setIgnoreCertificateErrors] = useState(false);
+  const [importAddresses, setImportAddresses] = useState<string[]>([]);
   const pending = useRef<AbortController | null>(null);
   const [connectStage, setConnectStage] = useState<"probe" | "login">("probe");
   const [diagnosticFeedback, setDiagnosticFeedback] = useState("");
@@ -2902,8 +3522,18 @@ function Login({
         token: "",
         name: "",
         deviceId: getDeviceId(),
+        ignoreCertificateErrors,
       });
       const info = await client.serverInfo(controller.signal);
+      if (
+        readConnections().some(
+          ({ account: saved }) =>
+            saved.server === client.account.server &&
+            saved.serverId &&
+            saved.serverId !== info.Id,
+        )
+      )
+        throw new Error(t("routeC.identity_changed"));
       if (controller.signal.aborted)
         throw new DOMException("Aborted", "AbortError");
       setConnectStage("login");
@@ -2911,7 +3541,27 @@ function Login({
       const account = {
         ...(await client.login(username.trim(), password, controller.signal)),
         serverId: info.Id,
+        serverName: info.ServerName,
       };
+      if (controller.signal.aborted)
+        throw new DOMException("Aborted", "AbortError");
+      for (const address of importAddresses) {
+        try {
+          if (
+            !readRoutes(account).some(
+              (route) => route.url === normalizeServer(address),
+            )
+          )
+            saveRoute(account, {
+              name: t("routeC.pending"),
+              url: normalizeServer(address),
+              serverId: "",
+              status: "pending",
+            });
+        } catch {
+          /* Invalid edited candidates are not saved. */
+        }
+      }
       await onLogin(
         remarkChanged.current
           ? { ...account, remark: remark.trim() }
@@ -2924,8 +3574,10 @@ function Login({
     } catch (e) {
       setError(
         (e as Error).name === "AbortError"
-          ? "已取消连接。"
-          : `${stage === "probe" ? "服务器探测失败" : "登录失败"}：${(e as Error).message}`,
+          ? t("library.connection_cancelled")
+          : t(stage === "probe" ? "errors.server_probe" : "errors.login", {
+              detail: privateError(e),
+            }),
       );
     } finally {
       setBusy(false);
@@ -2933,15 +3585,23 @@ function Login({
     }
   }
   return (
-    <div className="login-layout">
-      <section className="login-story">
-        <div className="brand">
-          <AppIcon /> miry
-        </div>
-      </section>
+    <div className={`login-layout${allowDemo ? "" : " login-embedded"}`}>
+      <ConnectionIntro compact={!allowDemo} />
       <section className="login-panel">
         <form onSubmit={submit}>
-          <h2>连接你的媒体库</h2>
+          <h2>{t("library.emby_server")}</h2>
+          <div className="login-import">
+            <SmartImport
+              disabled={busy}
+              onConfirm={(candidate, pending) => {
+                setServer(candidate.address);
+                setUsername(candidate.username);
+                setPassword(candidate.password);
+                setImportAddresses(pending);
+                setIgnoreCertificateErrors(false);
+              }}
+            />
+          </div>
           {readConnections().length > 0 && (
             <div className="saved-connections">
               {readConnections().map((c) => (
@@ -2951,47 +3611,26 @@ function Login({
                   key={connectionId(c.account)}
                   onClick={() => void reconnect(c)}
                 >
-                  连接 {connectionLabel(c.account)}
+                  {" "}
+                  {t("library.connect")} {connectionLabel(c.account)}
                 </button>
               ))}
             </div>
           )}
-          {error && (
-            <div className="error" role="alert">
-              {privateText(error)}
-              <button
-                type="button"
-                className="secondary compact"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(
-                      JSON.stringify(readNetworkDiagnostics(), null, 2),
-                    );
-                    setDiagnosticFeedback(
-                      "匿名诊断已复制，未包含地址、密码或令牌。",
-                    );
-                  } catch {
-                    setDiagnosticFeedback("诊断复制失败，请检查剪贴板权限。");
-                  }
-                }}
-              >
-                复制匿名诊断
-              </button>
-              {diagnosticFeedback && (
-                <small role="status">{diagnosticFeedback}</small>
-              )}
-            </div>
-          )}
           <label>
-            服务器地址
+            {" "}
+            {t("library.server_address")}{" "}
             <input
               required
               type="url"
               autoComplete="off"
               spellCheck={false}
-              placeholder="粘贴服务器地址"
+              placeholder={t("library.paste_server_address")}
               value={server}
-              onChange={(e) => setServer(e.target.value)}
+              onChange={(e) => {
+                setServer(e.target.value);
+                setIgnoreCertificateErrors(false);
+              }}
               onBlur={() => {
                 const name = readLoginHint(server);
                 if (name) setUsername(name);
@@ -3002,13 +3641,14 @@ function Login({
             />
           </label>
           <label>
-            备注（可选）
+            {" "}
+            {t("library.remark_optional")}{" "}
             <input
-              aria-label="服务器备注"
+              aria-label={t("library.server_remark")}
               type="text"
               autoComplete="off"
               maxLength={60}
-              placeholder="例如：家里的媒体库"
+              placeholder={t("library.for_example_home_library")}
               value={remark}
               onChange={(e) => {
                 remarkChanged.current = true;
@@ -3017,45 +3657,90 @@ function Login({
               disabled={busy}
             />
           </label>
-          <label>
-            用户名
-            <input
-              required
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onBlur={() => {
-                if (!remarkChanged.current)
-                  setRemark(remarkHint(server, username));
-              }}
-              disabled={busy}
-            />
-          </label>
-          <label>
-            密码
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={busy}
-            />
-          </label>
+          <div className="login-credentials">
+            <label>
+              {" "}
+              {t("library.username")}{" "}
+              <input
+                required
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onBlur={() => {
+                  if (!remarkChanged.current)
+                    setRemark(remarkHint(server, username));
+                }}
+                disabled={busy}
+              />
+            </label>
+            <label>
+              {" "}
+              {t("library.password")}{" "}
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={busy}
+              />
+            </label>
+          </div>
           <label className="check">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
               disabled={busy}
-            />
-            记住登录（仅在自己的电脑上使用）
+            />{" "}
+            {t("library.remember_me_only_on_your_own_computer")}{" "}
           </label>
+          <div className="route-security">
+            <CertificateOption
+              value={ignoreCertificateErrors}
+              onChange={setIgnoreCertificateErrors}
+              disabled={busy}
+            />
+          </div>
+          <div className="login-feedback">
+            {error && (
+              <div className="error" role="alert">
+                {displayError(error)}
+                <button
+                  type="button"
+                  className="secondary compact"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(
+                        JSON.stringify(readNetworkDiagnostics(), null, 2),
+                      );
+                      setDiagnosticFeedback(
+                        t(
+                          "library.anonymous_diagnostics_copied_addresses_passwords_and_tokens",
+                        ),
+                      );
+                    } catch {
+                      setDiagnosticFeedback(
+                        t(
+                          "library.could_not_copy_diagnostics_check_clipboard_permissions",
+                        ),
+                      );
+                    }
+                  }}
+                >
+                  {t("library.copy_anonymous_diagnostics")}
+                </button>
+                {diagnosticFeedback && (
+                  <small role="status">{diagnosticFeedback}</small>
+                )}
+              </div>
+            )}
+          </div>
           <button className="primary" disabled={busy}>
             {busy
               ? connectStage === "probe"
-                ? "正在探测服务器…"
-                : "服务器已连接，正在登录…"
-              : "连接服务器"}{" "}
+                ? t("library.checking_server")
+                : t("library.connected_signing_in")
+              : t("library.connect_to_server")}{" "}
             <ArrowRight size={17} />
           </button>
           {busy && (
@@ -3064,27 +3749,27 @@ function Login({
               className="cancel"
               onClick={() => pending.current?.abort()}
             >
-              <X size={16} />
-              取消连接
+              <X size={16} /> {t("library.cancel_connection")}{" "}
             </button>
           )}
-          {allowDemo && (
-            <>
-              <div className="divider">或者先体验</div>
-              <button
-                type="button"
-                className="secondary"
-                disabled={busy}
-                onClick={onDemo}
-              >
-                打开演示媒体库
-              </button>
-            </>
-          )}
           <small className="privacy">
-            密码不会保存。默认登录仅保留在当前会话中；勾选记住登录会在本机保存访问令牌。
+            {" "}
+            {t("library.your_password_is_never_saved_sign_in")}{" "}
           </small>
         </form>
+        {allowDemo && (
+          <div className="login-support">
+            <span>{t("library.or_try_it_first")}</span>
+            <button
+              type="button"
+              className="text-button"
+              disabled={busy}
+              onClick={onDemo}
+            >
+              {t("library.open_demo_library")} <ArrowRight size={15} />
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

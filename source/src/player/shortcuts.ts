@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 export const defaultShortcuts = {
   pause: "Space",
   backward: "ArrowLeft",
@@ -12,15 +13,33 @@ export const defaultShortcuts = {
 export type ShortcutAction = keyof typeof defaultShortcuts;
 export type Shortcuts = Record<ShortcutAction, string>;
 export const shortcutLabels: Record<ShortcutAction, string> = {
-  pause: "播放 / 暂停",
-  backward: "快退 10 秒",
-  forward: "快进 10 秒",
-  fullscreen: "全屏",
-  mute: "静音",
-  subtitle: "字幕菜单",
-  audio: "音轨菜单",
-  next: "下一集",
-  previous: "上一集",
+  get pause() {
+    return t("player.play_pause");
+  },
+  get backward() {
+    return t("player.rewind_10_seconds");
+  },
+  get forward() {
+    return t("player.forward_10_seconds");
+  },
+  get fullscreen() {
+    return t("danmaku.fullscreen");
+  },
+  get mute() {
+    return t("player.mute");
+  },
+  get subtitle() {
+    return t("player.subtitle_menu");
+  },
+  get audio() {
+    return t("player.audio_menu");
+  },
+  get next() {
+    return t("library.next_episode");
+  },
+  get previous() {
+    return t("player.previous_episode");
+  },
 };
 export function validKey(code: string) {
   return !!normalizeKey(code);

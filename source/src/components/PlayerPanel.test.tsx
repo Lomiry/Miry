@@ -17,12 +17,14 @@ import PlayerPanel, { PlayButton } from "./PlayerPanel";
 import { EmbyClient } from "../api/client";
 import { clearNetworkDiagnostics } from "../api/diagnostics";
 import { readSettings, saveSettings } from "../stores/settings";
+import { setLanguage } from "../i18n/core";
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
   isTauri: () => true,
 }));
 vi.mock("@tauri-apps/api/event", () => ({
   listen: vi.fn(async () => () => {}),
+  emitTo: vi.fn(async () => {}),
 }));
 vi.mock("../player/playback", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../player/playback")>()),
@@ -65,7 +67,98 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   clearNetworkDiagnostics();
+  setLanguage("zh-CN", false);
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
+it.each(["new item", "same item replay"])(
+  "rebinds the native viewport for a new session without an inactive snapshot: %s",
+  async (kind) => {
+    vi.stubGlobal("requestAnimationFrame", (fn: FrameRequestCallback) =>
+      window.setTimeout(() => fn(0), 0),
+    );
+    vi.stubGlobal("cancelAnimationFrame", window.clearTimeout.bind(window));
+    vi.spyOn(document, "hidden", "get").mockReturnValue(false);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      x: 1,
+      y: 41,
+      width: 1278,
+      height: 820,
+      bottom: 861,
+    } as DOMRect);
+    vi.stubGlobal("innerHeight", 860);
+    vi.stubGlobal("__TAURI_INTERNALS__", {});
+    snapshot = {
+      ...snapshot,
+      embedded: true,
+      playSessionId: "session-a",
+      itemId: "item-a",
+    };
+    const view = render(
+      <PlayerPanel theater revision={1} onStopped={vi.fn()} />,
+    );
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("player_overlay_attach", {
+        owner: expect.any(String),
+      }),
+    );
+    const viewport = screen.getByLabelText("视频画面");
+    const ownerA = vi
+      .mocked(invoke)
+      .mock.calls.find(([cmd]) => cmd === "player_overlay_attach")![1];
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("player_surface", {
+        rect: expect.objectContaining({ visible: true }),
+      }),
+    );
+    vi.mocked(invoke).mockClear();
+    // Native stop disposes the overlay, and start hides the surface. A fast
+    // switch may finish between status polls: both observed snapshots are active.
+    snapshot = {
+      ...snapshot,
+      playSessionId: "session-b",
+      itemId: kind === "new item" ? "item-b" : "item-a",
+    };
+    view.rerender(<PlayerPanel theater revision={2} onStopped={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("视频画面")).not.toBe(viewport),
+    );
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("player_overlay_release", ownerA),
+    );
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("player_overlay", {
+        owner: expect.any(String),
+        rect: expect.objectContaining({ visible: true }),
+      }),
+    );
+    const ownerB = vi
+      .mocked(invoke)
+      .mock.calls.find(([cmd]) => cmd === "player_overlay_attach")![1];
+    expect(ownerB).not.toEqual(ownerA);
+    const surfaces = vi
+      .mocked(invoke)
+      .mock.calls.filter(([cmd]) => cmd === "player_surface");
+    expect(
+      surfaces.map(
+        ([, args]) => (args as { rect: { visible: boolean } }).rect.visible,
+      ),
+    ).toEqual([false, true]);
+    const current = screen.getByLabelText("视频画面");
+    vi.mocked(invoke).mockClear();
+    view.rerender(<PlayerPanel theater revision={3} onStopped={vi.fn()} />);
+    await act(async () => {});
+    expect(screen.getByLabelText("视频画面")).toBe(current);
+    expect(invoke).not.toHaveBeenCalledWith(
+      "player_overlay_attach",
+      expect.anything(),
+    );
+    view.unmount();
+    await act(async () => {});
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  },
+);
 async function openVideoFit() {
   const user = userEvent.setup();
   await user.click(await screen.findByRole("button", { name: "更多播放操作" }));
@@ -188,6 +281,28 @@ it("persists only confirmed secondary controls and keeps the primary preferences
     subtitlePosition: 77,
     subtitleScale: 1.37,
   });
+});
+it("keeps an open subtitle menu, its focus and native playback unchanged during language switching", async () => {
+  const user = userEvent.setup();
+  render(<PlayerPanel theater dock revision={1} onStopped={vi.fn()} />);
+  await user.click(await screen.findByRole("button", { name: "字幕" }));
+  const track = screen.getByRole("menuitemradio", { name: "简体中文" });
+  act(() => track.focus());
+  const subscriptions = vi.mocked(listen).mock.calls.length;
+  vi.mocked(invoke).mockClear();
+  act(() => setLanguage("en-US"));
+  expect(screen.getByRole("button", { name: "Subtitles" })).toBeTruthy();
+  expect(
+    screen.getByRole("menuitemradio", { name: "Subtitles off" }),
+  ).toBeTruthy();
+  expect(screen.getByRole("menuitemradio", { name: "简体中文" })).toBe(track);
+  expect(document.activeElement).toBe(track);
+  expect(screen.getAllByText("测试影片").length).toBeGreaterThan(0);
+  expect(invoke).not.toHaveBeenCalled();
+  expect(vi.mocked(listen).mock.calls).toHaveLength(subscriptions);
+  act(() => setLanguage("zh-CN"));
+  expect(screen.getByRole("menuitemradio", { name: "关闭字幕" })).toBeTruthy();
+  expect(document.activeElement).toBe(track);
 });
 it("offers direct track selection and moves menu focus without seeking the video", async () => {
   snapshot.embedded = true;
@@ -611,6 +726,107 @@ it("controls pause, seek and mpv track IDs and waits for stop", async () => {
   await user.click(screen.getByRole("menuitem", { name: "停止播放" }));
   expect(invoke).toHaveBeenCalledWith("player_stop", {});
 });
+it.each([false, true])(
+  "routes the theater transport button once when paused=%s",
+  async (paused) => {
+    snapshot = { ...snapshot, embedded: true, paused };
+    const user = userEvent.setup();
+    render(<PlayerPanel theater revision={1} onStopped={vi.fn()} />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: paused ? "继续播放" : "暂停",
+      }),
+    );
+    expect(
+      screen.getByRole("button", { name: paused ? "暂停" : "继续播放" }),
+    ).toBeTruthy();
+    expect(
+      vi.mocked(invoke).mock.calls.filter(([cmd]) => cmd === "player_control"),
+    ).toEqual([["player_control", { action: "pause", value: undefined }]]);
+  },
+);
+it.each([true, false])(
+  "keeps the visible restart inside the theater hit surface after finished=%s",
+  async (finished) => {
+    snapshot = {
+      ...snapshot,
+      embedded: true,
+      active: false,
+      loaded: true,
+      finished,
+      position: 100,
+      syncComplete: true,
+    };
+    let complete!: () => void;
+    const restart = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          complete = resolve;
+        }),
+    );
+    const user = userEvent.setup();
+    const view = render(
+      <PlayerPanel
+        theater
+        revision={1}
+        onStopped={vi.fn()}
+        onRestart={restart}
+      />,
+    );
+    const button = await screen.findByRole("button", { name: "重新播放" });
+    // jsdom has no layout hit testing. Keep the fallback in the full-surface
+    // event owner so a later sibling Chrome cannot cover the visible button.
+    expect(button.closest(".player-chrome-theater")).not.toBeNull();
+    // EOF has released mpv; seeking resumes only after starting a new session.
+    expect(screen.queryByRole("slider", { name: "播放位置" })).toBeNull();
+    vi.mocked(invoke).mockClear();
+    await user.dblClick(button);
+    expect(restart).toHaveBeenCalledOnce();
+    expect(button).toHaveProperty("disabled", true);
+    // Include the background single-click timer: bubbling must not pause.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(invoke).not.toHaveBeenCalledWith(
+      "player_control",
+      expect.anything(),
+    );
+    await act(async () => complete());
+    snapshot = {
+      ...snapshot,
+      active: true,
+      loaded: true,
+      finished: false,
+      paused: false,
+      position: 0,
+      playSessionId: "replayed-session",
+    };
+    view.rerender(
+      <PlayerPanel
+        theater
+        revision={2}
+        onStopped={vi.fn()}
+        onRestart={restart}
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "重新播放" })).toBeNull(),
+    );
+    await user.click(screen.getByRole("button", { name: "暂停" }));
+    expect(screen.getByRole("button", { name: "继续播放" })).toBeTruthy();
+    const seek = screen.getByRole("slider", { name: "播放位置" });
+    fireEvent.pointerDown(seek);
+    fireEvent.change(seek, { target: { value: "40" } });
+    fireEvent.pointerUp(seek);
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("player_control", {
+        action: "seek",
+        value: 40,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "更多播放操作" }));
+    await user.click(screen.getByRole("menuitem", { name: "停止播放" }));
+    expect(invoke).toHaveBeenCalledWith("player_stop", {});
+  },
+);
 it("keeps sync failures visible after playback stops", async () => {
   snapshot = {
     ...snapshot,

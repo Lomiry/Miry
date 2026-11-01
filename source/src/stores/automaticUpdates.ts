@@ -4,6 +4,7 @@ export interface UpdateCandidate {
   version: string;
   url: string;
   notes: string;
+  updateReady?: boolean;
 }
 // Keep the settled attempt for this main WebView's lifetime, including failures.
 // A new launch starts fresh; legacy persisted preferences are unused.
@@ -21,6 +22,7 @@ export function automaticUpdate(): Promise<UpdateCandidate | undefined> {
             version: release.version,
             url: release.url,
             notes: release.notes.trim().slice(0, 600),
+            updateReady: release.update_ready === true,
           }
         : undefined,
     )

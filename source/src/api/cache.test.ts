@@ -13,6 +13,75 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
+it("refreshes only the exact Items cache key while retaining other pages, queries, accounts and servers", async () => {
+  vi.useFakeTimers();
+  let responseId = 0;
+  const fetch = vi.fn(
+    async () =>
+      new Response(
+        JSON.stringify({
+          Items: [{ Id: String(++responseId), Name: "Fixture", Type: "Movie" }],
+          TotalRecordCount: 100,
+        }),
+      ),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const client = new EmbyClient(account),
+    otherUser = new EmbyClient({ ...account, userId: "other" }),
+    otherServer = new EmbyClient({ ...account, server: "https://b.test/emby" });
+  const target = { ParentId: "movies", StartIndex: 30, Limit: 30 };
+  const neighbors = [
+    { ...target, StartIndex: 0 },
+    { ...target, ParentId: "series" },
+    { ...target, SortBy: "DateCreated" },
+    { SearchTerm: "Dune", Limit: 30 },
+  ];
+  const original = await client.items(target);
+  for (const query of neighbors) await client.items(query);
+  await otherUser.items(target);
+  await otherServer.items(target);
+  await client.views();
+  const before = fetch.mock.calls.length;
+  expect(await client.items(target)).toBe(original);
+  const fresh = await client.items(target, undefined, { forceRefresh: true });
+  expect(fresh).not.toBe(original);
+  expect(fetch).toHaveBeenCalledTimes(before + 1);
+  expect(await client.items(target)).toBe(fresh);
+  for (const query of neighbors) await client.items(query);
+  await otherUser.items(target);
+  await otherServer.items(target);
+  await client.views();
+  expect(fetch).toHaveBeenCalledTimes(before + 1);
+});
+it("a cancelled forced request neither removes a valid entry nor caches late data", async () => {
+  const fetch = vi.fn(
+    async () => new Response('{"Items":[],"TotalRecordCount":0}'),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const client = new EmbyClient(account),
+    query = { ParentId: "movies", StartIndex: 30 };
+  const original = await client.items(query);
+  const cancelled = new AbortController();
+  cancelled.abort();
+  await expect(
+    client.items(query, cancelled.signal, { forceRefresh: true }),
+  ).rejects.toMatchObject({ name: "AbortError" });
+  expect(await client.items(query)).toBe(original);
+  let finish!: (value: Response) => void;
+  fetch.mockImplementationOnce(
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const controller = new AbortController(),
+    pending = client.items(query, controller.signal, { forceRefresh: true });
+  controller.abort();
+  finish(new Response('{"Items":[],"TotalRecordCount":0}'));
+  await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  await client.items(query);
+  expect(fetch).toHaveBeenCalledTimes(3);
+});
 it("evicts least-used metadata, expires entries and enforces a byte budget", () => {
   vi.useFakeTimers();
   const cache = new MetadataCache(2, 120);

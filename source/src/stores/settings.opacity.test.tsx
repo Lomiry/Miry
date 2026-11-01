@@ -16,7 +16,8 @@ import {
   defaults,
   readSettings,
   saveSettings,
-  type Settings,
+  applySettingsUpdate,
+  type SettingsUpdate,
 } from "./settings";
 
 afterEach(() => {
@@ -133,9 +134,8 @@ it.each([0, 0.25, 0.37, 0.5, 0.85, 1])(
 
 function SettingsPage() {
   const [settings, update] = useState(readSettings);
-  const change = (value: Settings) => {
-    update(value);
-    saveSettings(value);
+  const change = (value: SettingsUpdate) => {
+    update(applySettingsUpdate(value));
   };
   return (
     <SettingsPanel

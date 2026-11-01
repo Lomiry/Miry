@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import {
   createContext,
   useContext,
@@ -17,10 +19,14 @@ export const useSidebarCollapsed = () => useContext(SidebarCollapsed);
 export default function Sidebar({
   children,
   navigation,
+  header,
 }: {
   children: ReactNode;
   navigation?: unknown;
+  header?: ReactNode;
 }) {
+  useI18n();
+
   const [collapsed, setCollapsed] = useState(
     () =>
       readAppearance().sidebarCollapsed ??
@@ -65,24 +71,41 @@ export default function Sidebar({
   return (
     <aside
       className="sidebar"
-      aria-label="侧边栏"
+      aria-label={t("library.sidebar")}
       data-collapsed={collapsed}
       onPointerOver={tooltip}
       onFocus={tooltip}
     >
-      <button
-        className="sidebar-toggle"
-        aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-        data-tooltip={collapsed ? "展开侧边栏" : "收起侧边栏"}
-        aria-expanded={!collapsed}
-        onClick={() =>
-          saveAppearance({
-            sidebarCollapsed: !(readAppearance().sidebarCollapsed ?? collapsed),
-          })
-        }
-      >
-        {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
-      </button>
+      <div className="sidebar-header">
+        {header}
+        <button
+          className="sidebar-toggle"
+          aria-label={
+            collapsed
+              ? t("library.expand_sidebar")
+              : t("library.collapse_sidebar")
+          }
+          data-tooltip={
+            collapsed
+              ? t("library.expand_sidebar")
+              : t("library.collapse_sidebar")
+          }
+          aria-expanded={!collapsed}
+          onClick={() =>
+            saveAppearance({
+              sidebarCollapsed: !(
+                readAppearance().sidebarCollapsed ?? collapsed
+              ),
+            })
+          }
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={20} />
+          ) : (
+            <PanelLeftClose size={20} />
+          )}
+        </button>
+      </div>
       <SidebarCollapsed.Provider value={collapsed}>
         {children}
       </SidebarCollapsed.Provider>

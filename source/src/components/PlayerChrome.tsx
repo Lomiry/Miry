@@ -1,3 +1,12 @@
+import { t, localizeMessage } from "../i18n/core";
+import DanmakuHeatmap from "./DanmakuHeatmap";
+import ControlLayoutSettings from "./ControlLayoutSettings";
+import {
+  normalizeControlLayout,
+  visibleControls,
+  type OptionalControl,
+} from "../player/controlLayout";
+import { useI18n } from "../i18n/react";
 import Select from "./Select";
 import {
   normalizeVideoFit,
@@ -34,6 +43,7 @@ import {
   SlidersHorizontal,
   Square,
   Subtitles,
+  MessageSquareText,
   Volume2,
   VolumeX,
   X,
@@ -41,8 +51,10 @@ import {
   Layers,
   BookOpen,
   Pin,
+  PictureInPicture2,
 } from "lucide-react";
 import { usePlayerChrome } from "../player/usePlayerChrome";
+import { usePlayerCursor } from "../player/usePlayerCursor";
 import { usePlayerPopover } from "../player/usePlayerPopover";
 import { playerMotionStyle } from "../player/motion";
 import { formatTime } from "../player/formatTime";
@@ -51,7 +63,7 @@ import type {
   PlayerMenu,
   PlayerUiModel,
 } from "../player/uiModel";
-import { privateText } from "../privacy";
+import { privateText, displayError } from "../privacy";
 import { isEditableTarget, isComposingKey } from "../player/shortcuts";
 import Tooltip from "./Tooltip";
 import PlayerSlider from "./PlayerSlider";
@@ -71,18 +83,48 @@ import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 const titles: Record<PlayerMenu, string> = {
-  danmaku: "弹幕",
-  subtitle: "字幕",
-  audio: "音轨",
-  volume: "音量",
-  more: "更多",
-  speed: "播放速度",
-  chapters: "章节",
-  loop: "A–B 循环",
-  routes: "播放线路",
-  versions: "播放版本",
-  settings: "播放设置",
-  queue: "播放队列",
+  get layout() {
+    return t("player.control_layout");
+  },
+  get danmaku() {
+    return t("player.danmaku");
+  },
+  get subtitle() {
+    return t("player.subtitles");
+  },
+  get "subtitle-settings"() {
+    return t("player.subtitle_size_position_and_delay");
+  },
+  get audio() {
+    return t("player.audio_tracks");
+  },
+  get volume() {
+    return t("player.volume");
+  },
+  get more() {
+    return t("player.more");
+  },
+  get speed() {
+    return t("player.playback_speed");
+  },
+  get chapters() {
+    return t("player.chapters");
+  },
+  get loop() {
+    return t("player.a_b_loop");
+  },
+  get routes() {
+    return t("player.playback_routes");
+  },
+  get versions() {
+    return t("player.media_version");
+  },
+  get settings() {
+    return t("player.playback_settings");
+  },
+  get queue() {
+    return t("player.play_queue");
+  },
 };
 
 export function contextPlacement(
@@ -104,19 +146,31 @@ export default function PlayerChrome({
   model,
   dispatch,
   owned = false,
+  children,
 }: {
   model: PlayerUiModel;
   dispatch: (action: PlayerAction) => Promise<void>;
   owned?: boolean;
+  children?: ReactNode;
 }) {
+  useI18n();
+
   const { state } = model,
     popover = usePlayerPopover();
+  const layout = normalizeControlLayout(model.controlLayout);
+  const tools: readonly OptionalControl[] = model.mini
+    ? []
+    : visibleControls(layout);
+  const hasTool = (id: OptionalControl) => tools.includes(id);
   const mediaQuality =
     state.playMethod === "Transcode" || state.videoParams?.gamma
       ? identifyQuality(undefined, state.videoParams)
       : state.mediaQuality;
   const [editing, setEditing] = useState(false),
-    [pending, setPending] = useState(false),
+    [pendingOperation, setPendingOperation] = useState<{
+      action: PlayerAction;
+      menu: PlayerMenu | null;
+    } | null>(null),
     [localError, setLocalError] = useState("");
   const [subtitlePositionEdit, setSubtitlePositionEdit] = useState<{
     value: number;
@@ -185,7 +239,26 @@ export default function PlayerChrome({
       document.removeEventListener("player-overlay-dismiss", dismissFromMain);
     };
   }, [popover.menu, popover.close]);
-  const busy = model.busy || pending;
+  const pending = !!pendingOperation;
+  const pendingAction = pendingOperation?.action;
+  const pendingMenu =
+    pendingAction?.kind === "control"
+      ? (
+          {
+            volume: "volume",
+            mute: "volume",
+            speed: "speed",
+            subtitle: "subtitle",
+            audio: "audio",
+          } as Record<string, PlayerMenu>
+        )[pendingAction.action]
+      : pendingAction?.kind === "danmaku"
+        ? "danmaku"
+        : pendingOperation?.menu;
+  const trackPending =
+    pendingAction?.kind === "control" &&
+    ["subtitle", "audio"].includes(pendingAction.action);
+  const busy = model.busy || (pending && !trackPending);
   const [notice, setNotice] = useState<{
     message: string;
     tone: ToastTone;
@@ -195,11 +268,19 @@ export default function PlayerChrome({
     if (!status || model.danmaku?.loading) return;
     setNotice({
       message: status,
-      tone: status.startsWith("弹幕已加载")
-        ? "success"
-        : status.startsWith("已解除")
-          ? "info"
-          : "warning",
+      tone:
+        status.startsWith(
+          t(
+            "danmaku.danmaku_loaded_comments",
+            { p0: "", p1: "" },
+            "zh-CN",
+          ).split(" · ")[0],
+        ) || status.startsWith("Danmaku loaded")
+          ? "success"
+          : status === t("danmaku.danmaku_file_unlinked", undefined, "zh-CN") ||
+              status === t("danmaku.danmaku_file_unlinked", undefined, "en-US")
+            ? "info"
+            : "warning",
     });
   }, [model.danmaku?.status, model.danmaku?.loading]);
   const segment = activeSegment(
@@ -263,13 +344,45 @@ export default function PlayerChrome({
     };
   }, [owned]);
   const actionPending = useRef(false);
+  const miniExitPending = useRef(false);
+  const [leavingMini, setLeavingMini] = useState(false);
+  const miniExitOwner = useRef(0);
+  const trackOperation = useRef(0);
+  const trackOwner = useRef({
+    revision: model.revision,
+    session: state.playSessionId,
+  });
+  trackOwner.current = {
+    revision: model.revision,
+    session: state.playSessionId,
+  };
+  useEffect(() => {
+    trackOperation.current++;
+    setPendingOperation((p) =>
+      p?.action.kind === "control" &&
+      ["subtitle", "audio"].includes(p.action.action)
+        ? null
+        : p,
+    );
+    return () => {
+      trackOperation.current++;
+    };
+  }, [model.revision, state.playSessionId]);
+  useEffect(() => {
+    miniExitOwner.current++;
+    miniExitPending.current = false;
+    setLeavingMini(false);
+    return () => {
+      miniExitOwner.current++;
+    };
+  }, [model.revision, model.mini, state.playSessionId]);
   useEffect(() => {
     popover.reset();
     clearTimeout(clickTimer.current);
     singleCommitted.current = false;
     setEditing(false);
     setHover(null);
-  }, [model.revision, popover.reset]);
+  }, [model.revision, model.mini, popover.reset]);
   const chrome = usePlayerChrome(
     model.canHide,
     !!(
@@ -287,21 +400,79 @@ export default function PlayerChrome({
     model.revision,
     !!popover.menu || editing || positioning,
     owned ? "player-ui" : "main",
+    !!model.mini,
   );
+  usePlayerCursor(owned, chrome.cursorHidden);
   const run = async (action: PlayerAction, close = false) => {
+    if (action.kind === "control" && action.action === "fullscreen") {
+      try {
+        await dispatch(action);
+      } catch {
+        setLocalError(t("player.the_action_could_not_be_completed_try"));
+      }
+      return;
+    }
+    if (
+      action.kind === "control" &&
+      (action.action === "subtitle" || action.action === "audio")
+    ) {
+      const operation = ++trackOperation.current,
+        session = state.playSessionId,
+        revision = model.revision,
+        menu = popover.menu;
+      const current = () =>
+        operation === trackOperation.current &&
+        revision === trackOwner.current.revision &&
+        session === trackOwner.current.session;
+      const request = { ...action, playSessionId: session };
+      setPendingOperation({ action: request, menu });
+      setLocalError("");
+      try {
+        await dispatch(request);
+        if (current() && close) popover.closeFor(menu);
+      } catch {
+        if (current())
+          setLocalError(t("player.the_action_could_not_be_completed_try"));
+      } finally {
+        if (current())
+          setPendingOperation((p) => (p?.action === request ? null : p));
+      }
+      return;
+    }
+    // Leaving the presentation never waits for a control or network operation.
+    if (action.kind === "mini" && action.command === "leave") {
+      if (miniExitPending.current) return;
+      miniExitPending.current = true;
+      const owner = miniExitOwner.current;
+      setLeavingMini(true);
+      setLocalError("");
+      try {
+        await dispatch(action);
+      } catch {
+        if (owner === miniExitOwner.current)
+          setLocalError(t("player.the_action_could_not_be_completed_try"));
+      } finally {
+        if (owner === miniExitOwner.current) {
+          miniExitPending.current = false;
+          setLeavingMini(false);
+        }
+      }
+      return;
+    }
     if (busy || actionPending.current) return;
     const requestMenu = popover.menu;
     actionPending.current = true;
-    setPending(true);
+    const operation = { action, menu: popover.menu };
+    setPendingOperation(operation);
     setLocalError("");
     try {
       await dispatch(action);
       if (close) popover.closeFor(requestMenu);
     } catch {
-      setLocalError("操作未完成，请重试。");
+      setLocalError(t("player.the_action_could_not_be_completed_try"));
     } finally {
       actionPending.current = false;
-      setPending(false);
+      setPendingOperation((p) => (p === operation ? null : p));
     }
   };
   const control = (action: string, value?: number, close = false) =>
@@ -311,8 +482,11 @@ export default function PlayerChrome({
       "fullscreen",
       state.embedded ? (state.fullscreen ? 0 : 1) : undefined,
     );
+  const mini = (command: "enter" | "leave" | "pin") => {
+    if (state.playSessionId)
+      void run({ kind: "mini", command, playSessionId: state.playSessionId });
+  };
   useEffect(() => {
-    if (!state.active || !state.loaded) return;
     const keyboard = (e: KeyboardEvent) => {
       if (isComposingKey(e)) return;
       if (
@@ -327,6 +501,11 @@ export default function PlayerChrome({
         dismissActiveOverlay();
         return;
       }
+      if (e.key === "Escape" && model.mini && !blockedShortcut(e)) {
+        e.preventDefault();
+        mini("leave");
+        return;
+      }
       if (
         e.key === "Escape" &&
         state.embedded &&
@@ -339,10 +518,15 @@ export default function PlayerChrome({
       }
       if (popover.menu || blockedShortcut(e)) return;
       const action = shortcutAction(e, model.shortcuts);
+      if (action === "fullscreen") {
+        e.preventDefault();
+        full();
+        return;
+      }
+      if (!state.active || !state.loaded) return;
       if (action) {
         e.preventDefault();
         if (action === "pause") control("pause");
-        else if (action === "fullscreen") full();
         else if (action === "mute") control("mute");
         else if (action === "backward" || action === "forward")
           control(
@@ -359,7 +543,7 @@ export default function PlayerChrome({
           open(
             action,
             root.current?.querySelector<HTMLButtonElement>(
-              `button[aria-label="${action === "subtitle" ? "字幕" : "音轨"}"]`,
+              `button[aria-label="${action === "subtitle" ? t("player.subtitles") : t("player.audio_tracks")}"]`,
             ) || undefined,
           );
         else if (
@@ -388,6 +572,7 @@ export default function PlayerChrome({
     model.shortcuts,
     model.inputConfig,
     model.shortcutsBlocked,
+    model.mini,
     positioning,
     popover.menu,
     popover.close,
@@ -405,6 +590,24 @@ export default function PlayerChrome({
             : 300,
         r.width - 24,
       );
+      if (model.mini) {
+        // Reserve the bottom action row, including Exit Mini, even for a
+        // context menu in the minimum 320×180 client area.
+        const bottom = 48;
+        setPlacement({
+          width,
+          left: Math.max(
+            12,
+            Math.min(
+              r.width - width - 12,
+              a ? a.right - r.left - width : contextPoint?.x || 12,
+            ),
+          ),
+          bottom,
+          maxHeight: Math.max(0, r.height - bottom - 8),
+        });
+        return;
+      }
       if (contextPoint) {
         const height = Math.min(
           panel.current?.offsetHeight || 440,
@@ -440,7 +643,7 @@ export default function PlayerChrome({
     observer?.observe(root.current);
     if (panel.current) observer?.observe(panel.current);
     return () => observer?.disconnect();
-  }, [popover.menu, contextPoint]);
+  }, [popover.menu, contextPoint, model.mini]);
   useEffect(() => {
     if (!popover.menu || popover.phase === "closing") return;
     const frame = requestAnimationFrame(() =>
@@ -455,6 +658,7 @@ export default function PlayerChrome({
     return () => cancelAnimationFrame(frame);
   }, [popover.menu]);
   const open = (menu: PlayerMenu, anchor?: HTMLButtonElement) => {
+    if (model.mini && menu !== "speed") return;
     if (anchor) setContextPoint(null);
     chrome.reveal();
     popover.open(menu, anchor);
@@ -471,6 +675,7 @@ export default function PlayerChrome({
         aria-label={label}
         title={label}
         disabled={disabled}
+        aria-busy={false}
         onClick={onClick}
         {...extra}
       >
@@ -483,8 +688,14 @@ export default function PlayerChrome({
       <button
         aria-label={label}
         title={label}
-        aria-expanded={popover.menu === menu && popover.phase !== "closing"}
+        aria-expanded={
+          (popover.menu === menu ||
+            (menu === "subtitle" && popover.menu === "subtitle-settings")) &&
+          popover.phase !== "closing"
+        }
         aria-controls="player-popover"
+        disabled={model.busy || !state.loaded}
+        aria-busy={pending && pendingMenu === menu}
         onClick={(e) => open(menu, e.currentTarget)}
       >
         {art}
@@ -496,7 +707,12 @@ export default function PlayerChrome({
       className="player-choice"
       role="menuitemradio"
       aria-checked={selected}
-      disabled={busy || !state.loaded}
+      disabled={
+        model.busy ||
+        (!(popover.menu === "subtitle" || popover.menu === "audio") &&
+          pending) ||
+        !state.loaded
+      }
       onClick={onClick}
     >
       <span className="choice-mark">{selected && <Check size={16} />}</span>
@@ -523,62 +739,23 @@ export default function PlayerChrome({
         t["main-selection"] === 0 ||
         (t.selected && t.id !== state.secondarySubtitle),
     )?.id ?? -1;
-  const trackLabel = (t: (typeof state.tracks)[number]) =>
+  const trackLabel = (track: (typeof state.tracks)[number]) =>
     privateText(
-      t.title || t.lang || `${t.type === "audio" ? "音轨" : "字幕"} ${t.id}`,
+      track.title ||
+        track.lang ||
+        `${track.type === "audio" ? t("player.audio_tracks") : t("player.subtitles")} ${track.id}`,
     );
-  const settings = (
+  const subtitleSettings = (
     <div className="player-setting-fields">
-      <label>
-        画面模式
+      <div className="player-setting-row">
+        <span>{t("player.secondary_subtitles")}</span>
         <Select
-          aria-label="画面模式"
-          value={state.videoFit || "fit"}
-          disabled={busy || !state.loaded || !state.playSessionId}
-          onChange={(e) =>
-            dispatch({
-              kind: "video-fit",
-              mode: normalizeVideoFit(e.target.value),
-              playSessionId: state.playSessionId!,
-            })
-          }
-        >
-          {videoFitModes.map((mode) => (
-            <option key={mode} value={mode}>
-              {videoFitLabels[mode]}
-            </option>
-          ))}
-        </Select>
-      </label>
-      <p className="player-menu-note">
-        自动适应保留完整画面；填充屏幕可能裁切；拉伸铺满可能变形。
-      </p>
-      <label className="player-check">
-        <input
-          type="checkbox"
-          checked={!chrome.pinned}
-          onChange={(e) => chrome.pin(!e.target.checked)}
-        />
-        自动隐藏控制栏
-      </label>
-      <button
-        aria-label="视频窗口置顶"
-        aria-pressed={!!state.ontop}
-        disabled={busy || !state.loaded}
-        onClick={() => control("ontop")}
-      >
-        <Pin size={16} />
-        {state.ontop ? "取消置顶" : "窗口置顶"}
-      </button>
-      <label>
-        次字幕
-        <Select
-          aria-label="次字幕"
+          aria-label={t("player.secondary_subtitles")}
           value={state.secondarySubtitle ?? -1}
           disabled={busy || !state.loaded}
           onChange={(e) => control("secondarySubtitle", Number(e.target.value))}
         >
-          <option value={-1}>关闭</option>
+          <option value={-1}>{t("player.off")}</option>
           {tracks("sub")
             .filter((t) => t.id !== selectedTrack("sub"))
             .map((t) => (
@@ -587,10 +764,10 @@ export default function PlayerChrome({
               </option>
             ))}
         </Select>
-      </label>
+      </div>
       <SubtitleSlider
         key={`scale-${model.revision}`}
-        label="字幕大小"
+        label={t("player.subtitle_size")}
         min={0.6}
         max={1.8}
         step={0.01}
@@ -602,7 +779,7 @@ export default function PlayerChrome({
       />
       <SubtitleSlider
         key={`secondary-scale-${model.revision}`}
-        label="次字幕大小"
+        label={t("player.secondary_subtitle_scale")}
         min={0.5}
         max={2}
         step={0.01}
@@ -633,19 +810,24 @@ export default function PlayerChrome({
           popover.reset();
         }}
       >
-        调整次字幕位置
+        {t("player.secondary_subtitle_position")}
       </button>
-      <p className="player-menu-note">
-        次字幕独立调整大小和垂直位置；默认位于顶部。需开启次字幕查看实际效果，位图字幕保留原生位置。
-      </p>
+      <p className="player-menu-note">{t("player.secondary_subtitle_help")}</p>
       {(
         [
-          ["字幕延迟", "subtitleDelay", state.subtitleDelay || 0, -30, 30, 0.5],
-          ["音频延迟", "audioDelay", state.audioDelay || 0, -10, 10, 0.1],
+          [
+            t("player.subtitle_delay"),
+            "subtitleDelay",
+            state.subtitleDelay || 0,
+            -30,
+            30,
+            0.5,
+          ],
         ] as const
       ).map(([label, action, value, min, max, step]) => (
         <label key={action}>
-          {label}（秒）
+          {label}
+          {t("player.seconds")}{" "}
           <input
             aria-label={label}
             type="number"
@@ -665,7 +847,7 @@ export default function PlayerChrome({
       ))}
       <SubtitleSlider
         key={`position-${model.revision}`}
-        label="字幕垂直位置"
+        label={t("player.subtitle_vertical_position")}
         min={0}
         max={100}
         value={state.subtitlePosition ?? 100}
@@ -680,85 +862,177 @@ export default function PlayerChrome({
         }
       />
       <button disabled={busy} onClick={() => control("subtitlePosition", 100)}>
-        <RotateCcw size={16} />
-        恢复默认字幕位置
+        <RotateCcw size={16} /> {t("player.reset_subtitle_position")}{" "}
       </button>
       <p className="player-menu-note">
-        大小与位置适用于文本字幕；ASS/SSA 保留自身样式和定位。
+        {" "}
+        {t("player.size_and_position_apply_to_text_subtitles")}{" "}
       </p>
+    </div>
+  );
+  const settings = (
+    <div className="player-setting-fields">
+      <div className="player-setting-row">
+        <span>{t("player.video_fit")}</span>
+        <Select
+          aria-label={t("player.video_fit")}
+          value={state.videoFit || "fit"}
+          disabled={busy || !state.loaded || !state.playSessionId}
+          onChange={(e) =>
+            void run({
+              kind: "video-fit",
+              mode: normalizeVideoFit(e.target.value),
+              playSessionId: state.playSessionId!,
+            })
+          }
+        >
+          {videoFitModes.map((mode) => (
+            <option key={mode} value={mode}>
+              {videoFitLabels[mode]}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <p className="player-menu-note">{t("player.video_fit_help")}</p>
+      <label className="player-check">
+        <input
+          type="checkbox"
+          checked={!chrome.pinned}
+          onChange={(e) => chrome.pin(!e.target.checked)}
+        />{" "}
+        {t("player.auto_hide_controls")}{" "}
+      </label>
+      <button
+        aria-label={t("player.keep_video_window_on_top")}
+        aria-pressed={!!state.ontop}
+        disabled={busy || !state.loaded}
+        onClick={() => control("ontop")}
+      >
+        <Pin size={16} />
+        {state.ontop
+          ? t("player.disable_always_on_top")
+          : t("player.always_on_top")}
+      </button>
+      <label>
+        {t("player.audio_delay")} {t("player.seconds")}
+        <input
+          aria-label={t("player.audio_delay")}
+          type="number"
+          key={state.audioDelay || 0}
+          defaultValue={state.audioDelay || 0}
+          min={-10}
+          max={10}
+          step={0.1}
+          disabled={busy || !state.loaded}
+          onBlur={(e) => {
+            const n = Number(e.target.value);
+            if (Number.isFinite(n) && n >= -10 && n <= 10)
+              control("audioDelay", n);
+          }}
+        />
+      </label>
       {state.bufferSeconds !== undefined && (
-        <small>已缓冲 {Math.round(state.bufferSeconds)} 秒</small>
+        <small>
+          {t("player.buffered_seconds", {
+            seconds: Math.round(state.bufferSeconds),
+          })}
+        </small>
       )}
       {mediaQuality && (
         <div className="player-menu-note">
           <p>
-            播放方式：
+            {t("player.playback_method")}
             {state.playMethod === "DirectStream"
-              ? "直接串流"
+              ? t("player.direct_stream")
               : state.playMethod === "Transcode"
-                ? "转码"
+                ? t("player.transcoding")
                 : state.playMethod === "DirectPlay"
-                  ? "直接播放"
+                  ? t("player.direct_play")
                   : "Unknown"}
           </p>
           <p>
-            媒体：{mediaQuality.hdr} ·{" "}
+            {" "}
+            {t("player.media")}
+            {mediaQuality.hdr} ·{" "}
             {mediaQuality.bitDepth
               ? `${mediaQuality.bitDepth}bit`
-              : "位深 Unknown"}{" "}
+              : t("player.bit_depth_unknown")}{" "}
             · {mediaQuality.primaries}
           </p>
           <p>
             Windows HDR：
             {state.windowsHdr?.hdr === true
-              ? "开启"
+              ? t("player.on")
               : state.windowsHdr?.hdr === false
-                ? "关闭"
+                ? t("player.off")
                 : "Unknown"}
           </p>
           <p>
-            输出策略：
+            {" "}
+            {t("player.output_policy")}{" "}
             {state.outputPolicy === "source"
-              ? "原样输出"
+              ? t("player.unmodified_output")
               : state.outputPolicy === "sdr"
                 ? "HDR → SDR"
-                : "自动"}{" "}
+                : t("player.auto")}{" "}
             · {state.renderer || "Unknown"}
           </p>
           {!!state.videoOutput?.gamma && (
             <p>
-              实际输出：{String(state.videoOutput.gamma)} ·{" "}
+              {" "}
+              {t("player.actual_output")}
+              {String(state.videoOutput.gamma)} ·{" "}
               {String(state.videoOutput.primaries || "Unknown")}
             </p>
           )}
           {state.requestedOutputPolicy === "source" &&
             state.outputPolicy === "auto" && (
-              <p>原样输出需系统 HDR 开启；当前回退为自动。</p>
+              <p>
+                {t(
+                  "player.unmodified_output_requires_system_hdr_currently_falling",
+                )}
+              </p>
             )}
-          {state.audioFallback && <p>已尝试自动音频设备与 PCM 回退</p>}
+          {state.audioFallback && (
+            <p>{t("player.tried_the_default_audio_device_and_pcm")}</p>
+          )}
           {mediaQuality.hdr === "Dolby Vision" && (
-            <p>DV 信息可识别；不保证所有 Profile 的完整 DV 输出。</p>
+            <p>{t("player.dolby_vision_information_is_recognized_full_dv")}</p>
           )}
         </div>
       )}
     </div>
   );
   const content: Record<PlayerMenu, ReactNode> = {
+    layout: (
+      <ControlLayoutSettings
+        value={layout}
+        disabled={busy}
+        change={(layout) => void run({ kind: "layout", layout })}
+      />
+    ),
     danmaku: model.danmaku ? (
       <>
         <OnlineDanmakuMenu value={model.danmaku} dispatch={run} />
         <small>
-          本地文件
-          {model.danmaku.source === "online" ? " · 当前使用在线弹幕" : ""}
+          {" "}
+          {t("player.local_file")}{" "}
+          {model.danmaku.source === "online"
+            ? t("player.using_online_danmaku")
+            : ""}
         </small>
         <div className="player-menu-note">
-          <strong>{model.danmaku.name || "尚未选择弹幕来源"}</strong>
+          <strong>
+            {model.danmaku.name || t("player.no_danmaku_source_selected")}
+          </strong>
           <p role="status">
-            {model.danmaku.status ||
-              "选择本地 Bilibili XML 或 ASS；当前媒体单独绑定。"}
+            {localizeMessage(
+              model.danmaku.status ||
+                t("player.select_a_local_bilibili_xml_or_ass"),
+            )}
           </p>
           {!state.embedded && (
-            <p>外挂弹幕在内嵌播放器显示。请在设置中开启“在客户端内播放”。</p>
+            <p>{t("player.local_danmaku_appears_in_the_embedded_player")}</p>
           )}
         </div>
         <div className="danmaku-file-actions">
@@ -766,19 +1040,22 @@ export default function PlayerChrome({
             disabled={busy || model.danmaku.loading || !state.embedded}
             onClick={() => void run({ kind: "danmaku", command: "choose" })}
           >
-            {model.danmaku.bound ? "重新选择文件" : "选择本地文件"}
+            {model.danmaku.bound
+              ? t("player.choose_another_file")
+              : t("player.choose_local_file")}
           </button>
           {model.danmaku.bound && (
             <button
               disabled={busy || model.danmaku.loading}
               onClick={() => void run({ kind: "danmaku", command: "unbind" })}
             >
-              解除绑定
+              {" "}
+              {t("player.unlink_file")}{" "}
             </button>
           )}
         </div>
         <fieldset disabled={busy || model.danmaku.loading}>
-          <small>时间校准 / 弹幕设置</small>
+          <small>{t("player.timing_danmaku_settings")}</small>
           <DanmakuSettings
             value={{ ...model.danmaku.settings, offset: model.danmaku.offset }}
             onChange={(patch) =>
@@ -787,39 +1064,68 @@ export default function PlayerChrome({
                     kind: "danmaku",
                     command: "settings",
                     patch,
-                  }).catch(() => setLocalError("透明度调整未完成，请重试。"))
+                  }).catch(() => setLocalError(t("danmaku.opacity_failed")))
                 : void run({ kind: "danmaku", command: "settings", patch })
             }
           />
         </fieldset>
       </>
     ) : (
-      <p className="player-menu-note">本地弹幕仅在原生播放器中可用。</p>
+      <p className="player-menu-note">
+        {t("player.local_danmaku_is_available_only_in_the")}
+      </p>
     ),
     subtitle: (
       <>
-        {option("关闭字幕", selectedTrack("sub") === -1, () =>
+        {option(t("player.subtitles_off"), selectedTrack("sub") === -1, () =>
           control("subtitle", -1, true),
         )}
-        {tracks("sub").map((t) => (
-          <div key={t.id}>
-            {option(trackLabel(t), !!t.selected, () =>
-              control("subtitle", t.id, true),
+        {[false, true].map((external) => (
+          <div className="player-menu-group" key={String(external)}>
+            <small>
+              {t(
+                external
+                  ? "player.external_subtitles"
+                  : "player.embedded_subtitles",
+              )}
+            </small>
+            {tracks("sub")
+              .filter((track) => !!track.external === external)
+              .map((track) => (
+                <div key={track.id}>
+                  {option(
+                    trackLabel(track),
+                    selectedTrack("sub") === track.id,
+                    () => control("subtitle", track.id, true),
+                  )}
+                </div>
+              ))}
+            {external && !tracks("sub").some((track) => track.external) && (
+              <p className="player-menu-note">
+                {t("player.external_subtitles_help")}
+              </p>
             )}
           </div>
         ))}
         {!tracks("sub").length && (
-          <p className="player-menu-note">此视频没有可用字幕</p>
+          <p className="player-menu-note">
+            {t("player.no_subtitles_available_for_this_video")}
+          </p>
         )}
-        <button className="player-menu-footer" onClick={() => open("settings")}>
-          字幕大小、位置与延迟
+        <button
+          className="player-menu-footer"
+          onClick={() => open("subtitle-settings")}
+        >
+          {" "}
+          {t("player.subtitle_size_position_and_delay")}{" "}
           <ChevronRight size={15} />
         </button>
       </>
     ),
+    "subtitle-settings": subtitleSettings,
     audio: (
       <>
-        {option("关闭音频", selectedTrack("audio") === -1, () =>
+        {option(t("player.audio_off"), selectedTrack("audio") === -1, () =>
           control("audio", -1, true),
         )}
         {tracks("audio").map((t) => (
@@ -830,15 +1136,23 @@ export default function PlayerChrome({
           </div>
         ))}
         {!tracks("audio").length && (
-          <p className="player-menu-note">此视频没有可用音轨</p>
+          <p className="player-menu-note">
+            {t("player.no_audio_tracks_available_for_this_video")}
+          </p>
         )}
       </>
     ),
     volume: (
       <div className="player-volume-content">
-        <Volume2 size={18} />
+        {icon(
+          t("player.mute"),
+          state.muted ? <VolumeX size={18} /> : <Volume2 size={18} />,
+          () => control("mute"),
+          busy,
+          { "aria-pressed": state.muted },
+        )}
         <PlayerSlider
-          label="音量"
+          label={t("player.volume")}
           max={100}
           value={state.volume}
           disabled={busy}
@@ -851,38 +1165,115 @@ export default function PlayerChrome({
     more: (
       <>
         <div className="player-menu-group">
-          <small>播放</small>
-          {entry("倍速", <Gauge size={17} />, "speed", `${state.speed || 1}×`)}
-          {model.danmaku &&
+          <small>{t("library.play")}</small>
+          {!hasTool("speed") &&
             entry(
-              "弹幕",
-              <Subtitles size={17} />,
+              t("player.speed"),
+              <Gauge size={17} />,
+              "speed",
+              `${state.speed || 1}×`,
+            )}
+          {!model.mini &&
+            model.danmaku &&
+            !hasTool("danmaku") &&
+            entry(
+              t("player.danmaku"),
+              <MessageSquareText size={17} />,
               "danmaku",
-              model.danmaku.settings.enabled ? "显示" : "关闭",
+              model.danmaku.settings.enabled
+                ? t("player.show")
+                : t("player.off"),
             )}
           {!!model.item?.Chapters?.length &&
-            entry("章节", <BookOpen size={17} />, "chapters")}
-          {entry("A–B 循环", <Repeat2 size={17} />, "loop")}
+            entry(t("player.chapters"), <BookOpen size={17} />, "chapters")}
+          {entry(t("player.a_b_loop"), <Repeat2 size={17} />, "loop")}
           {!!model.queue?.items.length &&
-            entry("播放队列", <ListVideo size={17} />, "queue")}
+            entry(t("player.play_queue"), <ListVideo size={17} />, "queue")}
         </div>
+        {(["volume", "audio", "subtitle"] as const).some(
+          (id) => !hasTool(id),
+        ) && (
+          <div className="player-menu-group">
+            <small>{t("player.audio_and_subtitles")}</small>
+            {!hasTool("volume") &&
+              entry(t("player.volume"), <Volume2 size={17} />, "volume")}
+            {!hasTool("audio") &&
+              entry(
+                t("player.audio_tracks"),
+                <Headphones size={17} />,
+                "audio",
+              )}
+            {!hasTool("subtitle") &&
+              entry(t("player.subtitles"), <Subtitles size={17} />, "subtitle")}
+          </div>
+        )}
+        {(!hasTool("mini") || !hasTool("fullscreen")) && (
+          <div className="player-menu-group">
+            <small>{t("player.picture_and_window")}</small>
+            {!model.mini &&
+              !hasTool("mini") &&
+              state.embedded &&
+              state.playSessionId &&
+              isTauri() && (
+                <button
+                  role="menuitem"
+                  disabled={busy || !state.loaded}
+                  onClick={() => mini(model.mini ? "leave" : "enter")}
+                >
+                  <PictureInPicture2 size={17} />
+                  <span>
+                    {model.mini
+                      ? t("player.restore_player")
+                      : t("player.mini_window")}
+                  </span>
+                </button>
+              )}
+            {!hasTool("fullscreen") && (
+              <button
+                role="menuitem"
+                disabled={busy || !state.loaded}
+                onClick={full}
+              >
+                <Maximize size={17} />
+                <span>
+                  {state.fullscreen
+                    ? t("player.exit_fullscreen")
+                    : t("danmaku.fullscreen")}
+                </span>
+              </button>
+            )}
+          </div>
+        )}
         {(model.routes.length > 0 || model.capabilities.versions) && (
           <div className="player-menu-group">
-            <small>播放源</small>
+            <small>{t("player.source")}</small>
             {model.routes.length > 0 &&
               entry(
-                "线路",
+                t("player.routes"),
                 <Network size={17} />,
                 "routes",
                 model.routes.find((r) => r.selected)?.name,
               )}
             {model.capabilities.versions &&
-              entry("播放版本", <Layers size={17} />, "versions")}
+              entry(
+                t("player.media_version"),
+                <Layers size={17} />,
+                "versions",
+              )}
           </div>
         )}
         <div className="player-menu-group">
-          <small>高级</small>
-          {entry("播放设置", <SlidersHorizontal size={17} />, "settings")}
+          <small>{t("player.advanced")}</small>
+          {entry(
+            t("player.control_layout"),
+            <SlidersHorizontal size={17} />,
+            "layout",
+          )}
+          {entry(
+            t("player.playback_settings"),
+            <SlidersHorizontal size={17} />,
+            "settings",
+          )}
         </div>
         <div className="player-menu-group">
           <button
@@ -892,7 +1283,7 @@ export default function PlayerChrome({
             onClick={() => control("stop", undefined, true)}
           >
             <Square size={16} />
-            <span>停止播放</span>
+            <span>{t("player.stop_playback")}</span>
           </button>
         </div>
       </>
@@ -919,7 +1310,9 @@ export default function PlayerChrome({
               control("seek", c.StartPositionTicks / 10000000, true)
             }
           >
-            <span>{privateText(c.Name || `章节 ${i + 1}`)}</span>
+            <span>
+              {privateText(c.Name || t("player.chapter", { p0: i + 1 }))}
+            </span>
             <small>{formatTime(c.StartPositionTicks / 10000000)}</small>
           </button>
         ))}
@@ -927,23 +1320,26 @@ export default function PlayerChrome({
     ),
     loop: (
       <div className="player-loop-popover">
-        <p>在当前播放位置设置循环范围</p>
+        <p>{t("player.set_loop_points_at_the_current_playback")}</p>
         <button
           disabled={busy || !state.loaded}
           onClick={() => control("loopA", state.position)}
         >
-          标记 A
+          {" "}
+          {t("player.set_a")}{" "}
           {state.loopA !== undefined ? ` · ${formatTime(state.loopA)}` : ""}
         </button>
         <button
           disabled={busy || state.loopA === undefined || !state.loaded}
           onClick={() => control("loopB", state.position)}
         >
-          标记 B
+          {" "}
+          {t("player.set_b")}{" "}
           {state.loopB !== undefined ? ` · ${formatTime(state.loopB)}` : ""}
         </button>
         <button disabled={busy} onClick={() => control("clearLoop")}>
-          取消循环
+          {" "}
+          {t("player.clear_loop")}{" "}
         </button>
       </div>
     ),
@@ -963,7 +1359,8 @@ export default function PlayerChrome({
                   void run({ kind: "route-probe", index: i, media: false })
                 }
               >
-                评估 API
+                {" "}
+                {t("player.check_api")}{" "}
               </button>
               <button
                 disabled={busy}
@@ -971,14 +1368,15 @@ export default function PlayerChrome({
                   void run({ kind: "route-probe", index: i, media: true })
                 }
               >
-                小样本吞吐
+                {" "}
+                {t("player.sample_throughput")}{" "}
               </button>
             </div>
           </div>
         ))}
         <p className="player-menu-note">
-          换线后从当前播放位置继续。吞吐测试只取最多 256KiB；每条线路至少间隔 60
-          秒。播放中不会自动换线。
+          {" "}
+          {t("player.playback_resumes_at_the_current_position_after")}{" "}
         </p>
       </>
     ),
@@ -987,7 +1385,7 @@ export default function PlayerChrome({
         {model.item?.MediaSources?.map((s) => (
           <div key={s.Id}>
             {option(
-              privateText(s.Name || s.Container || "视频版本"),
+              privateText(s.Name || s.Container || t("player.video_version")),
               s.Id === model.sourceId,
               () => void run({ kind: "source", id: s.Id }, true),
             )}
@@ -1005,8 +1403,8 @@ export default function PlayerChrome({
             onChange={(e) =>
               void run({ kind: "auto-next", value: e.target.checked })
             }
-          />
-          自动下一集
+          />{" "}
+          {t("player.auto_play_next_episode")}{" "}
         </label>
         {model.queue?.items
           .slice(Math.max(0, model.queue.index - 1), model.queue.index + 8)
@@ -1023,7 +1421,9 @@ export default function PlayerChrome({
                 )}
                 {i !== model.queue!.index && (
                   <button
-                    aria-label={`移除 ${privateText(item.Name)}`}
+                    aria-label={t("player.remove", {
+                      p0: privateText(item.Name),
+                    })}
                     disabled={busy || model.queue?.busy}
                     onClick={() => void run({ kind: "queue-remove", index: i })}
                   >
@@ -1034,20 +1434,83 @@ export default function PlayerChrome({
             );
           })}
         {model.queue?.error && (
-          <p role="alert">{privateText(model.queue.error)}</p>
+          <p role="alert">{displayError(model.queue.error)}</p>
         )}
       </>
+    ),
+  };
+  const toolButtons: Record<OptionalControl, ReactNode> = {
+    volume: menuButton(
+      t("player.volume"),
+      state.muted || state.volume === 0 ? (
+        <VolumeX size={21} />
+      ) : (
+        <Volume2 size={21} />
+      ),
+      "volume",
+    ),
+    subtitle: menuButton(
+      t("player.subtitles"),
+      <Subtitles size={21} />,
+      "subtitle",
+    ),
+    audio: menuButton(
+      t("player.audio_tracks"),
+      <Headphones size={21} />,
+      "audio",
+    ),
+    speed: menuButton(t("player.speed"), <Gauge size={21} />, "speed"),
+    danmaku:
+      !model.mini && model.danmaku
+        ? menuButton(
+            t("player.danmaku"),
+            <MessageSquareText size={21} />,
+            "danmaku",
+          )
+        : null,
+    mini:
+      state.embedded && state.playSessionId && isTauri()
+        ? icon(
+            t("player.mini_window"),
+            <PictureInPicture2 size={21} />,
+            () => mini("enter"),
+            busy || !state.loaded,
+          )
+        : null,
+    fullscreen: icon(
+      state.fullscreen ? t("player.exit_fullscreen") : t("danmaku.fullscreen"),
+      state.fullscreen ? <Minimize size={21} /> : <Maximize size={21} />,
+      full,
+      !state.embedded && (busy || !state.loaded),
+      { "aria-pressed": !!state.fullscreen },
     ),
   };
   return (
     <div
       ref={root}
-      className={`player-chrome ${model.theater ? "player-chrome-theater" : "player-chrome-dock"} chrome-${chrome.phase}${owned ? " player-owned-ui" : ""}${chrome.suspended ? " chrome-suspended" : ""}`}
+      className={`player-chrome ${model.theater ? "player-chrome-theater" : "player-chrome-dock"} chrome-${chrome.phase}${owned ? " player-owned-ui" : ""}${chrome.suspended ? " chrome-suspended" : ""}${model.mini ? " player-mini-ui" : ""}`}
       style={playerMotionStyle as CSSProperties}
+      aria-busy={busy || leavingMini}
+      data-cursor-hidden={chrome.cursorHidden}
+      onPointerEnter={chrome.pointer}
+      onPointerLeave={chrome.leave}
       onPointerMove={chrome.pointer}
       onPointerDownCapture={(e) => {
         chrome.pointer();
         if (!popover.menu) suppressClick.current = false;
+        if (
+          model.mini &&
+          e.button === 0 &&
+          state.playSessionId &&
+          e.target instanceof Element &&
+          !e.target.closest("button,input,.player-popover,[data-ui-overlay]")
+        ) {
+          void dispatch({
+            kind: "mini",
+            command: "drag",
+            playSessionId: state.playSessionId,
+          }).catch(() => {});
+        }
       }}
       onClick={(e) => {
         if (suppressClick.current) {
@@ -1070,6 +1533,7 @@ export default function PlayerChrome({
         }, 160);
       }}
       onDoubleClick={(e) => {
+        if (model.mini) return;
         if (
           e.target instanceof Element &&
           !e.target.closest(
@@ -1082,6 +1546,10 @@ export default function PlayerChrome({
         }
       }}
       onContextMenuCapture={(e) => {
+        if (model.mini) {
+          e.preventDefault();
+          return;
+        }
         if (
           e.target instanceof Element &&
           e.target.closest("input,select,[data-ui-overlay]")
@@ -1105,6 +1573,12 @@ export default function PlayerChrome({
         popover.open("more");
       }}
     >
+      {children}
+      {(busy || leavingMini) && (
+        <div className="player-action-pending" role="status">
+          {t("player.applying_action")}
+        </div>
+      )}
       {positioning && subtitlePositionEdit && (
         <SecondarySubtitlePosition
           key={`${subtitlePositionEdit.revision}-${subtitlePositionEdit.session}`}
@@ -1124,37 +1598,62 @@ export default function PlayerChrome({
               value,
             };
             setSubtitlePositionEdit(null);
-            open("settings");
+            open("subtitle-settings");
           }}
         />
       )}
-      {notice && (
+      {notice && !model.mini && (
         <Toast
           message={notice.message}
           tone={notice.tone}
           onDismiss={() => setNotice(null)}
         />
       )}
-      <div
-        className="player-heading"
-        aria-hidden={chrome.phase === "hidden"}
-        inert={chrome.phase === "hidden" || positioning}
-        onTransitionEnd={chrome.onTransitionEnd}
-      >
-        {model.capabilities.return &&
-          icon(
-            model.theater ? "退出播放" : "打开播放页面",
-            <ArrowLeft size={22} />,
-            () => void run({ kind: "return" }),
-            busy,
+      {model.mini && (
+        <button
+          className="mini-exit"
+          aria-label={t("player.exit_mini")}
+          data-tooltip={t("player.exit_mini")}
+          aria-busy={leavingMini}
+          aria-hidden={chrome.phase === "hidden"}
+          inert={chrome.phase === "hidden"}
+          onPointerEnter={() => chrome.hover(true)}
+          onPointerLeave={() => chrome.hover(false)}
+          disabled={leavingMini || !state.playSessionId}
+          onClick={() => mini("leave")}
+        >
+          <X size={20} />
+        </button>
+      )}
+      {!model.mini && (
+        <div
+          className="player-heading"
+          aria-hidden={chrome.phase === "hidden"}
+          inert={chrome.phase === "hidden" || positioning}
+          onTransitionEnd={chrome.onTransitionEnd}
+          onPointerEnter={() => chrome.hover(true)}
+          onPointerLeave={() => chrome.hover(false)}
+        >
+          {!model.mini &&
+            model.capabilities.return &&
+            icon(
+              model.mini
+                ? t("player.restore_player")
+                : model.theater
+                  ? t("library.exit_playback")
+                  : t("player.open_player"),
+              <ArrowLeft size={22} />,
+              () => (model.mini ? mini("leave") : void run({ kind: "return" })),
+              busy,
+            )}
+          <strong title={privateText(state.title)}>
+            {privateText(state.title)}
+          </strong>
+          {state.buffering && (
+            <span className="player-state-note">{t("player.buffering")}</span>
           )}
-        <strong title={privateText(state.title)}>
-          {privateText(state.title)}
-        </strong>
-        {state.buffering && (
-          <span className="player-state-note">正在缓冲…</span>
-        )}
-      </div>
+        </div>
+      )}
       {state.active && (
         <div
           className="player-console"
@@ -1162,126 +1661,173 @@ export default function PlayerChrome({
           aria-hidden={chrome.phase === "hidden"}
           inert={chrome.phase === "hidden" || positioning}
           onTransitionEnd={chrome.onTransitionEnd}
+          onPointerEnter={() => chrome.hover(true)}
+          onPointerLeave={() => chrome.hover(false)}
         >
-          <div
-            className="player-timeline"
-            onPointerMove={(e) => {
-              const input = e.currentTarget.querySelector("input")!,
-                b = input.getBoundingClientRect(),
-                p = Math.max(
-                  0,
-                  Math.min(1, (e.clientX - b.left) / Math.max(1, b.width)),
-                );
-              setHover({
-                time: state.duration * p,
-                left: Math.max(22, Math.min(b.width - 22, p * b.width)),
-              });
-            }}
-            onPointerLeave={() => setHover(null)}
-          >
-            <PlayerSlider
-              className="seek"
-              label="播放位置"
-              max={Math.max(1, state.duration)}
-              value={state.position}
-              disabled={busy || !state.loaded || !state.duration}
-              onEditing={setEditing}
-              commit={(n) => control("seek", n)}
-            />
-            {hover && state.duration > 0 && (
-              <span className="timeline-preview" style={{ left: hover.left }}>
-                {model.preview?.dataUrl &&
-                  Math.abs(model.preview.time - hover.time) < 0.5 && (
-                    <img src={model.preview.dataUrl} alt="进度预览" />
-                  )}
-                {formatTime(hover.time)}
-              </span>
-            )}
-          </div>
-          <div className="player-buttons">
-            <div className="transport-primary">
+          {model.mini ? (
+            <div className="player-mini-controls">
               {icon(
-                state.paused ? "继续播放" : "暂停",
-                state.paused ? <Play size={24} /> : <Pause size={24} />,
+                state.paused ? t("player.resume") : t("player.pause"),
+                state.paused ? <Play size={22} /> : <Pause size={22} />,
                 () => control("pause"),
                 busy || !state.loaded,
-                { className: "transport-play" },
+                {
+                  className: "transport-play",
+                  "aria-busy":
+                    pendingAction?.kind === "control" &&
+                    pendingAction.action === "pause",
+                },
               )}
-              {model.capabilities.previous &&
-                icon(
-                  "上一集",
-                  <SkipBack size={21} />,
-                  () => void run({ kind: "previous" }),
-                  busy || model.previousDisabled,
-                )}
-              {model.capabilities.next &&
-                icon(
-                  "下一集",
-                  <SkipForward size={21} />,
-                  () => void run({ kind: "next" }),
-                  busy || model.nextDisabled,
-                )}
-              {icon(
-                "快退 10 秒",
-                <RotateCcw size={19} />,
-                () => control("seek", Math.max(0, state.position - 10)),
-                busy || !state.loaded,
-                { className: "player-seek-step" },
-              )}
-              {icon(
-                "快进 10 秒",
-                <RotateCw size={19} />,
-                () =>
-                  control(
-                    "seek",
-                    Math.min(state.duration, state.position + 10),
-                  ),
-                busy || !state.loaded,
-                { className: "player-seek-step" },
-              )}
-              <time className="player-time">
-                {formatTime(state.position)}
-                <span> / {formatTime(state.duration)}</span>
-              </time>
-              {playbackResolution(state.videoParams) && (
-                <span className="player-resolution" aria-label="当前播放清晰度">
-                  {playbackResolution(state.videoParams)}
-                </span>
-              )}
-              {state.inputRateBps && state.inputRateBps > 0 && (
-                <span className="player-network-rate" aria-label="实时网速">
-                  {(state.inputRateBps / 1_000_000).toFixed(1)} MB/s
-                </span>
-              )}
-            </div>
-            <div className="transport-tools">
               {menuButton(
-                "音量",
-                state.muted || state.volume === 0 ? (
-                  <VolumeX size={21} />
-                ) : (
-                  <Volume2 size={21} />
-                ),
-                "volume",
-              )}
-              {menuButton("字幕", <Subtitles size={21} />, "subtitle")}
-              {menuButton("音轨", <Headphones size={21} />, "audio")}
-              {menuButton("更多播放操作", <MoreHorizontal size={22} />, "more")}
-              {icon(
-                state.fullscreen ? "退出全屏" : "全屏",
-                state.fullscreen ? (
-                  <Minimize size={21} />
-                ) : (
-                  <Maximize size={21} />
-                ),
-                full,
-                busy || !state.loaded,
+                t("player.speed"),
+                <span className="mini-speed-value">
+                  {Number.isInteger(state.speed || 1)
+                    ? (state.speed || 1).toFixed(1)
+                    : state.speed}
+                  ×
+                </span>,
+                "speed",
               )}
             </div>
-          </div>
+          ) : (
+            <>
+              <div
+                className="player-timeline"
+                onPointerMove={(e) => {
+                  const input = e.currentTarget.querySelector("input")!,
+                    b = input.getBoundingClientRect(),
+                    p = Math.max(
+                      0,
+                      Math.min(1, (e.clientX - b.left) / Math.max(1, b.width)),
+                    );
+                  setHover({
+                    time: state.duration * p,
+                    left: Math.max(22, Math.min(b.width - 22, p * b.width)),
+                  });
+                }}
+                onPointerLeave={() => setHover(null)}
+              >
+                {!model.mini && (
+                  <DanmakuHeatmap
+                    value={model.danmaku?.density}
+                    duration={state.duration}
+                  />
+                )}
+                <PlayerSlider
+                  className="seek"
+                  label={t("player.playback_position")}
+                  max={Math.max(1, state.duration)}
+                  value={state.position}
+                  buffered={state.bufferSeconds}
+                  disabled={busy || !state.loaded || !state.duration}
+                  onEditing={setEditing}
+                  commit={(n) => control("seek", n)}
+                />
+                {hover && state.duration > 0 && (
+                  <span
+                    className="timeline-preview"
+                    style={{ left: hover.left }}
+                  >
+                    {model.preview?.dataUrl &&
+                      Math.abs(model.preview.time - hover.time) < 0.5 && (
+                        <img
+                          src={model.preview.dataUrl}
+                          alt={t("player.seek_preview")}
+                        />
+                      )}
+                    {formatTime(hover.time)}
+                  </span>
+                )}
+              </div>
+              <div className="player-buttons">
+                <div className="transport-primary">
+                  {icon(
+                    state.paused ? t("player.resume") : t("player.pause"),
+                    state.paused ? <Play size={24} /> : <Pause size={24} />,
+                    () => control("pause"),
+                    busy || !state.loaded,
+                    {
+                      className: "transport-play",
+                      "aria-busy":
+                        pendingAction?.kind === "control" &&
+                        pendingAction.action === "pause",
+                    },
+                  )}
+                  {!model.mini &&
+                    model.capabilities.previous &&
+                    icon(
+                      t("player.previous_episode"),
+                      <SkipBack size={21} />,
+                      () => void run({ kind: "previous" }),
+                      busy || model.previousDisabled,
+                    )}
+                  {!model.mini &&
+                    model.capabilities.next &&
+                    icon(
+                      t("library.next_episode"),
+                      <SkipForward size={21} />,
+                      () => void run({ kind: "next" }),
+                      busy || model.nextDisabled,
+                    )}
+                  {!model.mini &&
+                    icon(
+                      t("player.rewind_10_seconds"),
+                      <RotateCcw size={19} />,
+                      () => control("seek", Math.max(0, state.position - 10)),
+                      busy || !state.loaded,
+                      { className: "player-seek-step" },
+                    )}
+                  {!model.mini &&
+                    icon(
+                      t("player.forward_10_seconds"),
+                      <RotateCw size={19} />,
+                      () =>
+                        control(
+                          "seek",
+                          Math.min(state.duration, state.position + 10),
+                        ),
+                      busy || !state.loaded,
+                      { className: "player-seek-step" },
+                    )}
+                  <time className="player-time">
+                    {formatTime(state.position)}
+                    <span> / {formatTime(state.duration)}</span>
+                  </time>
+                  {playbackResolution(state.videoParams) && (
+                    <span
+                      className="player-resolution"
+                      aria-label={t("player.current_playback_resolution")}
+                    >
+                      {playbackResolution(state.videoParams)}
+                    </span>
+                  )}
+                  {state.inputRateBps && state.inputRateBps > 0 && (
+                    <span
+                      className="player-network-rate"
+                      aria-label={t("player.live_network_speed")}
+                    >
+                      {(state.inputRateBps / 1_000_000).toFixed(1)} MB/s
+                    </span>
+                  )}
+                </div>
+                <div className="transport-tools">
+                  {tools.map((id) => (
+                    <span key={id} className="player-tool">
+                      {toolButtons[id]}
+                    </span>
+                  ))}
+                  {menuButton(
+                    t("player.more_playback_actions"),
+                    <MoreHorizontal size={22} />,
+                    "more",
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
-      {skipVisible && segment && !popover.menu && (
+      {!model.mini && skipVisible && segment && !popover.menu && (
         <div className="player-skip-overlay">
           <button
             disabled={busy}
@@ -1290,31 +1836,40 @@ export default function PlayerChrome({
               control("seek", segment.end);
             }}
           >
-            {segment.kind === "intro" ? "跳过片头" : "跳过片尾"}
+            {segment.kind === "intro"
+              ? t("player.skip_intro")
+              : t("player.skip_credits")}
           </button>
           <button
-            aria-label="忽略跳过提示"
+            aria-label={t("player.dismiss_skip_prompt")}
             onClick={() => setDismissedSkip(skipKey)}
           >
             <X size={15} />
           </button>
         </div>
       )}
-      {model.routeHint &&
+      {!model.mini &&
+        model.routeHint &&
         model.routes.length > 1 &&
         !state.syncError &&
         !popover.menu && (
           <div className="player-route-hint" role="status">
-            <p>当前线路可能不稳定 · {model.routeHint.reason}</p>
-            <button onClick={() => open("routes")}>查看线路</button>
+            <p>
+              {t("player.current_route_may_be_unstable")}{" "}
+              {localizeMessage(model.routeHint.reason)}
+            </p>
+            <button onClick={() => open("routes")}>
+              {t("player.view_routes")}
+            </button>
             <button
               disabled={busy}
               onClick={() => void run({ kind: "route-suppress" })}
             >
-              本次不再提醒
+              {" "}
+              {t("player.don_t_remind_me_this_session")}{" "}
             </button>
             <button
-              aria-label="关闭线路提示"
+              aria-label={t("player.dismiss_route_warning")}
               onClick={() => void run({ kind: "route-dismiss" })}
             >
               <X size={15} />
@@ -1329,7 +1884,11 @@ export default function PlayerChrome({
           className={`player-popover player-${popover.menu}-popover popover-${popover.phase}`}
           style={placement}
           role={
-            ["settings", "danmaku"].includes(popover.menu) ? "dialog" : "menu"
+            ["settings", "subtitle-settings", "danmaku", "layout"].includes(
+              popover.menu,
+            )
+              ? "dialog"
+              : "menu"
           }
           aria-label={titles[popover.menu]}
           aria-hidden={popover.phase === "closing"}
@@ -1382,11 +1941,25 @@ export default function PlayerChrome({
           }}
         >
           <header>
-            {popover.menu !== "more" &&
+            {!model.mini &&
+              popover.menu !== "more" &&
               popover.menu !== "audio" &&
               popover.menu !== "subtitle" &&
               popover.menu !== "volume" && (
-                <button aria-label="返回更多菜单" onClick={() => open("more")}>
+                <button
+                  aria-label={t(
+                    popover.menu === "subtitle-settings"
+                      ? "player.back_to_subtitles"
+                      : "player.back_to_more",
+                  )}
+                  onClick={() =>
+                    open(
+                      popover.menu === "subtitle-settings"
+                        ? "subtitle"
+                        : "more",
+                    )
+                  }
+                >
                   <ArrowLeft size={17} />
                 </button>
               )}
@@ -1394,8 +1967,8 @@ export default function PlayerChrome({
             <button
               aria-label={
                 popover.menu === "settings"
-                  ? "关闭播放设置"
-                  : `关闭${titles[popover.menu]}`
+                  ? t("player.close_playback_settings")
+                  : t("player.close", { p0: titles[popover.menu] })
               }
               onClick={() => popover.close()}
             >
@@ -1405,18 +1978,29 @@ export default function PlayerChrome({
           <div className="player-popover-scroll">{content[popover.menu]}</div>
         </div>
       )}
-      {(model.error || state.error || state.syncError || localError) && (
+      {(model.error ||
+        state.error ||
+        state.syncError ||
+        localError ||
+        state.subtitleLoadFailed) && (
         <div className="player-ui-error" role="alert">
-          {privateText(
-            model.error || state.error || state.syncError || localError,
+          {displayError(
+            model.error ||
+              state.error ||
+              state.syncError ||
+              localError ||
+              t("player.external_subtitle_failed"),
           )}
-          {(model.error || state.error) && (
+          {!model.mini && (model.error || state.error) && (
             <button onClick={() => void run({ kind: "diagnostics" })}>
-              复制播放诊断
+              {" "}
+              {t("player.copy_playback_diagnostics")}{" "}
             </button>
           )}
           {model.diagnosticFeedback && (
-            <span role="status">{model.diagnosticFeedback}</span>
+            <span role="status">
+              {localizeMessage(model.diagnosticFeedback)}
+            </span>
           )}
         </div>
       )}

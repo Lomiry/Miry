@@ -1,5 +1,6 @@
 ﻿import { expect, it } from "vitest";
 import { presentationModel, type PlayerUiModel } from "./uiModel";
+import { danmakuDefaults } from "../danmaku/types";
 it("sends presentation data without media deliveries, raw network failures or account credentials", () => {
   const source = {
     Id: "v",
@@ -28,6 +29,41 @@ it("sends presentation data without media deliveries, raw network failures or ac
       versions: true,
     },
     routes: [],
+    danmaku: {
+      name: "",
+      count: 1,
+      skipped: 0,
+      status: "",
+      offset: 0,
+      bound: false,
+      settings: {
+        ...danmakuDefaults,
+        sources: {
+          mode: "custom",
+          sources: [
+            {
+              id: "custom",
+              name: "Custom",
+              protocol: "logvar",
+              endpoint: "https://host.test/private",
+              enabled: true,
+              priority: 0,
+            },
+          ],
+        },
+      },
+      density: { duration: 100, bins: [0, 1] },
+      online: {
+        configured: true,
+        mock: false,
+        status: "",
+        query: "Movie",
+        candidates: [],
+        loading: false,
+        mode: "custom",
+        sources: [{ id: "custom", name: "Custom", enabled: true }],
+      },
+    },
     item: { Id: "m", Name: "影片", Type: "Movie", MediaSources: [source] },
     queue: {
       items: [{ Id: "q", Name: "队列", Type: "Movie", MediaSources: [source] }],
@@ -69,7 +105,11 @@ it("sends presentation data without media deliveries, raw network failures or ac
     type: "sub",
     title: "中文字幕",
     selected: true,
+    external: true,
   });
   expect(output.item?.MediaSources?.[0].Id).toBe("v");
+  expect(output.danmaku?.settings.sources).toBeUndefined();
+  expect(output.danmaku?.online?.sources?.[0].id).toBe("custom");
+  expect(output.danmaku?.density?.bins).toEqual([0, 1]);
   expect(data.item?.MediaSources?.[0].DirectStreamUrl).toContain("secret");
 });

@@ -3,7 +3,17 @@ import { beforeEach, expect, it } from "vitest";
 import { readPageSize, savePageSize, validPageSize } from "./browsePreferences";
 import { readSortPreference, saveSortPreference } from "./browsePreferences";
 import type { Account } from "../types/emby";
+import { readBrowseMode, saveBrowseMode } from "./browsePreferences";
 beforeEach(() => localStorage.clear());
+it("defaults to pages and persists infinite mode independently of page size", () => {
+  expect(readBrowseMode()).toBe("pages");
+  savePageSize(73);
+  saveBrowseMode("infinite");
+  expect(readBrowseMode()).toBe("infinite");
+  expect(readPageSize()).toBe(73);
+  localStorage.setItem("miry-browse-mode", "invalid");
+  expect(readBrowseMode()).toBe("pages");
+});
 it("defaults to 30 and reloads persisted custom preferences", () => {
   expect(readPageSize()).toBe(30);
   for (const size of [10, 20, 30, 50, 100, 73, 200]) {

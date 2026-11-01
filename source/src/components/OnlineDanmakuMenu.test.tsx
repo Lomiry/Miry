@@ -1,10 +1,32 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import OnlineDanmakuMenu from "./OnlineDanmakuMenu";
 import userEvent from "@testing-library/user-event";
 import { danmakuDefaults, type DanmakuPresentation } from "../danmaku/types";
-afterEach(cleanup);
+afterEach(async () => {
+  await act(async () => {});
+  cleanup();
+});
+it("shows an explicit confirmation without treating a candidate row click as acceptance", () => {
+  const dispatch = vi.fn(async () => {});
+  render(<OnlineDanmakuMenu value={value} dispatch={dispatch} />);
+  expect(screen.getByRole("button", { name: "确认此匹配" })).toBeTruthy();
+  fireEvent.click(screen.getByText("Anime Season 2"));
+  expect(dispatch).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "确认此匹配" }));
+  expect(dispatch).toHaveBeenCalledWith({
+    kind: "danmaku",
+    command: "select",
+    matchId: "1",
+  });
+});
 it("focuses search, edits Chinese/English/cursors/clipboard and prevents IME or empty submission", async () => {
   const dispatch = vi.fn(async () => {}),
     user = userEvent.setup();
@@ -61,6 +83,8 @@ it("shows shared recommendation and reason without hiding other selectable resul
   expect(screen.getByText("推荐")).toBeTruthy();
   expect(screen.getByText("剧名、S02E05一致")).toBeTruthy();
   fireEvent.click(screen.getByText("另一个结果"));
+  expect(dispatch).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "确认此匹配" }));
   expect(dispatch).toHaveBeenCalledWith({
     kind: "danmaku",
     command: "select",
@@ -95,7 +119,7 @@ const value: DanmakuPresentation = {
     ],
   },
 };
-it("search prefills series coordinates, submits explicit query and selects bounded labeled result", () => {
+it("search prefills series coordinates, submits explicit query and confirms bounded labeled result", async () => {
   const dispatch = vi.fn(async () => {});
   render(<OnlineDanmakuMenu value={value} dispatch={dispatch} />);
   fireEvent.click(screen.getByText("搜索其他弹幕"));
@@ -108,7 +132,9 @@ it("search prefills series coordinates, submits explicit query and selects bound
     command: "search",
     query: "Anime S02E05",
   });
+  await act(async () => {});
   fireEvent.click(screen.getByText("Anime Season 2"));
+  fireEvent.click(screen.getByRole("button", { name: "确认此匹配" }));
   expect(dispatch).toHaveBeenCalledWith({
     kind: "danmaku",
     command: "select",
@@ -137,6 +163,28 @@ it("offers native credential file picker and no secret input when unconfigured",
     kind: "danmaku",
     command: "configure",
   });
+});
+it("requires acknowledgement of a known season/episode mismatch and allows cancellation without applying it", async () => {
+  const dispatch = vi.fn(async () => {});
+  render(
+    <OnlineDanmakuMenu
+      value={{
+        ...value,
+        online: {
+          ...value.online!,
+          context: { title: "Anime", movie: false, season: 1, episode: 1 },
+        },
+      }}
+      dispatch={dispatch}
+    />,
+  );
+  const confirm = screen.getByRole("button", { name: "确认此匹配" });
+  expect(confirm).toHaveProperty("disabled", true);
+  fireEvent.click(screen.getByRole("checkbox"));
+  expect(confirm).toHaveProperty("disabled", false);
+  fireEvent.click(screen.getByRole("button", { name: "取消" }));
+  expect(dispatch).not.toHaveBeenCalled();
+  expect(screen.queryByRole("button", { name: "确认此匹配" })).toBeNull();
 });
 it("keeps built-in service usable without exposing credential controls", () => {
   const dispatch = vi.fn(async () => {});

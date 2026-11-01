@@ -8,7 +8,8 @@ pub async fn check_release(
     if window.label() != "main" {
         return Err("更新由主窗口管理".into());
     }
-    let release = crate::release::check_latest().await?;
+    let mut release = crate::release::check_latest().await?;
+    release.update_ready = crate::updater::signing_ready(window.app_handle().config());
     *window
         .state::<crate::updater::Service>()
         .release

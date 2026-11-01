@@ -45,9 +45,15 @@ export default function useDialogFocus(
       if (e.key !== "Tab") return;
       const nodes = [
         ...(panel.current?.querySelectorAll<HTMLElement>(
-          "button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex='0']",
+          "button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary,[tabindex='0']",
         ) || []),
-      ].filter((n) => !n.closest("[inert],[hidden],[aria-hidden='true']"));
+      ].filter((n) => {
+        if (n.closest("[inert],[hidden],[aria-hidden='true']")) return false;
+        const closed = n.closest("details:not([open])");
+        return (
+          !closed || (n.tagName === "SUMMARY" && n.parentElement === closed)
+        );
+      });
       const first = nodes[0],
         last = nodes.at(-1);
       if (!first) {

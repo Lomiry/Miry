@@ -20,6 +20,7 @@ vi.mock("@tauri-apps/api/core", () => ({
 const release = (version = "1.1.0", newer = true) => ({
   version,
   newer,
+  update_ready: true,
   notes: "改进与修复",
   url: `https://github.com/Lomiry/Miry/releases/tag/v${version}`,
 });
@@ -35,6 +36,63 @@ afterEach(() => {
 });
 const load = async () => (await import("./AutomaticUpdateNotice")).default;
 const settle = () => act(async () => {});
+
+it("shows release notes while signing is unconfirmed and disables download", async () => {
+  vi.mocked(invoke).mockResolvedValue({ ...release(), update_ready: false });
+  const Notice = await load();
+  render(<Notice blocked={false} />);
+  await screen.findByRole("dialog");
+  expect(screen.getByText("改进与修复")).toBeTruthy();
+  expect(screen.getByRole("status").textContent).toContain(
+    "正式更新签名尚未确认",
+  );
+  expect(screen.getByRole("button", { name: "立即更新" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  expect(invoke).toHaveBeenCalledExactlyOnceWith("check_release");
+});
+
+it("cancels from the dialog without installing and offers an explicit retry", async () => {
+  const Notice = await load();
+  render(<Notice blocked={false} />);
+  await screen.findByRole("dialog");
+  let fail!: (value: string) => void;
+  vi.mocked(invoke).mockImplementation((command) =>
+    command === "download_update"
+      ? new Promise<void>((_, reject) => {
+          fail = reject;
+        })
+      : Promise.resolve(),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "立即更新" }));
+  fireEvent.click(screen.getByRole("button", { name: "取消下载" }));
+  await settle();
+  expect(screen.getByRole("heading", { name: "正在取消下载" })).toBeTruthy();
+  await act(async () => fail("更新下载已取消"));
+  expect(screen.getByRole("heading", { name: "下载已取消" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "重试" })).toBeTruthy();
+  expect(
+    vi.mocked(invoke).mock.calls.some(([cmd]) => cmd === "install_update"),
+  ).toBe(false);
+});
+
+it("switches the open update prompt without checking again or replacing release notes", async () => {
+  const Notice = await load();
+  const { setLanguage } = await import("../i18n/core");
+  const view = render(<Notice blocked={false} />);
+  await screen.findByText("发现 Miry 新版本");
+  const dialog = screen.getByRole("dialog");
+  const checks = vi.mocked(invoke).mock.calls.length;
+  act(() => setLanguage("en-US"));
+  expect(screen.getByText("A new Miry version is available")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Update now" })).toBeTruthy();
+  expect(screen.getByText("改进与修复")).toBeTruthy();
+  expect(screen.getByRole("dialog")).toBe(dialog);
+  expect(invoke).toHaveBeenCalledTimes(checks);
+  view.unmount();
+  setLanguage("zh-CN", false);
+});
 
 it("checks on startup once through StrictMode and remounts, including an in-flight manual check", async () => {
   let resolve!: (value: ReturnType<typeof release>) => void;

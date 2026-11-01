@@ -7,6 +7,22 @@ export const defaultPageSize = 30;
 export const minPageSize = 10;
 export const maxPageSize = 200;
 const key = "miry-browse-page-size";
+export type BrowseMode = "pages" | "infinite";
+const modeKey = "miry-browse-mode";
+export function readBrowseMode(): BrowseMode {
+  try {
+    return localStorage.getItem(modeKey) === "infinite" ? "infinite" : "pages";
+  } catch {
+    return "pages";
+  }
+}
+export function saveBrowseMode(value: BrowseMode) {
+  try {
+    localStorage.setItem(modeKey, value);
+  } catch {
+    /* Keep browsing without storage. */
+  }
+}
 
 export function validPageSize(value: unknown): value is number {
   return (

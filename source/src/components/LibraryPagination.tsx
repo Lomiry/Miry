@@ -1,3 +1,5 @@
+import { t } from "../i18n/core";
+import { useI18n } from "../i18n/react";
 import Pagination from "./Pagination";
 import PageSizeControl from "./PageSizeControl";
 
@@ -28,15 +30,17 @@ export default function LibraryPagination({
   onPageSizeChange?: (value: number) => void;
   showRange?: boolean;
 }) {
+  useI18n();
+
   return (
     <div className="library-pagination">
       {showRange && (
         <span className="library-page-range" aria-live="polite">
           {loading
-            ? "正在加载…"
+            ? t("library.loading_2")
             : count
               ? `${page * pageSize + 1}–${page * pageSize + count}`
-              : "本页暂无内容"}
+              : t("library.this_page_is_empty")}
           {!loading && count > 0 && totalKnown && ` / ${total}`}
         </span>
       )}

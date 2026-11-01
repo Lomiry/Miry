@@ -1,3 +1,4 @@
+import { t } from "../i18n/core";
 import type { EmbyClient } from "./client";
 import type { Item, ItemPage } from "../types/emby";
 import { playbackResolution } from "../player/resolution";
@@ -92,7 +93,9 @@ export class ResolutionIndex {
           );
           scanned += data.Items.length;
           if (scanned > 50000)
-            throw Error("媒体库超过清晰度索引范围，请选择更小的媒体库后重试。");
+            throw Error(
+              t("library.this_library_exceeds_the_resolution_index_limit"),
+            );
           for (const item of data.Items) visit(item);
           offset += data.Items.length;
           if (
@@ -102,7 +105,9 @@ export class ResolutionIndex {
           )
             break;
           if (!data.Items.length)
-            throw Error("清晰度元数据分页不完整，请重试。");
+            throw Error(
+              t("library.resolution_metadata_is_incomplete_try_again"),
+            );
         }
       };
       const order: string[] = [];
@@ -154,7 +159,7 @@ export class ResolutionIndex {
     const byId = new Map(data.Items.map((item) => [item.Id, item]));
     if (selected.some((id) => !byId.has(id))) {
       this.cache.delete(key);
-      throw Error("媒体库已变化，请刷新清晰度筛选。");
+      throw Error(t("library.the_library_has_changed_refresh_the_resolution"));
     }
     return {
       Items: selected.map((id) => byId.get(id)!),

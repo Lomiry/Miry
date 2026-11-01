@@ -1,9 +1,12 @@
+import { useI18n } from "../i18n/react";
+import { t, localizeMessage } from "../i18n/core";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import useDialogFocus from "./useDialogFocus";
 import { automaticUpdate, dismissUpdate } from "../stores/automaticUpdates";
 import {
   clearUpdate,
+  cancelDownload,
   downloadUpdate,
   installUpdate,
   minimizeUpdate,
@@ -12,14 +15,6 @@ import {
   updateSnapshot,
 } from "../stores/inAppUpdate";
 
-const labels = {
-  available: "发现 Miry 新版本",
-  downloading: "正在下载",
-  verifying: "下载验证中",
-  ready: "准备安装",
-  installing: "安装交接中",
-  error: "下载或验证失败",
-};
 const size = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 export default function AutomaticUpdateNotice({
   blocked,
@@ -28,12 +23,26 @@ export default function AutomaticUpdateNotice({
   blocked: boolean;
   onPrepareInstall?: () => Promise<void>;
 }) {
+  useI18n();
+  const labels = {
+    available: t("updates.available"),
+    downloading: t("updates.downloading"),
+    verifying: t("updates.verifying"),
+    ready: t("updates.ready"),
+    installing: t("updates.installing"),
+    error: t("updates.failed"),
+    cancelling: t("updates.cancelling"),
+    cancelled: t("updates.cancelled"),
+  };
   const state = useSyncExternalStore(subscribeUpdate, updateSnapshot);
   const [restart, setRestart] = useState(true);
   const { release, phase, minimized } = state;
   const panel = useRef<HTMLElement>(null);
   const active =
-    phase === "downloading" || phase === "verifying" || phase === "installing";
+    phase === "downloading" ||
+    phase === "verifying" ||
+    phase === "installing" ||
+    phase === "cancelling";
   const visible = !!release && (!blocked || phase === "installing");
   const dismiss = () => {
     if (release) dismissUpdate(release.version);
@@ -62,7 +71,8 @@ export default function AutomaticUpdateNotice({
         className="update-background secondary"
         onClick={() => minimizeUpdate(false)}
       >
-        Miry 更新 · {labels[phase]}
+        {t("updates.background")}
+        {labels[phase]}
       </button>
     );
   const percent =
@@ -83,52 +93,71 @@ export default function AutomaticUpdateNotice({
         </header>
         <div className="settings-body">
           <p>Miry v{release.version}</p>
+          {release.updateReady !== true && (
+            <p role="status">{t("updates.signing_blocked")}</p>
+          )}
           {phase === "available" && (
             <pre className="release-notes">
-              {release.notes || "新版本已发布。"}
+              {release.notes || t("updates.release_available")}
             </pre>
           )}
           {(phase === "downloading" || phase === "verifying") && (
             <>
               <progress
                 className="update-progress"
-                aria-label="更新下载进度"
+                aria-label={t("updates.download_progress")}
                 max={100}
                 value={percent}
               />
               <p role="status">
                 {phase === "verifying"
-                  ? "正在验证更新包签名…"
-                  : `${percent === undefined ? "大小未知" : `${percent}%`} · ${size(state.downloaded)} / ${state.total ? size(state.total) : "未知"} · ${size(state.bytesPerSecond)}/s`}
+                  ? t("updates.verifying_signature")
+                  : `${percent === undefined ? t("updates.unknown_size") : `${percent}%`} · ${size(state.downloaded)} / ${state.total ? size(state.total) : t("updates.unknown")} · ${size(state.bytesPerSecond)}/s`}
               </p>
             </>
           )}
           {phase === "ready" && (
             <>
-              <p role="status">
-                更新包签名验证成功。安装将安全停止播放并退出
-                Miry，保留用户配置。
-              </p>
+              <p role="status">{t("updates.signature_verified")}</p>
               <label>
                 <input
                   type="checkbox"
                   checked={restart}
                   onChange={(e) => setRestart(e.target.checked)}
                 />{" "}
-                安装后重新启动 Miry
+                {t("updates.restart")}
               </label>
             </>
           )}
           {phase === "installing" && (
-            <p role="status">
-              正在保存播放状态并关闭播放器，随后由 Windows 安装程序接管。
-            </p>
+            <p role="status">{t("updates.handoff")}</p>
           )}
-          {phase === "error" && <p role="alert">{state.error}</p>}
+          {(phase === "cancelling" || phase === "cancelled") && (
+            <p role="status">{labels[phase]}</p>
+          )}
+          {(phase === "error" || (phase === "cancelling" && state.error)) && (
+            <p role="alert">{localizeMessage(state.error || "")}</p>
+          )}
           <div className="update-notice-actions">
-            {(phase === "available" || phase === "error") && (
-              <button className="primary" onClick={() => void downloadUpdate()}>
-                {phase === "error" ? "重试" : "立即更新"}
+            {(phase === "available" ||
+              phase === "error" ||
+              phase === "cancelled") && (
+              <button
+                className="primary"
+                disabled={release.updateReady !== true}
+                onClick={() => void downloadUpdate()}
+              >
+                {phase !== "available"
+                  ? t("library.retry")
+                  : t("updates.update_now")}
+              </button>
+            )}
+            {(phase === "downloading" || phase === "verifying") && (
+              <button
+                className="secondary"
+                onClick={() => void cancelDownload()}
+              >
+                {t("updates.cancel_download")}
               </button>
             )}
             {phase === "ready" && (
@@ -136,7 +165,7 @@ export default function AutomaticUpdateNotice({
                 className="primary"
                 onClick={() => void installUpdate(onPrepareInstall, restart)}
               >
-                确认安装
+                {t("updates.confirm")}
               </button>
             )}
             <button
@@ -145,10 +174,10 @@ export default function AutomaticUpdateNotice({
               onClick={close}
             >
               {active
-                ? "后台下载"
+                ? t("updates.download_background")
                 : phase === "ready"
-                  ? "稍后安装"
-                  : "暂不更新"}
+                  ? t("updates.install_later")
+                  : t("updates.dismiss")}
             </button>
           </div>
         </div>
