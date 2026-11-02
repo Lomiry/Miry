@@ -15,7 +15,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square" alt="Windows x64" />
-  <img src="https://img.shields.io/badge/Version-1.0.7-287C63?style=flat-square" alt="Miry v1.0.7" />
+  <img src="https://img.shields.io/badge/Version-1.0.8-287C63?style=flat-square" alt="Miry v1.0.8" />
   <img src="https://img.shields.io/badge/Player-mpv-343434?style=flat-square" alt="mpv" />
 </p>
 
@@ -26,13 +26,15 @@
 | 特性 | 使用体验 |
 | --- | --- |
 | 原生 mpv 播放 | 支持 Direct Play、Direct Stream、Transcode 与 HLS，按需选择媒体版本 |
-| 在线与本地弹幕 | 在线搜索作品、自动或手动匹配弹幕，也可加载本地 Bilibili XML / ASS |
+| 多来源弹幕 | 内置 DandanPlay，支持 LogVar、自定义来源、弹幕匹配与失败回退，以及本地 XML / ASS |
 | 主字幕 / 次字幕 | 同时显示两路字幕，播放时调节字幕大小与位置 |
+| 智能片源选择 | 可按分辨率或码率优先选择片源，支持手动切换、字幕和音轨预选 |
+| Mini 播放器 | 独立小窗继续播放，主窗口可同时浏览媒体库和搜索内容 |
 | 三种画面模式 | 自动适应（默认）、填充屏幕、拉伸铺满，播放过程中切换 |
 | Windows 桌面体验 | 原生视频窗口、系统媒体控制，支持多服务器与 Smart Route 多线路管理 |
 | 现代化界面 | 浅色、深色与跟随系统主题，支持 UI 字号调整和可折叠侧栏 |
 
-搜索、媒体库排序、筛选和分页帮助你找到想看的作品，收藏、待看清单与观看记录方便下次继续观看。功能迭代见[更新日志](CHANGELOG.md)。
+支持跨服务器聚合搜索、媒体库排序、筛选、分页与无限滚动，收藏、待看清单和观看记录方便下次继续观看。功能迭代见[更新日志](CHANGELOG.md)。
 
 ## 界面预览
 
@@ -40,9 +42,9 @@
 
 ## 下载与安装
 
-[**下载 Miry v1.0.7（Windows x64）**](https://github.com/Lomiry/Miry/releases/download/v1.0.7/Miry_1.0.7_x64-setup.exe)
+[**下载 Miry v1.0.8 安装版（Windows x64）**](https://github.com/Lomiry/Miry/releases/download/v1.0.8/Miry_1.0.8_x64-setup.exe) · [**下载 Portable 便携版**](https://github.com/Lomiry/Miry/releases/download/v1.0.8/Miry_1.0.8_x64-portable.zip)
 
-安装包：`Miry_1.0.7_x64-setup.exe`。退出 Miry 后运行安装程序，按提示完成安装。安装包包含 mpv；缺少 WebView2 时，官方引导程序可能需要联网。
+安装包：`Miry_1.0.8_x64-setup.exe`。退出 Miry 后运行安装程序，按提示完成安装。安装包包含 mpv；缺少 WebView2 时，官方引导程序可能需要联网。Windows 安装程序未进行 Authenticode 签名，可能显示“未知发布者”；请通过 [SHA256 清单](https://github.com/Lomiry/Miry/releases/download/v1.0.8/SHA256SUMS.txt) 校验下载文件。
 
 [全部版本](https://github.com/Lomiry/Miry/releases) · [安装、升级与校验说明](docs/releases/README.md)
 
